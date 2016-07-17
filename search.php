@@ -16,7 +16,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,7 +32,7 @@ $showform = optional_param('showform', 0, PARAM_INT);   // Just show the form
 
 $user    = trim(optional_param('user', '', PARAM_NOTAGS));    // Names to search for
 $userid  = trim(optional_param('userid', 0, PARAM_INT));      // UserID to search for
-$forumid = trim(optional_param('forumid', 0, PARAM_INT));      // ForumID to search for
+$cybraryid = trim(optional_param('cybraryid', 0, PARAM_INT));      // CybraryID to search for
 $subject = trim(optional_param('subject', '', PARAM_NOTAGS)); // Subject
 $phrase  = trim(optional_param('phrase', '', PARAM_NOTAGS));  // Phrase
 $words   = trim(optional_param('words', '', PARAM_NOTAGS));   // Words
@@ -77,20 +77,20 @@ if (empty($search)) {   // Check the other parameters instead
     if (!empty($userid)) {
         $search .= ' userid:'.$userid;
     }
-    if (!empty($forumid)) {
-        $search .= ' forumid:'.$forumid;
+    if (!empty($cybraryid)) {
+        $search .= ' cybraryid:'.$cybraryid;
     }
     if (!empty($user)) {
-        $search .= ' '.forum_clean_search_terms($user, 'user:');
+        $search .= ' '.cybrary_clean_search_terms($user, 'user:');
     }
     if (!empty($subject)) {
-        $search .= ' '.forum_clean_search_terms($subject, 'subject:');
+        $search .= ' '.cybrary_clean_search_terms($subject, 'subject:');
     }
     if (!empty($fullwords)) {
-        $search .= ' '.forum_clean_search_terms($fullwords, '+');
+        $search .= ' '.cybrary_clean_search_terms($fullwords, '+');
     }
     if (!empty($notwords)) {
-        $search .= ' '.forum_clean_search_terms($notwords, '-');
+        $search .= ' '.cybrary_clean_search_terms($notwords, '-');
     }
     if (!empty($phrase)) {
         $search .= ' "'.$phrase.'"';
@@ -107,7 +107,7 @@ if (empty($search)) {   // Check the other parameters instead
 }
 
 if ($search) {
-    $search = forum_clean_search_terms($search);
+    $search = cybrary_clean_search_terms($search);
 }
 
 if (!$course = $DB->get_record('course', array('id'=>$id))) {
@@ -121,50 +121,50 @@ $params = array(
     'other' => array('searchterm' => $search)
 );
 
-$event = \mod_forum\event\course_searched::create($params);
+$event = \mod_cybrary\event\course_searched::create($params);
 $event->trigger();
 
-$strforums = get_string("modulenameplural", "forum");
-$strsearch = get_string("search", "forum");
-$strsearchresults = get_string("searchresults", "forum");
+$strcybraries = get_string("modulenameplural", "cybrary");
+$strsearch = get_string("search", "cybrary");
+$strsearchresults = get_string("searchresults", "cybrary");
 $strpage = get_string("page");
 
 if (!$search || $showform) {
 
-    $PAGE->navbar->add($strforums, new moodle_url('/mod/forum/index.php', array('id'=>$course->id)));
-    $PAGE->navbar->add(get_string('advancedsearch', 'forum'));
+    $PAGE->navbar->add($strcybraries, new moodle_url('/mod/cybrary/index.php', array('id'=>$course->id)));
+    $PAGE->navbar->add(get_string('advancedsearch', 'cybrary'));
 
     $PAGE->set_title($strsearch);
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
 
-    forum_print_big_search_form($course);
+    cybrary_print_big_search_form($course);
     echo $OUTPUT->footer();
     exit;
 }
 
 /// We need to do a search now and print results
 
-$searchterms = str_replace('forumid:', 'instance:', $search);
+$searchterms = str_replace('cybraryid:', 'instance:', $search);
 $searchterms = explode(' ', $searchterms);
 
-$searchform = forum_search_form($course, $search);
+$searchform = cybrary_search_form($course, $search);
 
-$PAGE->navbar->add($strsearch, new moodle_url('/mod/forum/search.php', array('id'=>$course->id)));
+$PAGE->navbar->add($strsearch, new moodle_url('/mod/cybrary/search.php', array('id'=>$course->id)));
 $PAGE->navbar->add($strsearchresults);
-if (!$posts = forum_search_posts($searchterms, $course->id, $page*$perpage, $perpage, $totalcount)) {
+if (!$posts = cybrary_search_posts($searchterms, $course->id, $page*$perpage, $perpage, $totalcount)) {
     $PAGE->set_title($strsearchresults);
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
-    echo $OUTPUT->heading($strforums, 2);
+    echo $OUTPUT->heading($strcybraries, 2);
     echo $OUTPUT->heading($strsearchresults, 3);
-    echo $OUTPUT->heading(get_string("noposts", "forum"), 4);
+    echo $OUTPUT->heading(get_string("noposts", "cybrary"), 4);
 
     if (!$individualparams) {
         $words = $search;
     }
 
-    forum_print_big_search_form($course);
+    cybrary_print_big_search_form($course);
 
     echo $OUTPUT->footer();
     exit;
@@ -175,7 +175,7 @@ require_once($CFG->dirroot.'/rating/lib.php');
 
 //set up the ratings information that will be the same for all posts
 $ratingoptions = new stdClass();
-$ratingoptions->component = 'mod_forum';
+$ratingoptions->component = 'mod_cybrary';
 $ratingoptions->ratingarea = 'post';
 $ratingoptions->userid = $USER->id;
 $ratingoptions->returnurl = $PAGE->url->out(false);
@@ -189,7 +189,7 @@ echo '<div class="reportlink">';
 echo '<a href="search.php?id='.$course->id.
                          '&amp;user='.urlencode($user).
                          '&amp;userid='.$userid.
-                         '&amp;forumid='.$forumid.
+                         '&amp;cybraryid='.$cybraryid.
                          '&amp;subject='.urlencode($subject).
                          '&amp;phrase='.urlencode($phrase).
                          '&amp;words='.urlencode($words).
@@ -198,10 +198,10 @@ echo '<a href="search.php?id='.$course->id.
                          '&amp;dateto='.$dateto.
                          '&amp;datefrom='.$datefrom.
                          '&amp;showform=1'.
-                         '">'.get_string('advancedsearch','forum').'...</a>';
+                         '">'.get_string('advancedsearch','cybrary').'...</a>';
 echo '</div>';
 
-echo $OUTPUT->heading($strforums, 2);
+echo $OUTPUT->heading($strcybraries, 2);
 echo $OUTPUT->heading("$strsearchresults: $totalcount", 3);
 
 $url = new moodle_url('search.php', array('search' => $search, 'id' => $course->id, 'perpage' => $perpage));
@@ -224,24 +224,24 @@ $strippedsearch = implode(' ', $searchterms);    // Rebuild the string
 
 foreach ($posts as $post) {
 
-    // Replace the simple subject with the three items forum name -> thread name -> subject
+    // Replace the simple subject with the three items cybrary name -> thread name -> subject
     // (if all three are appropriate) each as a link.
-    if (! $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion))) {
-        print_error('invaliddiscussionid', 'forum');
+    if (! $discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion))) {
+        print_error('invaliddiscussionid', 'cybrary');
     }
-    if (! $forum = $DB->get_record('forum', array('id' => "$discussion->forum"))) {
-        print_error('invalidforumid', 'forum');
+    if (! $cybrary = $DB->get_record('cybrary', array('id' => "$discussion->cybrary"))) {
+        print_error('invalidcybraryid', 'cybrary');
     }
 
-    if (!$cm = get_coursemodule_from_instance('forum', $forum->id)) {
+    if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id)) {
         print_error('invalidcoursemodule');
     }
 
     $post->subject = highlight($strippedsearch, $post->subject);
     $discussion->name = highlight($strippedsearch, $discussion->name);
 
-    $fullsubject = "<a href=\"view.php?f=$forum->id\">".format_string($forum->name,true)."</a>";
-    if ($forum->type != 'single') {
+    $fullsubject = "<a href=\"view.php?f=$cybrary->id\">".format_string($cybrary->name,true)."</a>";
+    if ($cybrary->type != 'single') {
         $fullsubject .= " -> <a href=\"discuss.php?d=$discussion->id\">".format_string($discussion->name,true)."</a>";
         if ($post->parent != 0) {
             $fullsubject .= " -> <a href=\"discuss.php?d=$post->discussion&amp;parent=$post->id\">".format_string($post->subject,true)."</a>";
@@ -252,15 +252,15 @@ foreach ($posts as $post) {
     $post->subjectnoformat = true;
 
     //add the ratings information to the post
-    //Unfortunately seem to have do this individually as posts may be from different forums
-    if ($forum->assessed != RATING_AGGREGATE_NONE) {
+    //Unfortunately seem to have do this individually as posts may be from different cybraries
+    if ($cybrary->assessed != RATING_AGGREGATE_NONE) {
         $modcontext = context_module::instance($cm->id);
         $ratingoptions->context = $modcontext;
         $ratingoptions->items = array($post);
-        $ratingoptions->aggregate = $forum->assessed;//the aggregation method
-        $ratingoptions->scaleid = $forum->scale;
-        $ratingoptions->assesstimestart = $forum->assesstimestart;
-        $ratingoptions->assesstimefinish = $forum->assesstimefinish;
+        $ratingoptions->aggregate = $cybrary->assessed;//the aggregation method
+        $ratingoptions->scaleid = $cybrary->scale;
+        $ratingoptions->assesstimestart = $cybrary->assesstimestart;
+        $ratingoptions->assesstimefinish = $cybrary->assesstimefinish;
         $postswithratings = $rm->get_ratings($ratingoptions);
 
         if ($postswithratings && count($postswithratings)==1) {
@@ -269,7 +269,7 @@ foreach ($posts as $post) {
     }
 
     // Identify search terms only found in HTML markup, and add a warning about them to
-    // the start of the message text. However, do not do the highlighting here. forum_print_post
+    // the start of the message text. However, do not do the highlighting here. cybrary_print_post
     // will do it for us later.
     $missing_terms = "";
 
@@ -289,12 +289,12 @@ foreach ($posts as $post) {
     $post->message = str_replace('</fgw9sdpq4>', '</span>', $post->message);
 
     if ($missing_terms) {
-        $strmissingsearchterms = get_string('missingsearchterms','forum');
+        $strmissingsearchterms = get_string('missingsearchterms','cybrary');
         $post->message = '<p class="highlight2">'.$strmissingsearchterms.' '.$missing_terms.'</p>'.$post->message;
     }
 
-    // Prepare a link to the post in context, to be displayed after the forum post.
-    $fulllink = "<a href=\"discuss.php?d=$post->discussion#p$post->id\">".get_string("postincontext", "forum")."</a>";
+    // Prepare a link to the post in context, to be displayed after the cybrary post.
+    $fulllink = "<a href=\"discuss.php?d=$post->discussion#p$post->id\">".get_string("postincontext", "cybrary")."</a>";
 
     // Message is now html format.
     if ($post->messageformat != FORMAT_HTML) {
@@ -302,7 +302,7 @@ foreach ($posts as $post) {
     }
 
     // Now pring the post.
-    forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false,
+    cybrary_print_post($post, $discussion, $cybrary, $cm, $course, false, false, false,
             $fulllink, '', -99, false);
 }
 
@@ -317,43 +317,43 @@ echo $OUTPUT->footer();
   * @param stdClass $course The Course that will be searched.
   * @return void The function prints the form.
   */
-function forum_print_big_search_form($course) {
+function cybrary_print_big_search_form($course) {
     global $CFG, $DB, $words, $subject, $phrase, $user, $userid, $fullwords, $notwords, $datefrom, $dateto, $PAGE, $OUTPUT;
 
-    echo $OUTPUT->box(get_string('searchforumintro', 'forum'), 'searchbox boxaligncenter', 'intro');
+    echo $OUTPUT->box(get_string('searchcybraryintro', 'cybrary'), 'searchbox boxaligncenter', 'intro');
 
     echo $OUTPUT->box_start('generalbox boxaligncenter');
 
-    echo html_writer::script('', $CFG->wwwroot.'/mod/forum/forum.js');
+    echo html_writer::script('', $CFG->wwwroot.'/mod/cybrary/cybrary.js');
 
     echo '<form id="searchform" action="search.php" method="get">';
     echo '<table cellpadding="10" class="searchbox" id="form">';
 
     echo '<tr>';
-    echo '<td class="c0"><label for="words">'.get_string('searchwords', 'forum').'</label>';
+    echo '<td class="c0"><label for="words">'.get_string('searchwords', 'cybrary').'</label>';
     echo '<input type="hidden" value="'.$course->id.'" name="id" alt="" /></td>';
     echo '<td class="c1"><input type="text" size="35" name="words" id="words"value="'.s($words, true).'" alt="" /></td>';
     echo '</tr>';
 
     echo '<tr>';
-    echo '<td class="c0"><label for="phrase">'.get_string('searchphrase', 'forum').'</label></td>';
+    echo '<td class="c0"><label for="phrase">'.get_string('searchphrase', 'cybrary').'</label></td>';
     echo '<td class="c1"><input type="text" size="35" name="phrase" id="phrase" value="'.s($phrase, true).'" alt="" /></td>';
     echo '</tr>';
 
     echo '<tr>';
-    echo '<td class="c0"><label for="notwords">'.get_string('searchnotwords', 'forum').'</label></td>';
+    echo '<td class="c0"><label for="notwords">'.get_string('searchnotwords', 'cybrary').'</label></td>';
     echo '<td class="c1"><input type="text" size="35" name="notwords" id="notwords" value="'.s($notwords, true).'" alt="" /></td>';
     echo '</tr>';
 
     if ($DB->get_dbfamily() == 'mysql' || $DB->get_dbfamily() == 'postgres') {
         echo '<tr>';
-        echo '<td class="c0"><label for="fullwords">'.get_string('searchfullwords', 'forum').'</label></td>';
+        echo '<td class="c0"><label for="fullwords">'.get_string('searchfullwords', 'cybrary').'</label></td>';
         echo '<td class="c1"><input type="text" size="35" name="fullwords" id="fullwords" value="'.s($fullwords, true).'" alt="" /></td>';
         echo '</tr>';
     }
 
     echo '<tr>';
-    echo '<td class="c0">'.get_string('searchdatefrom', 'forum').'</td>';
+    echo '<td class="c0">'.get_string('searchdatefrom', 'cybrary').'</td>';
     echo '<td class="c1">';
     if (empty($datefrom)) {
         $datefromchecked = '';
@@ -362,7 +362,7 @@ function forum_print_big_search_form($course) {
         $datefromchecked = 'checked="checked"';
     }
 
-    echo '<input name="timefromrestrict" type="checkbox" value="1" alt="'.get_string('searchdatefrom', 'forum').'" onclick="return lockoptions(\'searchform\', \'timefromrestrict\', timefromitems)" '.  $datefromchecked . ' /> ';
+    echo '<input name="timefromrestrict" type="checkbox" value="1" alt="'.get_string('searchdatefrom', 'cybrary').'" onclick="return lockoptions(\'searchform\', \'timefromrestrict\', timefromitems)" '.  $datefromchecked . ' /> ';
     $selectors = html_writer::select_time('days', 'fromday', $datefrom)
                . html_writer::select_time('months', 'frommonth', $datefrom)
                . html_writer::select_time('years', 'fromyear', $datefrom)
@@ -379,7 +379,7 @@ function forum_print_big_search_form($course) {
     echo '</tr>';
 
     echo '<tr>';
-    echo '<td class="c0">'.get_string('searchdateto', 'forum').'</td>';
+    echo '<td class="c0">'.get_string('searchdateto', 'cybrary').'</td>';
     echo '<td class="c1">';
     if (empty($dateto)) {
         $datetochecked = '';
@@ -388,7 +388,7 @@ function forum_print_big_search_form($course) {
         $datetochecked = 'checked="checked"';
     }
 
-    echo '<input name="timetorestrict" type="checkbox" value="1" alt="'.get_string('searchdateto', 'forum').'" onclick="return lockoptions(\'searchform\', \'timetorestrict\', timetoitems)" ' .$datetochecked. ' /> ';
+    echo '<input name="timetorestrict" type="checkbox" value="1" alt="'.get_string('searchdateto', 'cybrary').'" onclick="return lockoptions(\'searchform\', \'timetorestrict\', timetoitems)" ' .$datetochecked. ' /> ';
     $selectors = html_writer::select_time('days', 'today', $dateto)
                . html_writer::select_time('months', 'tomonth', $dateto)
                . html_writer::select_time('years', 'toyear', $dateto)
@@ -406,25 +406,25 @@ function forum_print_big_search_form($course) {
     echo '</tr>';
 
     echo '<tr>';
-    echo '<td class="c0"><label for="menuforumid">'.get_string('searchwhichforums', 'forum').'</label></td>';
+    echo '<td class="c0"><label for="menucybraryid">'.get_string('searchwhichcybraries', 'cybrary').'</label></td>';
     echo '<td class="c1">';
-    echo html_writer::select(forum_menu_list($course), 'forumid', '', array(''=>get_string('allforums', 'forum')));
+    echo html_writer::select(cybrary_menu_list($course), 'cybraryid', '', array(''=>get_string('allcybraries', 'cybrary')));
     echo '</td>';
     echo '</tr>';
 
     echo '<tr>';
-    echo '<td class="c0"><label for="subject">'.get_string('searchsubject', 'forum').'</label></td>';
+    echo '<td class="c0"><label for="subject">'.get_string('searchsubject', 'cybrary').'</label></td>';
     echo '<td class="c1"><input type="text" size="35" name="subject" id="subject" value="'.s($subject, true).'" alt="" /></td>';
     echo '</tr>';
 
     echo '<tr>';
-    echo '<td class="c0"><label for="user">'.get_string('searchuser', 'forum').'</label></td>';
+    echo '<td class="c0"><label for="user">'.get_string('searchuser', 'cybrary').'</label></td>';
     echo '<td class="c1"><input type="text" size="35" name="user" id="user" value="'.s($user, true).'" alt="" /></td>';
     echo '</tr>';
 
     echo '<tr>';
     echo '<td class="submit" colspan="2" align="center">';
-    echo '<input type="submit" value="'.get_string('searchforums', 'forum').'" alt="" /></td>';
+    echo '<input type="submit" value="'.get_string('searchcybraries', 'cybrary').'" alt="" /></td>';
     echo '</tr>';
 
     echo '</table>';
@@ -446,7 +446,7 @@ function forum_print_big_search_form($course) {
  * @return string The filtered search terms, separated by spaces.
  * @todo Take the hardcoded limit out of this function and put it into a user-specified parameter.
  */
-function forum_clean_search_terms($words, $prefix='') {
+function cybrary_clean_search_terms($words, $prefix='') {
     $searchterms = explode(' ', $words);
     foreach ($searchterms as $key => $searchterm) {
         if (strlen($searchterm) < 2) {
@@ -459,25 +459,25 @@ function forum_clean_search_terms($words, $prefix='') {
 }
 
  /**
-  * Retrieve a list of the forums that this user can view.
+  * Retrieve a list of the cybraries that this user can view.
   *
   * @param stdClass $course The Course to use.
-  * @return array A set of formatted forum names stored against the forum id.
+  * @return array A set of formatted cybrary names stored against the cybrary id.
   */
-function forum_menu_list($course)  {
+function cybrary_menu_list($course)  {
     $menu = array();
 
     $modinfo = get_fast_modinfo($course);
-    if (empty($modinfo->instances['forum'])) {
+    if (empty($modinfo->instances['cybrary'])) {
         return $menu;
     }
 
-    foreach ($modinfo->instances['forum'] as $cm) {
+    foreach ($modinfo->instances['cybrary'] as $cm) {
         if (!$cm->uservisible) {
             continue;
         }
         $context = context_module::instance($cm->id);
-        if (!has_capability('mod/forum:viewdiscussion', $context)) {
+        if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
             continue;
         }
         $menu[$cm->instance] = format_string($cm->name);

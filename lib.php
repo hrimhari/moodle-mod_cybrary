@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,45 +29,45 @@ require_once($CFG->libdir.'/eventslib.php');
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 
-define('FORUM_MODE_FLATOLDEST', 1);
-define('FORUM_MODE_FLATNEWEST', -1);
-define('FORUM_MODE_THREADED', 2);
-define('FORUM_MODE_NESTED', 3);
+define('CYBRARY_MODE_FLATOLDEST', 1);
+define('CYBRARY_MODE_FLATNEWEST', -1);
+define('CYBRARY_MODE_THREADED', 2);
+define('CYBRARY_MODE_NESTED', 3);
 
-define('FORUM_CHOOSESUBSCRIBE', 0);
-define('FORUM_FORCESUBSCRIBE', 1);
-define('FORUM_INITIALSUBSCRIBE', 2);
-define('FORUM_DISALLOWSUBSCRIBE',3);
-
-/**
- * FORUM_TRACKING_OFF - Tracking is not available for this forum.
- */
-define('FORUM_TRACKING_OFF', 0);
+define('CYBRARY_CHOOSESUBSCRIBE', 0);
+define('CYBRARY_FORCESUBSCRIBE', 1);
+define('CYBRARY_INITIALSUBSCRIBE', 2);
+define('CYBRARY_DISALLOWSUBSCRIBE',3);
 
 /**
- * FORUM_TRACKING_OPTIONAL - Tracking is based on user preference.
+ * CYBRARY_TRACKING_OFF - Tracking is not available for this cybrary.
  */
-define('FORUM_TRACKING_OPTIONAL', 1);
+define('CYBRARY_TRACKING_OFF', 0);
 
 /**
- * FORUM_TRACKING_FORCED - Tracking is on, regardless of user setting.
- * Treated as FORUM_TRACKING_OPTIONAL if $CFG->forum_allowforcedreadtracking is off.
+ * CYBRARY_TRACKING_OPTIONAL - Tracking is based on user preference.
  */
-define('FORUM_TRACKING_FORCED', 2);
+define('CYBRARY_TRACKING_OPTIONAL', 1);
 
-define('FORUM_MAILED_PENDING', 0);
-define('FORUM_MAILED_SUCCESS', 1);
-define('FORUM_MAILED_ERROR', 2);
+/**
+ * CYBRARY_TRACKING_FORCED - Tracking is on, regardless of user setting.
+ * Treated as CYBRARY_TRACKING_OPTIONAL if $CFG->cybrary_allowforcedreadtracking is off.
+ */
+define('CYBRARY_TRACKING_FORCED', 2);
 
-if (!defined('FORUM_CRON_USER_CACHE')) {
-    /** Defines how many full user records are cached in forum cron. */
-    define('FORUM_CRON_USER_CACHE', 5000);
+define('CYBRARY_MAILED_PENDING', 0);
+define('CYBRARY_MAILED_SUCCESS', 1);
+define('CYBRARY_MAILED_ERROR', 2);
+
+if (!defined('CYBRARY_CRON_USER_CACHE')) {
+    /** Defines how many full user records are cached in cybrary cron. */
+    define('CYBRARY_CRON_USER_CACHE', 5000);
 }
 
 /**
- * FORUM_POSTS_ALL_USER_GROUPS - All the posts in groups where the user is enrolled.
+ * CYBRARY_POSTS_ALL_USER_GROUPS - All the posts in groups where the user is enrolled.
  */
-define('FORUM_POSTS_ALL_USER_GROUPS', -2);
+define('CYBRARY_POSTS_ALL_USER_GROUPS', -2);
 
 /// STANDARD FUNCTIONS ///////////////////////////////////////////////////////////
 
@@ -77,72 +77,72 @@ define('FORUM_POSTS_ALL_USER_GROUPS', -2);
  * will create a new instance and return the id number
  * of the new instance.
  *
- * @param stdClass $forum add forum instance
- * @param mod_forum_mod_form $mform
+ * @param stdClass $cybrary add cybrary instance
+ * @param mod_cybrary_mod_form $mform
  * @return int intance id
  */
-function forum_add_instance($forum, $mform = null) {
+function cybrary_add_instance($cybrary, $mform = null) {
     global $CFG, $DB;
 
-    $forum->timemodified = time();
+    $cybrary->timemodified = time();
 
-    if (empty($forum->assessed)) {
-        $forum->assessed = 0;
+    if (empty($cybrary->assessed)) {
+        $cybrary->assessed = 0;
     }
 
-    if (empty($forum->ratingtime) or empty($forum->assessed)) {
-        $forum->assesstimestart  = 0;
-        $forum->assesstimefinish = 0;
+    if (empty($cybrary->ratingtime) or empty($cybrary->assessed)) {
+        $cybrary->assesstimestart  = 0;
+        $cybrary->assesstimefinish = 0;
     }
 
-    $forum->id = $DB->insert_record('forum', $forum);
-    $modcontext = context_module::instance($forum->coursemodule);
+    $cybrary->id = $DB->insert_record('cybrary', $cybrary);
+    $modcontext = context_module::instance($cybrary->coursemodule);
 
-    if ($forum->type == 'single') {  // Create related discussion.
+    if ($cybrary->type == 'single') {  // Create related discussion.
         $discussion = new stdClass();
-        $discussion->course        = $forum->course;
-        $discussion->forum         = $forum->id;
-        $discussion->name          = $forum->name;
-        $discussion->assessed      = $forum->assessed;
-        $discussion->message       = $forum->intro;
-        $discussion->messageformat = $forum->introformat;
-        $discussion->messagetrust  = trusttext_trusted(context_course::instance($forum->course));
+        $discussion->course        = $cybrary->course;
+        $discussion->cybrary         = $cybrary->id;
+        $discussion->name          = $cybrary->name;
+        $discussion->assessed      = $cybrary->assessed;
+        $discussion->message       = $cybrary->intro;
+        $discussion->messageformat = $cybrary->introformat;
+        $discussion->messagetrust  = trusttext_trusted(context_course::instance($cybrary->course));
         $discussion->mailnow       = false;
         $discussion->groupid       = -1;
 
         $message = '';
 
-        $discussion->id = forum_add_discussion($discussion, null, $message);
+        $discussion->id = cybrary_add_discussion($discussion, null, $message);
 
         if ($mform and $draftid = file_get_submitted_draft_itemid('introeditor')) {
             // Ugly hack - we need to copy the files somehow.
-            $discussion = $DB->get_record('forum_discussions', array('id'=>$discussion->id), '*', MUST_EXIST);
-            $post = $DB->get_record('forum_posts', array('id'=>$discussion->firstpost), '*', MUST_EXIST);
+            $discussion = $DB->get_record('cybrary_discussions', array('id'=>$discussion->id), '*', MUST_EXIST);
+            $post = $DB->get_record('cybrary_posts', array('id'=>$discussion->firstpost), '*', MUST_EXIST);
 
             $options = array('subdirs'=>true); // Use the same options as intro field!
-            $post->message = file_save_draft_area_files($draftid, $modcontext->id, 'mod_forum', 'post', $post->id, $options, $post->message);
-            $DB->set_field('forum_posts', 'message', $post->message, array('id'=>$post->id));
+            $post->message = file_save_draft_area_files($draftid, $modcontext->id, 'mod_cybrary', 'post', $post->id, $options, $post->message);
+            $DB->set_field('cybrary_posts', 'message', $post->message, array('id'=>$post->id));
         }
     }
 
-    forum_grade_item_update($forum);
+    cybrary_grade_item_update($cybrary);
 
-    return $forum->id;
+    return $cybrary->id;
 }
 
 /**
- * Handle changes following the creation of a forum instance.
+ * Handle changes following the creation of a cybrary instance.
  * This function is typically called by the course_module_created observer.
  *
- * @param object $context the forum context
- * @param stdClass $forum The forum object
+ * @param object $context the cybrary context
+ * @param stdClass $cybrary The cybrary object
  * @return void
  */
-function forum_instance_created($context, $forum) {
-    if ($forum->forcesubscribe == FORUM_INITIALSUBSCRIBE) {
-        $users = \mod_forum\subscriptions::get_potential_subscribers($context, 0, 'u.id, u.email');
+function cybrary_instance_created($context, $cybrary) {
+    if ($cybrary->forcesubscribe == CYBRARY_INITIALSUBSCRIBE) {
+        $users = \mod_cybrary\subscriptions::get_potential_subscribers($context, 0, 'u.id, u.email');
         foreach ($users as $user) {
-            \mod_forum\subscriptions::subscribe_user($user->id, $forum, $context);
+            \mod_cybrary\subscriptions::subscribe_user($user->id, $cybrary, $context);
         }
     }
 }
@@ -153,98 +153,98 @@ function forum_instance_created($context, $forum) {
  * will update an existing instance with new data.
  *
  * @global object
- * @param object $forum forum instance (with magic quotes)
+ * @param object $cybrary cybrary instance (with magic quotes)
  * @return bool success
  */
-function forum_update_instance($forum, $mform) {
+function cybrary_update_instance($cybrary, $mform) {
     global $DB, $OUTPUT, $USER;
 
-    $forum->timemodified = time();
-    $forum->id           = $forum->instance;
+    $cybrary->timemodified = time();
+    $cybrary->id           = $cybrary->instance;
 
-    if (empty($forum->assessed)) {
-        $forum->assessed = 0;
+    if (empty($cybrary->assessed)) {
+        $cybrary->assessed = 0;
     }
 
-    if (empty($forum->ratingtime) or empty($forum->assessed)) {
-        $forum->assesstimestart  = 0;
-        $forum->assesstimefinish = 0;
+    if (empty($cybrary->ratingtime) or empty($cybrary->assessed)) {
+        $cybrary->assesstimestart  = 0;
+        $cybrary->assesstimefinish = 0;
     }
 
-    $oldforum = $DB->get_record('forum', array('id'=>$forum->id));
+    $oldcybrary = $DB->get_record('cybrary', array('id'=>$cybrary->id));
 
-    // MDL-3942 - if the aggregation type or scale (i.e. max grade) changes then recalculate the grades for the entire forum
+    // MDL-3942 - if the aggregation type or scale (i.e. max grade) changes then recalculate the grades for the entire cybrary
     // if  scale changes - do we need to recheck the ratings, if ratings higher than scale how do we want to respond?
     // for count and sum aggregation types the grade we check to make sure they do not exceed the scale (i.e. max score) when calculating the grade
-    if (($oldforum->assessed<>$forum->assessed) or ($oldforum->scale<>$forum->scale)) {
-        forum_update_grades($forum); // recalculate grades for the forum
+    if (($oldcybrary->assessed<>$cybrary->assessed) or ($oldcybrary->scale<>$cybrary->scale)) {
+        cybrary_update_grades($cybrary); // recalculate grades for the cybrary
     }
 
-    if ($forum->type == 'single') {  // Update related discussion and post.
-        $discussions = $DB->get_records('forum_discussions', array('forum'=>$forum->id), 'timemodified ASC');
+    if ($cybrary->type == 'single') {  // Update related discussion and post.
+        $discussions = $DB->get_records('cybrary_discussions', array('cybrary'=>$cybrary->id), 'timemodified ASC');
         if (!empty($discussions)) {
             if (count($discussions) > 1) {
-                echo $OUTPUT->notification(get_string('warnformorepost', 'forum'));
+                echo $OUTPUT->notification(get_string('warnformorepost', 'cybrary'));
             }
             $discussion = array_pop($discussions);
         } else {
             // try to recover by creating initial discussion - MDL-16262
             $discussion = new stdClass();
-            $discussion->course          = $forum->course;
-            $discussion->forum           = $forum->id;
-            $discussion->name            = $forum->name;
-            $discussion->assessed        = $forum->assessed;
-            $discussion->message         = $forum->intro;
-            $discussion->messageformat   = $forum->introformat;
+            $discussion->course          = $cybrary->course;
+            $discussion->cybrary           = $cybrary->id;
+            $discussion->name            = $cybrary->name;
+            $discussion->assessed        = $cybrary->assessed;
+            $discussion->message         = $cybrary->intro;
+            $discussion->messageformat   = $cybrary->introformat;
             $discussion->messagetrust    = true;
             $discussion->mailnow         = false;
             $discussion->groupid         = -1;
 
             $message = '';
 
-            forum_add_discussion($discussion, null, $message);
+            cybrary_add_discussion($discussion, null, $message);
 
-            if (! $discussion = $DB->get_record('forum_discussions', array('forum'=>$forum->id))) {
-                print_error('cannotadd', 'forum');
+            if (! $discussion = $DB->get_record('cybrary_discussions', array('cybrary'=>$cybrary->id))) {
+                print_error('cannotadd', 'cybrary');
             }
         }
-        if (! $post = $DB->get_record('forum_posts', array('id'=>$discussion->firstpost))) {
-            print_error('cannotfindfirstpost', 'forum');
+        if (! $post = $DB->get_record('cybrary_posts', array('id'=>$discussion->firstpost))) {
+            print_error('cannotfindfirstpost', 'cybrary');
         }
 
-        $cm         = get_coursemodule_from_instance('forum', $forum->id);
+        $cm         = get_coursemodule_from_instance('cybrary', $cybrary->id);
         $modcontext = context_module::instance($cm->id, MUST_EXIST);
 
-        $post = $DB->get_record('forum_posts', array('id'=>$discussion->firstpost), '*', MUST_EXIST);
-        $post->subject       = $forum->name;
-        $post->message       = $forum->intro;
-        $post->messageformat = $forum->introformat;
+        $post = $DB->get_record('cybrary_posts', array('id'=>$discussion->firstpost), '*', MUST_EXIST);
+        $post->subject       = $cybrary->name;
+        $post->message       = $cybrary->intro;
+        $post->messageformat = $cybrary->introformat;
         $post->messagetrust  = trusttext_trusted($modcontext);
-        $post->modified      = $forum->timemodified;
+        $post->modified      = $cybrary->timemodified;
         $post->userid        = $USER->id;    // MDL-18599, so that current teacher can take ownership of activities.
 
         if ($mform and $draftid = file_get_submitted_draft_itemid('introeditor')) {
             // Ugly hack - we need to copy the files somehow.
             $options = array('subdirs'=>true); // Use the same options as intro field!
-            $post->message = file_save_draft_area_files($draftid, $modcontext->id, 'mod_forum', 'post', $post->id, $options, $post->message);
+            $post->message = file_save_draft_area_files($draftid, $modcontext->id, 'mod_cybrary', 'post', $post->id, $options, $post->message);
         }
 
-        $DB->update_record('forum_posts', $post);
-        $discussion->name = $forum->name;
-        $DB->update_record('forum_discussions', $discussion);
+        $DB->update_record('cybrary_posts', $post);
+        $discussion->name = $cybrary->name;
+        $DB->update_record('cybrary_discussions', $discussion);
     }
 
-    $DB->update_record('forum', $forum);
+    $DB->update_record('cybrary', $cybrary);
 
-    $modcontext = context_module::instance($forum->coursemodule);
-    if (($forum->forcesubscribe == FORUM_INITIALSUBSCRIBE) && ($oldforum->forcesubscribe <> $forum->forcesubscribe)) {
-        $users = \mod_forum\subscriptions::get_potential_subscribers($modcontext, 0, 'u.id, u.email', '');
+    $modcontext = context_module::instance($cybrary->coursemodule);
+    if (($cybrary->forcesubscribe == CYBRARY_INITIALSUBSCRIBE) && ($oldcybrary->forcesubscribe <> $cybrary->forcesubscribe)) {
+        $users = \mod_cybrary\subscriptions::get_potential_subscribers($modcontext, 0, 'u.id, u.email', '');
         foreach ($users as $user) {
-            \mod_forum\subscriptions::subscribe_user($user->id, $forum, $modcontext);
+            \mod_cybrary\subscriptions::subscribe_user($user->id, $cybrary, $modcontext);
         }
     }
 
-    forum_grade_item_update($forum);
+    cybrary_grade_item_update($cybrary);
 
     return true;
 }
@@ -256,16 +256,16 @@ function forum_update_instance($forum, $mform) {
  * and any data that depends on it.
  *
  * @global object
- * @param int $id forum instance id
+ * @param int $id cybrary instance id
  * @return bool success
  */
-function forum_delete_instance($id) {
+function cybrary_delete_instance($id) {
     global $DB;
 
-    if (!$forum = $DB->get_record('forum', array('id'=>$id))) {
+    if (!$cybrary = $DB->get_record('cybrary', array('id'=>$id))) {
         return false;
     }
-    if (!$cm = get_coursemodule_from_instance('forum', $forum->id)) {
+    if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id)) {
         return false;
     }
     if (!$course = $DB->get_record('course', array('id'=>$cm->course))) {
@@ -281,32 +281,32 @@ function forum_delete_instance($id) {
     $result = true;
 
     // Delete digest and subscription preferences.
-    $DB->delete_records('forum_digests', array('forum' => $forum->id));
-    $DB->delete_records('forum_subscriptions', array('forum'=>$forum->id));
-    $DB->delete_records('forum_discussion_subs', array('forum' => $forum->id));
+    $DB->delete_records('cybrary_digests', array('cybrary' => $cybrary->id));
+    $DB->delete_records('cybrary_subscriptions', array('cybrary'=>$cybrary->id));
+    $DB->delete_records('cybrary_discussion_subs', array('cybrary' => $cybrary->id));
 
-    if ($discussions = $DB->get_records('forum_discussions', array('forum'=>$forum->id))) {
+    if ($discussions = $DB->get_records('cybrary_discussions', array('cybrary'=>$cybrary->id))) {
         foreach ($discussions as $discussion) {
-            if (!forum_delete_discussion($discussion, true, $course, $cm, $forum)) {
+            if (!cybrary_delete_discussion($discussion, true, $course, $cm, $cybrary)) {
                 $result = false;
             }
         }
     }
 
-    forum_tp_delete_read_records(-1, -1, -1, $forum->id);
+    cybrary_tp_delete_read_records(-1, -1, -1, $cybrary->id);
 
-    if (!$DB->delete_records('forum', array('id'=>$forum->id))) {
+    if (!$DB->delete_records('cybrary', array('id'=>$cybrary->id))) {
         $result = false;
     }
 
-    forum_grade_item_delete($forum);
+    cybrary_grade_item_delete($cybrary);
 
     return $result;
 }
 
 
 /**
- * Indicates API features that the forum supports.
+ * Indicates API features that the cybrary supports.
  *
  * @uses FEATURE_GROUPS
  * @uses FEATURE_GROUPINGS
@@ -318,7 +318,7 @@ function forum_delete_instance($id) {
  * @param string $feature
  * @return mixed True if yes (some features may use other values)
  */
-function forum_supports($feature) {
+function cybrary_supports($feature) {
     switch($feature) {
         case FEATURE_GROUPS:                  return true;
         case FEATURE_GROUPINGS:               return true;
@@ -338,8 +338,8 @@ function forum_supports($feature) {
 
 
 /**
- * Obtains the automatic completion state for this forum based on any conditions
- * in forum settings.
+ * Obtains the automatic completion state for this cybrary based on any conditions
+ * in cybrary settings.
  *
  * @global object
  * @global object
@@ -350,37 +350,37 @@ function forum_supports($feature) {
  * @return bool True if completed, false if not. (If no conditions, then return
  *   value depends on comparison type)
  */
-function forum_get_completion_state($course,$cm,$userid,$type) {
+function cybrary_get_completion_state($course,$cm,$userid,$type) {
     global $CFG,$DB;
 
-    // Get forum details
-    if (!($forum=$DB->get_record('forum',array('id'=>$cm->instance)))) {
-        throw new Exception("Can't find forum {$cm->instance}");
+    // Get cybrary details
+    if (!($cybrary=$DB->get_record('cybrary',array('id'=>$cm->instance)))) {
+        throw new Exception("Can't find cybrary {$cm->instance}");
     }
 
     $result=$type; // Default return value
 
-    $postcountparams=array('userid'=>$userid,'forumid'=>$forum->id);
+    $postcountparams=array('userid'=>$userid,'cybraryid'=>$cybrary->id);
     $postcountsql="
 SELECT
     COUNT(1)
 FROM
-    {forum_posts} fp
-    INNER JOIN {forum_discussions} fd ON fp.discussion=fd.id
+    {cybrary_posts} fp
+    INNER JOIN {cybrary_discussions} fd ON fp.discussion=fd.id
 WHERE
-    fp.userid=:userid AND fd.forum=:forumid";
+    fp.userid=:userid AND fd.cybrary=:cybraryid";
 
-    if ($forum->completiondiscussions) {
-        $value = $forum->completiondiscussions <=
-                 $DB->count_records('forum_discussions',array('forum'=>$forum->id,'userid'=>$userid));
+    if ($cybrary->completiondiscussions) {
+        $value = $cybrary->completiondiscussions <=
+                 $DB->count_records('cybrary_discussions',array('cybrary'=>$cybrary->id,'userid'=>$userid));
         if ($type == COMPLETION_AND) {
             $result = $result && $value;
         } else {
             $result = $result || $value;
         }
     }
-    if ($forum->completionreplies) {
-        $value = $forum->completionreplies <=
+    if ($cybrary->completionreplies) {
+        $value = $cybrary->completionreplies <=
                  $DB->get_field_sql( $postcountsql.' AND fp.parent<>0',$postcountparams);
         if ($type==COMPLETION_AND) {
             $result = $result && $value;
@@ -388,8 +388,8 @@ WHERE
             $result = $result || $value;
         }
     }
-    if ($forum->completionposts) {
-        $value = $forum->completionposts <= $DB->get_field_sql($postcountsql,$postcountparams);
+    if ($cybrary->completionposts) {
+        $value = $cybrary->completionposts <= $DB->get_field_sql($postcountsql,$postcountparams);
         if ($type == COMPLETION_AND) {
             $result = $result && $value;
         } else {
@@ -401,16 +401,16 @@ WHERE
 }
 
 /**
- * Create a message-id string to use in the custom headers of forum notification emails
+ * Create a message-id string to use in the custom headers of cybrary notification emails
  *
  * message-id is used by email clients to identify emails and to nest conversations
  *
- * @param int $postid The ID of the forum post we are notifying the user about
+ * @param int $postid The ID of the cybrary post we are notifying the user about
  * @param int $usertoid The ID of the user being notified
  * @param string $hostname The server's hostname
  * @return string A unique message-id
  */
-function forum_get_email_message_id($postid, $usertoid, $hostname) {
+function cybrary_get_email_message_id($postid, $usertoid, $hostname) {
     return '<'.hash('sha256',$postid.'to'.$usertoid).'@'.$hostname.'>';
 }
 
@@ -420,7 +420,7 @@ function forum_get_email_message_id($postid, $usertoid, $hostname) {
  * @param stdClass $user
  * @return void, $user parameter is modified
  */
-function forum_cron_minimise_user_record(stdClass $user) {
+function cybrary_cron_minimise_user_record(stdClass $user) {
 
     // We store large amount of users in one huge array,
     // make sure we do not store info there we do not actually need
@@ -447,18 +447,18 @@ function forum_cron_minimise_user_record(stdClass $user) {
  *
  * @todo MDL-44734 The function will be split up into seperate tasks.
  */
-function forum_cron() {
+function cybrary_cron() {
     global $CFG, $USER, $DB, $PAGE;
 
     $site = get_site();
 
     // The main renderers.
-    $htmlout = $PAGE->get_renderer('mod_forum', 'email', 'htmlemail');
-    $textout = $PAGE->get_renderer('mod_forum', 'email', 'textemail');
-    $htmldigestfullout = $PAGE->get_renderer('mod_forum', 'emaildigestfull', 'htmlemail');
-    $textdigestfullout = $PAGE->get_renderer('mod_forum', 'emaildigestfull', 'textemail');
-    $htmldigestbasicout = $PAGE->get_renderer('mod_forum', 'emaildigestbasic', 'htmlemail');
-    $textdigestbasicout = $PAGE->get_renderer('mod_forum', 'emaildigestbasic', 'textemail');
+    $htmlout = $PAGE->get_renderer('mod_cybrary', 'email', 'htmlemail');
+    $textout = $PAGE->get_renderer('mod_cybrary', 'email', 'textemail');
+    $htmldigestfullout = $PAGE->get_renderer('mod_cybrary', 'emaildigestfull', 'htmlemail');
+    $textdigestfullout = $PAGE->get_renderer('mod_cybrary', 'emaildigestfull', 'textemail');
+    $htmldigestbasicout = $PAGE->get_renderer('mod_cybrary', 'emaildigestbasic', 'htmlemail');
+    $textdigestbasicout = $PAGE->get_renderer('mod_cybrary', 'emaildigestbasic', 'textemail');
 
     // All users that are subscribed to any post that needs sending,
     // please increase $CFG->extramemorylimit on large sites that
@@ -472,7 +472,7 @@ function forum_cron() {
 
     // caches
     $discussions        = array();
-    $forums             = array();
+    $cybraries             = array();
     $courses            = array();
     $coursemodules      = array();
     $subscribedusers    = array();
@@ -485,28 +485,28 @@ function forum_cron() {
     $endtime   = $timenow - $CFG->maxeditingtime;
     $starttime = $endtime - 48 * 3600;   // Two days earlier
 
-    // Get the list of forum subscriptions for per-user per-forum maildigest settings.
-    $digestsset = $DB->get_recordset('forum_digests', null, '', 'id, userid, forum, maildigest');
+    // Get the list of cybrary subscriptions for per-user per-cybrary maildigest settings.
+    $digestsset = $DB->get_recordset('cybrary_digests', null, '', 'id, userid, cybrary, maildigest');
     $digests = array();
     foreach ($digestsset as $thisrow) {
-        if (!isset($digests[$thisrow->forum])) {
-            $digests[$thisrow->forum] = array();
+        if (!isset($digests[$thisrow->cybrary])) {
+            $digests[$thisrow->cybrary] = array();
         }
-        $digests[$thisrow->forum][$thisrow->userid] = $thisrow->maildigest;
+        $digests[$thisrow->cybrary][$thisrow->userid] = $thisrow->maildigest;
     }
     $digestsset->close();
 
     // Create the generic messageinboundgenerator.
     $messageinboundgenerator = new \core\message\inbound\address_manager();
-    $messageinboundgenerator->set_handler('\mod_forum\message\inbound\reply_handler');
+    $messageinboundgenerator->set_handler('\mod_cybrary\message\inbound\reply_handler');
 
-    if ($posts = forum_get_unmailed_posts($starttime, $endtime, $timenow)) {
+    if ($posts = cybrary_get_unmailed_posts($starttime, $endtime, $timenow)) {
         // Mark them all now as being mailed.  It's unlikely but possible there
         // might be an error later so that a post is NOT actually mailed out,
         // but since mail isn't crucial, we can accept this risk.  Doing it now
         // prevents the risk of duplicated mails, which is a worse problem.
 
-        if (!forum_mark_old_posts_as_mailed($endtime)) {
+        if (!cybrary_mark_old_posts_as_mailed($endtime)) {
             mtrace('Errors occurred while trying to mark some posts as being mailed.');
             return false;  // Don't continue trying to mail them, in case we are in a cron loop
         }
@@ -516,10 +516,10 @@ function forum_cron() {
 
             $discussionid = $post->discussion;
             if (!isset($discussions[$discussionid])) {
-                if ($discussion = $DB->get_record('forum_discussions', array('id'=> $post->discussion))) {
+                if ($discussion = $DB->get_record('cybrary_discussions', array('id'=> $post->discussion))) {
                     $discussions[$discussionid] = $discussion;
-                    \mod_forum\subscriptions::fill_subscription_cache($discussion->forum);
-                    \mod_forum\subscriptions::fill_discussion_subscription_cache($discussion->forum);
+                    \mod_cybrary\subscriptions::fill_subscription_cache($discussion->cybrary);
+                    \mod_cybrary\subscriptions::fill_discussion_subscription_cache($discussion->cybrary);
 
                 } else {
                     mtrace('Could not find discussion ' . $discussionid);
@@ -527,17 +527,17 @@ function forum_cron() {
                     continue;
                 }
             }
-            $forumid = $discussions[$discussionid]->forum;
-            if (!isset($forums[$forumid])) {
-                if ($forum = $DB->get_record('forum', array('id' => $forumid))) {
-                    $forums[$forumid] = $forum;
+            $cybraryid = $discussions[$discussionid]->cybrary;
+            if (!isset($cybraries[$cybraryid])) {
+                if ($cybrary = $DB->get_record('cybrary', array('id' => $cybraryid))) {
+                    $cybraries[$cybraryid] = $cybrary;
                 } else {
-                    mtrace('Could not find forum '.$forumid);
+                    mtrace('Could not find cybrary '.$cybraryid);
                     unset($posts[$pid]);
                     continue;
                 }
             }
-            $courseid = $forums[$forumid]->course;
+            $courseid = $cybraries[$cybraryid]->course;
             if (!isset($courses[$courseid])) {
                 if ($course = $DB->get_record('course', array('id' => $courseid))) {
                     $courses[$courseid] = $course;
@@ -547,11 +547,11 @@ function forum_cron() {
                     continue;
                 }
             }
-            if (!isset($coursemodules[$forumid])) {
-                if ($cm = get_coursemodule_from_instance('forum', $forumid, $courseid)) {
-                    $coursemodules[$forumid] = $cm;
+            if (!isset($coursemodules[$cybraryid])) {
+                if ($cm = get_coursemodule_from_instance('cybrary', $cybraryid, $courseid)) {
+                    $coursemodules[$cybraryid] = $cm;
                 } else {
-                    mtrace('Could not find course module for forum '.$forumid);
+                    mtrace('Could not find course module for cybrary '.$cybraryid);
                     unset($posts[$pid]);
                     continue;
                 }
@@ -561,23 +561,23 @@ function forum_cron() {
             $messageinboundgenerator->set_data($pid);
             $messageinboundhandlers[$pid] = $messageinboundgenerator->fetch_data_key();
 
-            // Caching subscribed users of each forum.
-            if (!isset($subscribedusers[$forumid])) {
-                $modcontext = context_module::instance($coursemodules[$forumid]->id);
-                if ($subusers = \mod_forum\subscriptions::fetch_subscribed_users($forums[$forumid], 0, $modcontext, 'u.*', true)) {
+            // Caching subscribed users of each cybrary.
+            if (!isset($subscribedusers[$cybraryid])) {
+                $modcontext = context_module::instance($coursemodules[$cybraryid]->id);
+                if ($subusers = \mod_cybrary\subscriptions::fetch_subscribed_users($cybraries[$cybraryid], 0, $modcontext, 'u.*', true)) {
 
                     foreach ($subusers as $postuser) {
-                        // this user is subscribed to this forum
-                        $subscribedusers[$forumid][$postuser->id] = $postuser->id;
+                        // this user is subscribed to this cybrary
+                        $subscribedusers[$cybraryid][$postuser->id] = $postuser->id;
                         $userscount++;
-                        if ($userscount > FORUM_CRON_USER_CACHE) {
+                        if ($userscount > CYBRARY_CRON_USER_CACHE) {
                             // Store minimal user info.
                             $minuser = new stdClass();
                             $minuser->id = $postuser->id;
                             $users[$postuser->id] = $minuser;
                         } else {
                             // Cache full user record.
-                            forum_cron_minimise_user_record($postuser);
+                            cybrary_cron_minimise_user_record($postuser);
                             $users[$postuser->id] = $postuser;
                         }
                     }
@@ -607,7 +607,7 @@ function forum_cron() {
                 $userto = clone($userto);
             } else {
                 $userto = $DB->get_record('user', array('id' => $userto->id));
-                forum_cron_minimise_user_record($userto);
+                cybrary_cron_minimise_user_record($userto);
             }
             $userto->viewfullnames = array();
             $userto->canpost       = array();
@@ -617,42 +617,42 @@ function forum_cron() {
             cron_setup_user($userto);
 
             // Reset the caches.
-            foreach ($coursemodules as $forumid => $unused) {
-                $coursemodules[$forumid]->cache       = new stdClass();
-                $coursemodules[$forumid]->cache->caps = array();
-                unset($coursemodules[$forumid]->uservisible);
+            foreach ($coursemodules as $cybraryid => $unused) {
+                $coursemodules[$cybraryid]->cache       = new stdClass();
+                $coursemodules[$cybraryid]->cache->caps = array();
+                unset($coursemodules[$cybraryid]->uservisible);
             }
 
             foreach ($posts as $pid => $post) {
                 $discussion = $discussions[$post->discussion];
-                $forum      = $forums[$discussion->forum];
-                $course     = $courses[$forum->course];
-                $cm         =& $coursemodules[$forum->id];
+                $cybrary      = $cybraries[$discussion->cybrary];
+                $course     = $courses[$cybrary->course];
+                $cm         =& $coursemodules[$cybrary->id];
 
                 // Do some checks to see if we can bail out now.
 
                 // Only active enrolled users are in the list of subscribers.
-                // This does not necessarily mean that the user is subscribed to the forum or to the discussion though.
-                if (!isset($subscribedusers[$forum->id][$userto->id])) {
-                    // The user does not subscribe to this forum.
+                // This does not necessarily mean that the user is subscribed to the cybrary or to the discussion though.
+                if (!isset($subscribedusers[$cybrary->id][$userto->id])) {
+                    // The user does not subscribe to this cybrary.
                     continue;
                 }
 
-                if (!\mod_forum\subscriptions::is_subscribed($userto->id, $forum, $post->discussion, $coursemodules[$forum->id])) {
-                    // The user does not subscribe to this forum, or to this specific discussion.
+                if (!\mod_cybrary\subscriptions::is_subscribed($userto->id, $cybrary, $post->discussion, $coursemodules[$cybrary->id])) {
+                    // The user does not subscribe to this cybrary, or to this specific discussion.
                     continue;
                 }
 
-                if ($subscriptiontime = \mod_forum\subscriptions::fetch_discussion_subscription($forum->id, $userto->id)) {
+                if ($subscriptiontime = \mod_cybrary\subscriptions::fetch_discussion_subscription($cybrary->id, $userto->id)) {
                     // Skip posts if the user subscribed to the discussion after it was created.
                     if (isset($subscriptiontime[$post->discussion]) && ($subscriptiontime[$post->discussion] > $post->created)) {
                         continue;
                     }
                 }
 
-                // Don't send email if the forum is Q&A and the user has not posted.
+                // Don't send email if the cybrary is Q&A and the user has not posted.
                 // Initial topics are still mailed.
-                if ($forum->type == 'qanda' && !forum_get_user_posted_time($discussion->id, $userto->id) && $pid != $discussion->firstpost) {
+                if ($cybrary->type == 'qanda' && !cybrary_get_user_posted_time($discussion->id, $userto->id) && $pid != $discussion->firstpost) {
                     mtrace('Did not email ' . $userto->id.' because user has not posted in discussion');
                     continue;
                 }
@@ -664,13 +664,13 @@ function forum_cron() {
                     if (!isset($userfrom->idnumber)) {
                         // Minimalised user info, fetch full record.
                         $userfrom = $DB->get_record('user', array('id' => $userfrom->id));
-                        forum_cron_minimise_user_record($userfrom);
+                        cybrary_cron_minimise_user_record($userfrom);
                     }
 
                 } else if ($userfrom = $DB->get_record('user', array('id' => $post->userid))) {
-                    forum_cron_minimise_user_record($userfrom);
+                    cybrary_cron_minimise_user_record($userfrom);
                     // Fetch only once if possible, we can add it to user list, it will be skipped anyway.
-                    if ($userscount <= FORUM_CRON_USER_CACHE) {
+                    if ($userscount <= CYBRARY_CRON_USER_CACHE) {
                         $userscount++;
                         $users[$userfrom->id] = $userfrom;
                     }
@@ -685,24 +685,24 @@ function forum_cron() {
                 cron_setup_user($userto, $course);
 
                 // Fill caches.
-                if (!isset($userto->viewfullnames[$forum->id])) {
+                if (!isset($userto->viewfullnames[$cybrary->id])) {
                     $modcontext = context_module::instance($cm->id);
-                    $userto->viewfullnames[$forum->id] = has_capability('moodle/site:viewfullnames', $modcontext);
+                    $userto->viewfullnames[$cybrary->id] = has_capability('moodle/site:viewfullnames', $modcontext);
                 }
                 if (!isset($userto->canpost[$discussion->id])) {
                     $modcontext = context_module::instance($cm->id);
-                    $userto->canpost[$discussion->id] = forum_user_can_post($forum, $discussion, $userto, $cm, $course, $modcontext);
+                    $userto->canpost[$discussion->id] = cybrary_user_can_post($cybrary, $discussion, $userto, $cm, $course, $modcontext);
                 }
-                if (!isset($userfrom->groups[$forum->id])) {
+                if (!isset($userfrom->groups[$cybrary->id])) {
                     if (!isset($userfrom->groups)) {
                         $userfrom->groups = array();
                         if (isset($users[$userfrom->id])) {
                             $users[$userfrom->id]->groups = array();
                         }
                     }
-                    $userfrom->groups[$forum->id] = groups_get_all_groups($course->id, $userfrom->id, $cm->groupingid);
+                    $userfrom->groups[$cybrary->id] = groups_get_all_groups($course->id, $userfrom->id, $cm->groupingid);
                     if (isset($users[$userfrom->id])) {
-                        $users[$userfrom->id]->groups[$forum->id] = $userfrom->groups[$forum->id];
+                        $users[$userfrom->id]->groups[$cybrary->id] = $userfrom->groups[$cybrary->id];
                     }
                 }
 
@@ -721,7 +721,7 @@ function forum_cron() {
                 }
 
                 // Make sure we're allowed to see the post.
-                if (!forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
+                if (!cybrary_user_can_see_post($cybrary, $discussion, $post, null, $cm)) {
                     mtrace('User ' . $userto->id .' can not see ' . $post->id . '. Not sending message.');
                     continue;
                 }
@@ -729,7 +729,7 @@ function forum_cron() {
                 // OK so we need to send the email.
 
                 // Does the user want this post in a digest?  If so postpone it for now.
-                $maildigest = forum_get_user_maildigest_bulk($digests, $userto, $forum->id);
+                $maildigest = cybrary_get_user_maildigest_bulk($digests, $userto, $cybrary->id);
 
                 if ($maildigest > 0) {
                     // This user wants the mails to be in digest form.
@@ -738,19 +738,19 @@ function forum_cron() {
                     $queue->discussionid = $discussion->id;
                     $queue->postid       = $post->id;
                     $queue->timemodified = $post->created;
-                    $DB->insert_record('forum_queue', $queue);
+                    $DB->insert_record('cybrary_queue', $queue);
                     continue;
                 }
 
                 // Prepare to actually send the post now, and build up the content.
 
-                $cleanforumname = str_replace('"', "'", strip_tags(format_string($forum->name)));
+                $cleancybraryname = str_replace('"', "'", strip_tags(format_string($cybrary->name)));
 
                 $userfrom->customheaders = array (
                     // Headers to make emails easier to track.
-                    'List-Id: "'        . $cleanforumname . '" <moodleforum' . $forum->id . '@' . $hostname.'>',
-                    'List-Help: '       . $CFG->wwwroot . '/mod/forum/view.php?f=' . $forum->id,
-                    'Message-ID: '      . forum_get_email_message_id($post->id, $userto->id, $hostname),
+                    'List-Id: "'        . $cleancybraryname . '" <moodlecybrary' . $cybrary->id . '@' . $hostname.'>',
+                    'List-Help: '       . $CFG->wwwroot . '/mod/cybrary/view.php?f=' . $cybrary->id,
+                    'Message-ID: '      . cybrary_get_email_message_id($post->id, $userto->id, $hostname),
                     'X-Course-Id: '     . $course->id,
                     'X-Course-Name: '   . format_string($course->fullname, true),
 
@@ -770,15 +770,15 @@ function forum_cron() {
                 }
 
                 if (!isset($userto->canpost[$discussion->id])) {
-                    $canreply = forum_user_can_post($forum, $discussion, $userto, $cm, $course, $modcontext);
+                    $canreply = cybrary_user_can_post($cybrary, $discussion, $userto, $cm, $course, $modcontext);
                 } else {
                     $canreply = $userto->canpost[$discussion->id];
                 }
 
-                $data = new \mod_forum\output\forum_post_email(
+                $data = new \mod_cybrary\output\cybrary_post_email(
                         $course,
                         $cm,
-                        $forum,
+                        $cybrary,
                         $discussion,
                         $post,
                         $userfrom,
@@ -786,23 +786,23 @@ function forum_cron() {
                         $canreply
                     );
 
-                if (!isset($userto->viewfullnames[$forum->id])) {
+                if (!isset($userto->viewfullnames[$cybrary->id])) {
                     $data->viewfullnames = has_capability('moodle/site:viewfullnames', $modcontext, $userto->id);
                 } else {
-                    $data->viewfullnames = $userto->viewfullnames[$forum->id];
+                    $data->viewfullnames = $userto->viewfullnames[$cybrary->id];
                 }
 
                 $a = new stdClass();
                 $a->courseshortname = $data->get_coursename();
-                $a->forumname = $cleanforumname;
+                $a->cybraryname = $cleancybraryname;
                 $a->subject = $data->get_subject();
-                $postsubject = html_to_text(get_string('postmailsubject', 'forum', $a), 0);
+                $postsubject = html_to_text(get_string('postmailsubject', 'cybrary', $a), 0);
 
-                $rootid = forum_get_email_message_id($discussion->firstpost, $userto->id, $hostname);
+                $rootid = cybrary_get_email_message_id($discussion->firstpost, $userto->id, $hostname);
 
                 if ($post->parent) {
                     // This post is a reply, so add reply header (RFC 2822).
-                    $parentid = forum_get_email_message_id($post->parent, $userto->id, $hostname);
+                    $parentid = cybrary_get_email_message_id($post->parent, $userto->id, $hostname);
                     $userfrom->customheaders[] = "In-Reply-To: $parentid";
 
                     // If the post is deeply nested we also reference the parent message id and
@@ -818,7 +818,7 @@ function forum_cron() {
                 // MS Outlook / Office uses poorly documented and non standard headers, including
                 // Thread-Topic which overrides the Subject and shouldn't contain Re: or Fwd: etc.
                 $a->subject = $discussion->name;
-                $threadtopic = html_to_text(get_string('postmailsubject', 'forum', $a), 0);
+                $threadtopic = html_to_text(get_string('postmailsubject', 'cybrary', $a), 0);
                 $userfrom->customheaders[] = "Thread-Topic: $threadtopic";
                 $userfrom->customheaders[] = "Thread-Index: " . substr($rootid, 1, 28);
 
@@ -826,7 +826,7 @@ function forum_cron() {
                 mtrace('Sending ', '');
 
                 $eventdata = new \core\message\message();
-                $eventdata->component           = 'mod_forum';
+                $eventdata->component           = 'mod_cybrary';
                 $eventdata->name                = 'posts';
                 $eventdata->userfrom            = $userfrom;
                 $eventdata->userto              = $userto;
@@ -838,40 +838,40 @@ function forum_cron() {
                 $eventdata->replyto             = $replyaddress;
                 if (!empty($replyaddress)) {
                     // Add extra text to email messages if they can reply back.
-                    $textfooter = "\n\n" . get_string('replytopostbyemail', 'mod_forum');
-                    $htmlfooter = html_writer::tag('p', get_string('replytopostbyemail', 'mod_forum'));
+                    $textfooter = "\n\n" . get_string('replytopostbyemail', 'mod_cybrary');
+                    $htmlfooter = html_writer::tag('p', get_string('replytopostbyemail', 'mod_cybrary'));
                     $additionalcontent = array('fullmessage' => array('footer' => $textfooter),
                                      'fullmessagehtml' => array('footer' => $htmlfooter));
                     $eventdata->set_additional_content('email', $additionalcontent);
                 }
 
-                // If forum_replytouser is not set then send mail using the noreplyaddress.
-                if (empty($CFG->forum_replytouser)) {
+                // If cybrary_replytouser is not set then send mail using the noreplyaddress.
+                if (empty($CFG->cybrary_replytouser)) {
                     $eventdata->userfrom = core_user::get_noreply_user();
                 }
 
                 $smallmessagestrings = new stdClass();
                 $smallmessagestrings->user          = fullname($userfrom);
-                $smallmessagestrings->forumname     = "$shortname: " . format_string($forum->name, true) . ": " . $discussion->name;
+                $smallmessagestrings->cybraryname     = "$shortname: " . format_string($cybrary->name, true) . ": " . $discussion->name;
                 $smallmessagestrings->message       = $post->message;
 
                 // Make sure strings are in message recipients language.
-                $eventdata->smallmessage = get_string_manager()->get_string('smallmessage', 'forum', $smallmessagestrings, $userto->lang);
+                $eventdata->smallmessage = get_string_manager()->get_string('smallmessage', 'cybrary', $smallmessagestrings, $userto->lang);
 
-                $contexturl = new moodle_url('/mod/forum/discuss.php', array('d' => $discussion->id), 'p' . $post->id);
+                $contexturl = new moodle_url('/mod/cybrary/discuss.php', array('d' => $discussion->id), 'p' . $post->id);
                 $eventdata->contexturl = $contexturl->out();
                 $eventdata->contexturlname = $discussion->name;
 
                 $mailresult = message_send($eventdata);
                 if (!$mailresult) {
-                    mtrace("Error: mod/forum/lib.php forum_cron(): Could not send out mail for id $post->id to user $userto->id".
+                    mtrace("Error: mod/cybrary/lib.php cybrary_cron(): Could not send out mail for id $post->id to user $userto->id".
                             " ($userto->email) .. not trying again.");
                     $errorcount[$post->id]++;
                 } else {
                     $mailcount[$post->id]++;
 
-                    // Mark post as read if forum_usermarksread is set off.
-                    if (!$CFG->forum_usermarksread) {
+                    // Mark post as read if cybrary_usermarksread is set off.
+                    if (!$CFG->cybrary_usermarksread) {
                         $userto->markposts[$post->id] = $post->id;
                     }
                 }
@@ -880,7 +880,7 @@ function forum_cron() {
             }
 
             // Mark processed posts as read.
-            forum_tp_mark_posts_read($userto, $userto->markposts);
+            cybrary_tp_mark_posts_read($userto, $userto->markposts);
             unset($userto);
         }
     }
@@ -889,7 +889,7 @@ function forum_cron() {
         foreach ($posts as $post) {
             mtrace($mailcount[$post->id]." users were sent post $post->id, '$post->subject'");
             if ($errorcount[$post->id]) {
-                $DB->set_field('forum_posts', 'mailed', FORUM_MAILED_ERROR, array('id' => $post->id));
+                $DB->set_field('cybrary_posts', 'mailed', CYBRARY_MAILED_ERROR, array('id' => $post->id));
             }
         }
     }
@@ -918,14 +918,14 @@ function forum_cron() {
 
     // Delete any really old ones (normally there shouldn't be any)
     $weekago = $timenow - (7 * 24 * 3600);
-    $DB->delete_records_select('forum_queue', "timemodified < ?", array($weekago));
+    $DB->delete_records_select('cybrary_queue', "timemodified < ?", array($weekago));
     mtrace ('Cleaned old digest records');
 
     if ($CFG->digestmailtimelast < $digesttime and $timenow > $digesttime) {
 
-        mtrace('Sending forum digests: '.userdate($timenow, '', $sitetimezone));
+        mtrace('Sending cybrary digests: '.userdate($timenow, '', $sitetimezone));
 
-        $digestposts_rs = $DB->get_recordset_select('forum_queue', "timemodified < ?", array($digesttime));
+        $digestposts_rs = $DB->get_recordset_select('cybrary_queue', "timemodified < ?", array($digesttime));
 
         if ($digestposts_rs->valid()) {
 
@@ -938,7 +938,7 @@ function forum_cron() {
 
             foreach ($digestposts_rs as $digestpost) {
                 if (!isset($posts[$digestpost->postid])) {
-                    if ($post = $DB->get_record('forum_posts', array('id' => $digestpost->postid))) {
+                    if ($post = $DB->get_record('cybrary_posts', array('id' => $digestpost->postid))) {
                         $posts[$digestpost->postid] = $post;
                     } else {
                         continue;
@@ -946,22 +946,22 @@ function forum_cron() {
                 }
                 $discussionid = $digestpost->discussionid;
                 if (!isset($discussions[$discussionid])) {
-                    if ($discussion = $DB->get_record('forum_discussions', array('id' => $discussionid))) {
+                    if ($discussion = $DB->get_record('cybrary_discussions', array('id' => $discussionid))) {
                         $discussions[$discussionid] = $discussion;
                     } else {
                         continue;
                     }
                 }
-                $forumid = $discussions[$discussionid]->forum;
-                if (!isset($forums[$forumid])) {
-                    if ($forum = $DB->get_record('forum', array('id' => $forumid))) {
-                        $forums[$forumid] = $forum;
+                $cybraryid = $discussions[$discussionid]->cybrary;
+                if (!isset($cybraries[$cybraryid])) {
+                    if ($cybrary = $DB->get_record('cybrary', array('id' => $cybraryid))) {
+                        $cybraries[$cybraryid] = $cybrary;
                     } else {
                         continue;
                     }
                 }
 
-                $courseid = $forums[$forumid]->course;
+                $courseid = $cybraries[$cybraryid]->course;
                 if (!isset($courses[$courseid])) {
                     if ($course = $DB->get_record('course', array('id' => $courseid))) {
                         $courses[$courseid] = $course;
@@ -970,9 +970,9 @@ function forum_cron() {
                     }
                 }
 
-                if (!isset($coursemodules[$forumid])) {
-                    if ($cm = get_coursemodule_from_instance('forum', $forumid, $courseid)) {
-                        $coursemodules[$forumid] = $cm;
+                if (!isset($coursemodules[$cybraryid])) {
+                    if ($cm = get_coursemodule_from_instance('cybrary', $cybraryid, $courseid)) {
+                        $coursemodules[$cybraryid] = $cm;
                     } else {
                         continue;
                     }
@@ -989,10 +989,10 @@ function forum_cron() {
 
                 cron_setup_user();
 
-                mtrace(get_string('processingdigest', 'forum', $userid), '... ');
+                mtrace(get_string('processingdigest', 'cybrary', $userid), '... ');
 
                 // First of all delete all the queue entries for this user
-                $DB->delete_records_select('forum_queue', "userid = ? AND timemodified < ?", array($userid, $digesttime));
+                $DB->delete_records_select('cybrary_queue', "userid = ? AND timemodified < ?", array($userid, $digesttime));
 
                 // Init user caches - we keep the cache for one cycle only,
                 // otherwise it would unnecessarily consume memory.
@@ -1000,7 +1000,7 @@ function forum_cron() {
                     $userto = clone($users[$userid]);
                 } else {
                     $userto = $DB->get_record('user', array('id' => $userid));
-                    forum_cron_minimise_user_record($userto);
+                    cybrary_cron_minimise_user_record($userto);
                 }
                 $userto->viewfullnames = array();
                 $userto->canpost       = array();
@@ -1010,14 +1010,14 @@ function forum_cron() {
                 // mail is customised for the receiver.
                 cron_setup_user($userto);
 
-                $postsubject = get_string('digestmailsubject', 'forum', format_string($site->shortname, true));
+                $postsubject = get_string('digestmailsubject', 'cybrary', format_string($site->shortname, true));
 
                 $headerdata = new stdClass();
                 $headerdata->sitename = format_string($site->fullname, true);
                 $headerdata->userprefs = $CFG->wwwroot.'/user/edit.php?id='.$userid.'&amp;course='.$site->id;
 
-                $posttext = get_string('digestmailheader', 'forum', $headerdata)."\n\n";
-                $headerdata->userprefs = '<a target="_blank" href="'.$headerdata->userprefs.'">'.get_string('digestmailprefs', 'forum').'</a>';
+                $posttext = get_string('digestmailheader', 'cybrary', $headerdata)."\n\n";
+                $headerdata->userprefs = '<a target="_blank" href="'.$headerdata->userprefs.'">'.get_string('digestmailprefs', 'cybrary').'</a>';
 
                 $posthtml = "<head>";
 /*                foreach ($CFG->stylesheets as $stylesheet) {
@@ -1025,54 +1025,54 @@ function forum_cron() {
                     $posthtml .= '<link rel="stylesheet" type="text/css" href="'.$stylesheet.'" />'."\n";
                 }*/
                 $posthtml .= "</head>\n<body id=\"email\">\n";
-                $posthtml .= '<p>'.get_string('digestmailheader', 'forum', $headerdata).'</p><br /><hr size="1" noshade="noshade" />';
+                $posthtml .= '<p>'.get_string('digestmailheader', 'cybrary', $headerdata).'</p><br /><hr size="1" noshade="noshade" />';
 
                 foreach ($thesediscussions as $discussionid) {
 
                     core_php_time_limit::raise(120);   // to be reset for each post
 
                     $discussion = $discussions[$discussionid];
-                    $forum      = $forums[$discussion->forum];
-                    $course     = $courses[$forum->course];
-                    $cm         = $coursemodules[$forum->id];
+                    $cybrary      = $cybraries[$discussion->cybrary];
+                    $course     = $courses[$cybrary->course];
+                    $cm         = $coursemodules[$cybrary->id];
 
                     //override language
                     cron_setup_user($userto, $course);
 
                     // Fill caches
-                    if (!isset($userto->viewfullnames[$forum->id])) {
+                    if (!isset($userto->viewfullnames[$cybrary->id])) {
                         $modcontext = context_module::instance($cm->id);
-                        $userto->viewfullnames[$forum->id] = has_capability('moodle/site:viewfullnames', $modcontext);
+                        $userto->viewfullnames[$cybrary->id] = has_capability('moodle/site:viewfullnames', $modcontext);
                     }
                     if (!isset($userto->canpost[$discussion->id])) {
                         $modcontext = context_module::instance($cm->id);
-                        $userto->canpost[$discussion->id] = forum_user_can_post($forum, $discussion, $userto, $cm, $course, $modcontext);
+                        $userto->canpost[$discussion->id] = cybrary_user_can_post($cybrary, $discussion, $userto, $cm, $course, $modcontext);
                     }
 
-                    $strforums      = get_string('forums', 'forum');
-                    $canunsubscribe = ! \mod_forum\subscriptions::is_forcesubscribed($forum);
+                    $strcybraries      = get_string('cybraries', 'cybrary');
+                    $canunsubscribe = ! \mod_cybrary\subscriptions::is_forcesubscribed($cybrary);
                     $canreply       = $userto->canpost[$discussion->id];
                     $shortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
 
                     $posttext .= "\n \n";
                     $posttext .= '=====================================================================';
                     $posttext .= "\n \n";
-                    $posttext .= "$shortname -> $strforums -> ".format_string($forum->name,true);
-                    if ($discussion->name != $forum->name) {
+                    $posttext .= "$shortname -> $strcybraries -> ".format_string($cybrary->name,true);
+                    if ($discussion->name != $cybrary->name) {
                         $posttext  .= " -> ".format_string($discussion->name,true);
                     }
                     $posttext .= "\n";
-                    $posttext .= $CFG->wwwroot.'/mod/forum/discuss.php?d='.$discussion->id;
+                    $posttext .= $CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$discussion->id;
                     $posttext .= "\n";
 
                     $posthtml .= "<p><font face=\"sans-serif\">".
                     "<a target=\"_blank\" href=\"$CFG->wwwroot/course/view.php?id=$course->id\">$shortname</a> -> ".
-                    "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/forum/index.php?id=$course->id\">$strforums</a> -> ".
-                    "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/forum/view.php?f=$forum->id\">".format_string($forum->name,true)."</a>";
-                    if ($discussion->name == $forum->name) {
+                    "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/cybrary/index.php?id=$course->id\">$strcybraries</a> -> ".
+                    "<a target=\"_blank\" href=\"$CFG->wwwroot/mod/cybrary/view.php?f=$cybrary->id\">".format_string($cybrary->name,true)."</a>";
+                    if ($discussion->name == $cybrary->name) {
                         $posthtml .= "</font></p>";
                     } else {
-                        $posthtml .= " -> <a target=\"_blank\" href=\"$CFG->wwwroot/mod/forum/discuss.php?d=$discussion->id\">".format_string($discussion->name,true)."</a></font></p>";
+                        $posthtml .= " -> <a target=\"_blank\" href=\"$CFG->wwwroot/mod/cybrary/discuss.php?d=$discussion->id\">".format_string($discussion->name,true)."</a></font></p>";
                     }
                     $posthtml .= '<p>';
 
@@ -1086,12 +1086,12 @@ function forum_cron() {
                             $userfrom = $users[$post->userid];
                             if (!isset($userfrom->idnumber)) {
                                 $userfrom = $DB->get_record('user', array('id' => $userfrom->id));
-                                forum_cron_minimise_user_record($userfrom);
+                                cybrary_cron_minimise_user_record($userfrom);
                             }
 
                         } else if ($userfrom = $DB->get_record('user', array('id' => $post->userid))) {
-                            forum_cron_minimise_user_record($userfrom);
-                            if ($userscount <= FORUM_CRON_USER_CACHE) {
+                            cybrary_cron_minimise_user_record($userfrom);
+                            if ($userscount <= CYBRARY_CRON_USER_CACHE) {
                                 $userscount++;
                                 $users[$userfrom->id] = $userfrom;
                             }
@@ -1101,16 +1101,16 @@ function forum_cron() {
                             continue;
                         }
 
-                        if (!isset($userfrom->groups[$forum->id])) {
+                        if (!isset($userfrom->groups[$cybrary->id])) {
                             if (!isset($userfrom->groups)) {
                                 $userfrom->groups = array();
                                 if (isset($users[$userfrom->id])) {
                                     $users[$userfrom->id]->groups = array();
                                 }
                             }
-                            $userfrom->groups[$forum->id] = groups_get_all_groups($course->id, $userfrom->id, $cm->groupingid);
+                            $userfrom->groups[$cybrary->id] = groups_get_all_groups($course->id, $userfrom->id, $cm->groupingid);
                             if (isset($users[$userfrom->id])) {
-                                $users[$userfrom->id]->groups[$forum->id] = $userfrom->groups[$forum->id];
+                                $users[$userfrom->id]->groups[$cybrary->id] = $userfrom->groups[$cybrary->id];
                             }
                         }
 
@@ -1121,17 +1121,17 @@ function forum_cron() {
                                 'Auto-Submitted: auto-generated',
                             );
 
-                        $maildigest = forum_get_user_maildigest_bulk($digests, $userto, $forum->id);
+                        $maildigest = cybrary_get_user_maildigest_bulk($digests, $userto, $cybrary->id);
                         if (!isset($userto->canpost[$discussion->id])) {
-                            $canreply = forum_user_can_post($forum, $discussion, $userto, $cm, $course, $modcontext);
+                            $canreply = cybrary_user_can_post($cybrary, $discussion, $userto, $cm, $course, $modcontext);
                         } else {
                             $canreply = $userto->canpost[$discussion->id];
                         }
 
-                        $data = new \mod_forum\output\forum_post_email(
+                        $data = new \mod_cybrary\output\cybrary_post_email(
                                 $course,
                                 $cm,
-                                $forum,
+                                $cybrary,
                                 $discussion,
                                 $post,
                                 $userfrom,
@@ -1139,10 +1139,10 @@ function forum_cron() {
                                 $canreply
                             );
 
-                        if (!isset($userto->viewfullnames[$forum->id])) {
+                        if (!isset($userto->viewfullnames[$cybrary->id])) {
                             $data->viewfullnames = has_capability('moodle/site:viewfullnames', $modcontext, $userto->id);
                         } else {
-                            $data->viewfullnames = $userto->viewfullnames[$forum->id];
+                            $data->viewfullnames = $userto->viewfullnames[$cybrary->id];
                         }
 
                         if ($maildigest == 2) {
@@ -1155,18 +1155,18 @@ function forum_cron() {
                             $posthtml .= $htmldigestfullout->render($data);
 
                             // Create an array of postid's for this user to mark as read.
-                            if (!$CFG->forum_usermarksread) {
+                            if (!$CFG->cybrary_usermarksread) {
                                 $userto->markposts[$post->id] = $post->id;
                             }
                         }
                     }
                     $footerlinks = array();
                     if ($canunsubscribe) {
-                        $footerlinks[] = "<a href=\"$CFG->wwwroot/mod/forum/subscribe.php?id=$forum->id\">" . get_string("unsubscribe", "forum") . "</a>";
+                        $footerlinks[] = "<a href=\"$CFG->wwwroot/mod/cybrary/subscribe.php?id=$cybrary->id\">" . get_string("unsubscribe", "cybrary") . "</a>";
                     } else {
-                        $footerlinks[] = get_string("everyoneissubscribed", "forum");
+                        $footerlinks[] = get_string("everyoneissubscribed", "cybrary");
                     }
-                    $footerlinks[] = "<a href='{$CFG->wwwroot}/mod/forum/index.php?id={$forum->course}'>" . get_string("digestmailpost", "forum") . '</a>';
+                    $footerlinks[] = "<a href='{$CFG->wwwroot}/mod/cybrary/index.php?id={$cybrary->course}'>" . get_string("digestmailpost", "cybrary") . '</a>';
                     $posthtml .= "\n<div class='mdl-right'><font size=\"1\">" . implode('&nbsp;', $footerlinks) . '</font></div>';
                     $posthtml .= '<hr size="1" noshade="noshade" /></p>';
                 }
@@ -1178,19 +1178,19 @@ function forum_cron() {
                 }
 
                 $attachment = $attachname='';
-                // Directly email forum digests rather than sending them via messaging, use the
+                // Directly email cybrary digests rather than sending them via messaging, use the
                 // site shortname as 'from name', the noreply address will be used by email_to_user.
                 $mailresult = email_to_user($userto, $site->shortname, $postsubject, $posttext, $posthtml, $attachment, $attachname);
 
                 if (!$mailresult) {
-                    mtrace("ERROR: mod/forum/cron.php: Could not send out digest mail to user $userto->id ".
+                    mtrace("ERROR: mod/cybrary/cron.php: Could not send out digest mail to user $userto->id ".
                         "($userto->email)... not trying again.");
                 } else {
                     mtrace("success.");
                     $usermailcount++;
 
-                    // Mark post as read if forum_usermarksread is set off
-                    forum_tp_mark_posts_read($userto, $userto->markposts);
+                    // Mark post as read if cybrary_usermarksread is set off
+                    cybrary_tp_mark_posts_read($userto, $userto->markposts);
                 }
             }
         }
@@ -1201,18 +1201,18 @@ function forum_cron() {
     cron_setup_user();
 
     if (!empty($usermailcount)) {
-        mtrace(get_string('digestsentusers', 'forum', $usermailcount));
+        mtrace(get_string('digestsentusers', 'cybrary', $usermailcount));
     }
 
-    if (!empty($CFG->forum_lastreadclean)) {
+    if (!empty($CFG->cybrary_lastreadclean)) {
         $timenow = time();
-        if ($CFG->forum_lastreadclean + (24*3600) < $timenow) {
-            set_config('forum_lastreadclean', $timenow);
-            mtrace('Removing old forum read tracking info...');
-            forum_tp_clean_read_records();
+        if ($CFG->cybrary_lastreadclean + (24*3600) < $timenow) {
+            set_config('cybrary_lastreadclean', $timenow);
+            mtrace('Removing old cybrary read tracking info...');
+            cybrary_tp_clean_read_records();
         }
     } else {
-        set_config('forum_lastreadclean', time());
+        set_config('cybrary_lastreadclean', time());
     }
 
     return true;
@@ -1223,24 +1223,24 @@ function forum_cron() {
  * @param object $course
  * @param object $user
  * @param object $mod TODO this is not used in this function, refactor
- * @param object $forum
+ * @param object $cybrary
  * @return object A standard object with 2 variables: info (number of posts for this user) and time (last modified)
  */
-function forum_user_outline($course, $user, $mod, $forum) {
+function cybrary_user_outline($course, $user, $mod, $cybrary) {
     global $CFG;
     require_once("$CFG->libdir/gradelib.php");
-    $grades = grade_get_grades($course->id, 'mod', 'forum', $forum->id, $user->id);
+    $grades = grade_get_grades($course->id, 'mod', 'cybrary', $cybrary->id, $user->id);
     if (empty($grades->items[0]->grades)) {
         $grade = false;
     } else {
         $grade = reset($grades->items[0]->grades);
     }
 
-    $count = forum_count_user_posts($forum->id, $user->id);
+    $count = cybrary_count_user_posts($cybrary->id, $user->id);
 
     if ($count && $count->postcount > 0) {
         $result = new stdClass();
-        $result->info = get_string("numposts", "forum", $count->postcount);
+        $result->info = get_string("numposts", "cybrary", $count->postcount);
         $result->time = $count->lastpost;
         if ($grade) {
             $result->info .= ', ' . get_string('grade') . ': ' . $grade->str_long_grade;
@@ -1271,13 +1271,13 @@ function forum_user_outline($course, $user, $mod, $forum) {
  * @param object $coure
  * @param object $user
  * @param object $mod
- * @param object $forum
+ * @param object $cybrary
  */
-function forum_user_complete($course, $user, $mod, $forum) {
+function cybrary_user_complete($course, $user, $mod, $cybrary) {
     global $CFG,$USER, $OUTPUT;
     require_once("$CFG->libdir/gradelib.php");
 
-    $grades = grade_get_grades($course->id, 'mod', 'forum', $forum->id, $user->id);
+    $grades = grade_get_grades($course->id, 'mod', 'cybrary', $cybrary->id, $user->id);
     if (!empty($grades->items[0]->grades)) {
         $grade = reset($grades->items[0]->grades);
         echo $OUTPUT->container(get_string('grade').': '.$grade->str_long_grade);
@@ -1286,12 +1286,12 @@ function forum_user_complete($course, $user, $mod, $forum) {
         }
     }
 
-    if ($posts = forum_get_user_posts($forum->id, $user->id)) {
+    if ($posts = cybrary_get_user_posts($cybrary->id, $user->id)) {
 
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) {
+        if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id)) {
             print_error('invalidcoursemodule');
         }
-        $discussions = forum_get_user_involved_discussions($forum->id, $user->id);
+        $discussions = cybrary_get_user_involved_discussions($cybrary->id, $user->id);
 
         foreach ($posts as $post) {
             if (!isset($discussions[$post->discussion])) {
@@ -1299,48 +1299,48 @@ function forum_user_complete($course, $user, $mod, $forum) {
             }
             $discussion = $discussions[$post->discussion];
 
-            forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+            cybrary_print_post($post, $discussion, $cybrary, $cm, $course, false, false, false);
         }
     } else {
-        echo "<p>".get_string("noposts", "forum")."</p>";
+        echo "<p>".get_string("noposts", "cybrary")."</p>";
     }
 }
 
 /**
- * Filters the forum discussions according to groups membership and config.
+ * Filters the cybrary discussions according to groups membership and config.
  *
  * @since  Moodle 2.8, 2.7.1, 2.6.4
  * @param  array $discussions Discussions with new posts array
- * @return array Forums with the number of new posts
+ * @return array Cybraries with the number of new posts
  */
-function forum_filter_user_groups_discussions($discussions) {
+function cybrary_filter_user_groups_discussions($discussions) {
 
-    // Group the remaining discussions posts by their forumid.
-    $filteredforums = array();
+    // Group the remaining discussions posts by their cybraryid.
+    $filteredcybraries = array();
 
     // Discard not visible groups.
     foreach ($discussions as $discussion) {
 
         // Course data is already cached.
         $instances = get_fast_modinfo($discussion->course)->get_instances();
-        $forum = $instances['forum'][$discussion->forum];
+        $cybrary = $instances['cybrary'][$discussion->cybrary];
 
         // Continue if the user should not see this discussion.
-        if (!forum_is_user_group_discussion($forum, $discussion->groupid)) {
+        if (!cybrary_is_user_group_discussion($cybrary, $discussion->groupid)) {
             continue;
         }
 
-        // Grouping results by forum.
-        if (empty($filteredforums[$forum->instance])) {
-            $filteredforums[$forum->instance] = new stdClass();
-            $filteredforums[$forum->instance]->id = $forum->id;
-            $filteredforums[$forum->instance]->count = 0;
+        // Grouping results by cybrary.
+        if (empty($filteredcybraries[$cybrary->instance])) {
+            $filteredcybraries[$cybrary->instance] = new stdClass();
+            $filteredcybraries[$cybrary->instance]->id = $cybrary->id;
+            $filteredcybraries[$cybrary->instance]->count = 0;
         }
-        $filteredforums[$forum->instance]->count += $discussion->count;
+        $filteredcybraries[$cybrary->instance]->count += $discussion->count;
 
     }
 
-    return $filteredforums;
+    return $filteredcybraries;
 }
 
 /**
@@ -1351,7 +1351,7 @@ function forum_filter_user_groups_discussions($discussions) {
  * @param int $discussiongroupid The discussion groupid
  * @return bool
  */
-function forum_is_user_group_discussion(cm_info $cm, $discussiongroupid) {
+function cybrary_is_user_group_discussion(cm_info $cm, $discussiongroupid) {
 
     if ($discussiongroupid == -1 || $cm->effectivegroupmode != SEPARATEGROUPS) {
         return true;
@@ -1376,14 +1376,14 @@ function forum_is_user_group_discussion(cm_info $cm, $discussiongroupid) {
  * @param array $courses
  * @param array $htmlarray
  */
-function forum_print_overview($courses,&$htmlarray) {
+function cybrary_print_overview($courses,&$htmlarray) {
     global $USER, $CFG, $DB, $SESSION;
 
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
         return array();
     }
 
-    if (!$forums = get_all_instances_in_courses('forum',$courses)) {
+    if (!$cybraries = get_all_instances_in_courses('cybrary',$courses)) {
         return;
     }
 
@@ -1407,14 +1407,14 @@ function forum_print_overview($courses,&$htmlarray) {
     $params[] = $USER->id;
     $coursessql = implode(' OR ', $coursessqls);
 
-    $sql = "SELECT d.id, d.forum, d.course, d.groupid, COUNT(*) as count "
-                .'FROM {forum_discussions} d '
-                .'JOIN {forum_posts} p ON p.discussion = d.id '
+    $sql = "SELECT d.id, d.cybrary, d.course, d.groupid, COUNT(*) as count "
+                .'FROM {cybrary_discussions} d '
+                .'JOIN {cybrary_posts} p ON p.discussion = d.id '
                 ."WHERE ($coursessql) "
                 .'AND p.userid != ? '
                 .'AND (d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?)) '
-                .'GROUP BY d.id, d.forum, d.course, d.groupid '
-                .'ORDER BY d.course, d.forum';
+                .'GROUP BY d.id, d.cybrary, d.course, d.groupid '
+                .'ORDER BY d.course, d.cybrary';
     $params[] = time();
     $params[] = time();
 
@@ -1423,26 +1423,26 @@ function forum_print_overview($courses,&$htmlarray) {
         $discussions = array();
     }
 
-    $forumsnewposts = forum_filter_user_groups_discussions($discussions);
+    $cybrariesnewposts = cybrary_filter_user_groups_discussions($discussions);
 
-    // also get all forum tracking stuff ONCE.
-    $trackingforums = array();
-    foreach ($forums as $forum) {
-        if (forum_tp_can_track_forums($forum)) {
-            $trackingforums[$forum->id] = $forum;
+    // also get all cybrary tracking stuff ONCE.
+    $trackingcybraries = array();
+    foreach ($cybraries as $cybrary) {
+        if (cybrary_tp_can_track_cybraries($cybrary)) {
+            $trackingcybraries[$cybrary->id] = $cybrary;
         }
     }
 
-    if (count($trackingforums) > 0) {
-        $cutoffdate = isset($CFG->forum_oldpostdays) ? (time() - ($CFG->forum_oldpostdays*24*60*60)) : 0;
-        $sql = 'SELECT d.forum,d.course,COUNT(p.id) AS count '.
-            ' FROM {forum_posts} p '.
-            ' JOIN {forum_discussions} d ON p.discussion = d.id '.
-            ' LEFT JOIN {forum_read} r ON r.postid = p.id AND r.userid = ? WHERE (';
+    if (count($trackingcybraries) > 0) {
+        $cutoffdate = isset($CFG->cybrary_oldpostdays) ? (time() - ($CFG->cybrary_oldpostdays*24*60*60)) : 0;
+        $sql = 'SELECT d.cybrary,d.course,COUNT(p.id) AS count '.
+            ' FROM {cybrary_posts} p '.
+            ' JOIN {cybrary_discussions} d ON p.discussion = d.id '.
+            ' LEFT JOIN {cybrary_read} r ON r.postid = p.id AND r.userid = ? WHERE (';
         $params = array($USER->id);
 
-        foreach ($trackingforums as $track) {
-            $sql .= '(d.forum = ? AND (d.groupid = -1 OR d.groupid = 0 OR d.groupid = ?)) OR ';
+        foreach ($trackingcybraries as $track) {
+            $sql .= '(d.cybrary = ? AND (d.groupid = -1 OR d.groupid = 0 OR d.groupid = ?)) OR ';
             $params[] = $track->id;
             if (isset($SESSION->currentgroup[$track->course])) {
                 $groupid =  $SESSION->currentgroup[$track->course];
@@ -1463,7 +1463,7 @@ function forum_print_overview($courses,&$htmlarray) {
         $sql = substr($sql,0,-3); // take off the last OR
         $sql .= ') AND p.modified >= ? AND r.id is NULL ';
         $sql .= 'AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?)) ';
-        $sql .= 'GROUP BY d.forum,d.course';
+        $sql .= 'GROUP BY d.cybrary,d.course';
         $params[] = $cutoffdate;
         $params[] = time();
         $params[] = time();
@@ -1475,43 +1475,43 @@ function forum_print_overview($courses,&$htmlarray) {
         $unread = array();
     }
 
-    if (empty($unread) and empty($forumsnewposts)) {
+    if (empty($unread) and empty($cybrariesnewposts)) {
         return;
     }
 
-    $strforum = get_string('modulename','forum');
+    $strcybrary = get_string('modulename','cybrary');
 
-    foreach ($forums as $forum) {
+    foreach ($cybraries as $cybrary) {
         $str = '';
         $count = 0;
         $thisunread = 0;
         $showunread = false;
         // either we have something from logs, or trackposts, or nothing.
-        if (array_key_exists($forum->id, $forumsnewposts) && !empty($forumsnewposts[$forum->id])) {
-            $count = $forumsnewposts[$forum->id]->count;
+        if (array_key_exists($cybrary->id, $cybrariesnewposts) && !empty($cybrariesnewposts[$cybrary->id])) {
+            $count = $cybrariesnewposts[$cybrary->id]->count;
         }
-        if (array_key_exists($forum->id,$unread)) {
-            $thisunread = $unread[$forum->id]->count;
+        if (array_key_exists($cybrary->id,$unread)) {
+            $thisunread = $unread[$cybrary->id]->count;
             $showunread = true;
         }
         if ($count > 0 || $thisunread > 0) {
-            $str .= '<div class="overview forum"><div class="name">'.$strforum.': <a title="'.$strforum.'" href="'.$CFG->wwwroot.'/mod/forum/view.php?f='.$forum->id.'">'.
-                $forum->name.'</a></div>';
+            $str .= '<div class="overview cybrary"><div class="name">'.$strcybrary.': <a title="'.$strcybrary.'" href="'.$CFG->wwwroot.'/mod/cybrary/view.php?f='.$cybrary->id.'">'.
+                $cybrary->name.'</a></div>';
             $str .= '<div class="info"><span class="postsincelogin">';
-            $str .= get_string('overviewnumpostssince', 'forum', $count)."</span>";
+            $str .= get_string('overviewnumpostssince', 'cybrary', $count)."</span>";
             if (!empty($showunread)) {
-                $str .= '<div class="unreadposts">'.get_string('overviewnumunread', 'forum', $thisunread).'</div>';
+                $str .= '<div class="unreadposts">'.get_string('overviewnumunread', 'cybrary', $thisunread).'</div>';
             }
             $str .= '</div></div>';
         }
         if (!empty($str)) {
-            if (!array_key_exists($forum->course,$htmlarray)) {
-                $htmlarray[$forum->course] = array();
+            if (!array_key_exists($cybrary->course,$htmlarray)) {
+                $htmlarray[$cybrary->course] = array();
             }
-            if (!array_key_exists('forum',$htmlarray[$forum->course])) {
-                $htmlarray[$forum->course]['forum'] = ''; // initialize, avoid warnings
+            if (!array_key_exists('cybrary',$htmlarray[$cybrary->course])) {
+                $htmlarray[$cybrary->course]['cybrary'] = ''; // initialize, avoid warnings
             }
-            $htmlarray[$forum->course]['forum'] .= $str;
+            $htmlarray[$cybrary->course]['cybrary'] .= $str;
         }
     }
 }
@@ -1530,17 +1530,17 @@ function forum_print_overview($courses,&$htmlarray) {
  * @param int $timestart
  * @return bool success
  */
-function forum_print_recent_activity($course, $viewfullnames, $timestart) {
+function cybrary_print_recent_activity($course, $viewfullnames, $timestart) {
     global $CFG, $USER, $DB, $OUTPUT;
 
     // do not use log table if possible, it may be huge and is expensive to join with other tables
 
     $allnamefields = user_picture::fields('u', null, 'duserid');
-    if (!$posts = $DB->get_records_sql("SELECT p.*, f.type AS forumtype, d.forum, d.groupid,
+    if (!$posts = $DB->get_records_sql("SELECT p.*, f.type AS cybrarytype, d.cybrary, d.groupid,
                                               d.timestart, d.timeend, $allnamefields
-                                         FROM {forum_posts} p
-                                              JOIN {forum_discussions} d ON d.id = p.discussion
-                                              JOIN {forum} f             ON f.id = d.forum
+                                         FROM {cybrary_posts} p
+                                              JOIN {cybrary_discussions} d ON d.id = p.discussion
+                                              JOIN {cybrary} f             ON f.id = d.cybrary
                                               JOIN {user} u              ON u.id = p.userid
                                         WHERE p.created > ? AND f.course = ?
                                      ORDER BY p.id ASC", array($timestart, $course->id))) { // order by initial posting date
@@ -1556,29 +1556,29 @@ function forum_print_recent_activity($course, $viewfullnames, $timestart) {
 
     $printposts = array();
     foreach ($posts as $post) {
-        if (!isset($modinfo->instances['forum'][$post->forum])) {
+        if (!isset($modinfo->instances['cybrary'][$post->cybrary])) {
             // not visible
             continue;
         }
-        $cm = $modinfo->instances['forum'][$post->forum];
+        $cm = $modinfo->instances['cybrary'][$post->cybrary];
         if (!$cm->uservisible) {
             continue;
         }
         $context = context_module::instance($cm->id);
 
-        if (!has_capability('mod/forum:viewdiscussion', $context)) {
+        if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
             continue;
         }
 
-        if (!empty($CFG->forum_enabletimedposts) and $USER->id != $post->duserid
+        if (!empty($CFG->cybrary_enabletimedposts) and $USER->id != $post->duserid
           and (($post->timestart > 0 and $post->timestart > time()) or ($post->timeend > 0 and $post->timeend < time()))) {
-            if (!has_capability('mod/forum:viewhiddentimedposts', $context)) {
+            if (!has_capability('mod/cybrary:viewhiddentimedposts', $context)) {
                 continue;
             }
         }
 
         // Check that the user can see the discussion.
-        if (forum_is_user_group_discussion($cm, $post->groupid)) {
+        if (cybrary_is_user_group_discussion($cm, $post->groupid)) {
             $printposts[] = $post;
         }
 
@@ -1589,7 +1589,7 @@ function forum_print_recent_activity($course, $viewfullnames, $timestart) {
         return false;
     }
 
-    echo $OUTPUT->heading(get_string('newforumposts', 'forum').':', 3);
+    echo $OUTPUT->heading(get_string('newcybraryposts', 'cybrary').':', 3);
     echo "\n<ul class='unlist'>\n";
 
     foreach ($printposts as $post) {
@@ -1601,9 +1601,9 @@ function forum_print_recent_activity($course, $viewfullnames, $timestart) {
              '</div>';
         echo '<div class="info'.$subjectclass.'">';
         if (empty($post->parent)) {
-            echo '"<a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'">';
+            echo '"<a href="'.$CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'">';
         } else {
-            echo '"<a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'&amp;parent='.$post->parent.'#p'.$post->id.'">';
+            echo '"<a href="'.$CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'&amp;parent='.$post->parent.'#p'.$post->id.'">';
         }
         $post->subject = break_up_long_words(format_string($post->subject, true));
         echo $post->subject;
@@ -1620,26 +1620,26 @@ function forum_print_recent_activity($course, $viewfullnames, $timestart) {
  *
  * @global object
  * @global object
- * @param object $forum
+ * @param object $cybrary
  * @param int $userid optional user id, 0 means all users
  * @return array array of grades, false if none
  */
-function forum_get_user_grades($forum, $userid = 0) {
+function cybrary_get_user_grades($cybrary, $userid = 0) {
     global $CFG;
 
     require_once($CFG->dirroot.'/rating/lib.php');
 
     $ratingoptions = new stdClass;
-    $ratingoptions->component = 'mod_forum';
+    $ratingoptions->component = 'mod_cybrary';
     $ratingoptions->ratingarea = 'post';
 
     //need these to work backwards to get a context id. Is there a better way to get contextid from a module instance?
-    $ratingoptions->modulename = 'forum';
-    $ratingoptions->moduleid   = $forum->id;
+    $ratingoptions->modulename = 'cybrary';
+    $ratingoptions->moduleid   = $cybrary->id;
     $ratingoptions->userid = $userid;
-    $ratingoptions->aggregationmethod = $forum->assessed;
-    $ratingoptions->scaleid = $forum->scale;
-    $ratingoptions->itemtable = 'forum_posts';
+    $ratingoptions->aggregationmethod = $cybrary->assessed;
+    $ratingoptions->scaleid = $cybrary->scale;
+    $ratingoptions->itemtable = 'cybrary_posts';
     $ratingoptions->itemtableusercolumn = 'userid';
 
     $rm = new rating_manager();
@@ -1650,62 +1650,62 @@ function forum_get_user_grades($forum, $userid = 0) {
  * Update activity grades
  *
  * @category grade
- * @param object $forum
+ * @param object $cybrary
  * @param int $userid specific user only, 0 means all
  * @param boolean $nullifnone return null if grade does not exist
  * @return void
  */
-function forum_update_grades($forum, $userid=0, $nullifnone=true) {
+function cybrary_update_grades($cybrary, $userid=0, $nullifnone=true) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/gradelib.php');
 
-    if (!$forum->assessed) {
-        forum_grade_item_update($forum);
+    if (!$cybrary->assessed) {
+        cybrary_grade_item_update($cybrary);
 
-    } else if ($grades = forum_get_user_grades($forum, $userid)) {
-        forum_grade_item_update($forum, $grades);
+    } else if ($grades = cybrary_get_user_grades($cybrary, $userid)) {
+        cybrary_grade_item_update($cybrary, $grades);
 
     } else if ($userid and $nullifnone) {
         $grade = new stdClass();
         $grade->userid   = $userid;
         $grade->rawgrade = NULL;
-        forum_grade_item_update($forum, $grade);
+        cybrary_grade_item_update($cybrary, $grade);
 
     } else {
-        forum_grade_item_update($forum);
+        cybrary_grade_item_update($cybrary);
     }
 }
 
 /**
- * Create/update grade item for given forum
+ * Create/update grade item for given cybrary
  *
  * @category grade
  * @uses GRADE_TYPE_NONE
  * @uses GRADE_TYPE_VALUE
  * @uses GRADE_TYPE_SCALE
- * @param stdClass $forum Forum object with extra cmidnumber
+ * @param stdClass $cybrary Cybrary object with extra cmidnumber
  * @param mixed $grades Optional array/object of grade(s); 'reset' means reset grades in gradebook
  * @return int 0 if ok
  */
-function forum_grade_item_update($forum, $grades=NULL) {
+function cybrary_grade_item_update($cybrary, $grades=NULL) {
     global $CFG;
     if (!function_exists('grade_update')) { //workaround for buggy PHP versions
         require_once($CFG->libdir.'/gradelib.php');
     }
 
-    $params = array('itemname'=>$forum->name, 'idnumber'=>$forum->cmidnumber);
+    $params = array('itemname'=>$cybrary->name, 'idnumber'=>$cybrary->cmidnumber);
 
-    if (!$forum->assessed or $forum->scale == 0) {
+    if (!$cybrary->assessed or $cybrary->scale == 0) {
         $params['gradetype'] = GRADE_TYPE_NONE;
 
-    } else if ($forum->scale > 0) {
+    } else if ($cybrary->scale > 0) {
         $params['gradetype'] = GRADE_TYPE_VALUE;
-        $params['grademax']  = $forum->scale;
+        $params['grademax']  = $cybrary->scale;
         $params['grademin']  = 0;
 
-    } else if ($forum->scale < 0) {
+    } else if ($cybrary->scale < 0) {
         $params['gradetype'] = GRADE_TYPE_SCALE;
-        $params['scaleid']   = -$forum->scale;
+        $params['scaleid']   = -$cybrary->scale;
     }
 
     if ($grades  === 'reset') {
@@ -1713,37 +1713,37 @@ function forum_grade_item_update($forum, $grades=NULL) {
         $grades = NULL;
     }
 
-    return grade_update('mod/forum', $forum->course, 'mod', 'forum', $forum->id, 0, $grades, $params);
+    return grade_update('mod/cybrary', $cybrary->course, 'mod', 'cybrary', $cybrary->id, 0, $grades, $params);
 }
 
 /**
- * Delete grade item for given forum
+ * Delete grade item for given cybrary
  *
  * @category grade
- * @param stdClass $forum Forum object
+ * @param stdClass $cybrary Cybrary object
  * @return grade_item
  */
-function forum_grade_item_delete($forum) {
+function cybrary_grade_item_delete($cybrary) {
     global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
 
-    return grade_update('mod/forum', $forum->course, 'mod', 'forum', $forum->id, 0, NULL, array('deleted'=>1));
+    return grade_update('mod/cybrary', $cybrary->course, 'mod', 'cybrary', $cybrary->id, 0, NULL, array('deleted'=>1));
 }
 
 
 /**
- * This function returns if a scale is being used by one forum
+ * This function returns if a scale is being used by one cybrary
  *
  * @global object
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $scaleid negative number
  * @return bool
  */
-function forum_scale_used ($forumid,$scaleid) {
+function cybrary_scale_used ($cybraryid,$scaleid) {
     global $DB;
     $return = false;
 
-    $rec = $DB->get_record("forum",array("id" => "$forumid","scale" => "-$scaleid"));
+    $rec = $DB->get_record("cybrary",array("id" => "$cybraryid","scale" => "-$scaleid"));
 
     if (!empty($rec) && !empty($scaleid)) {
         $return = true;
@@ -1753,17 +1753,17 @@ function forum_scale_used ($forumid,$scaleid) {
 }
 
 /**
- * Checks if scale is being used by any instance of forum
+ * Checks if scale is being used by any instance of cybrary
  *
  * This is used to find out if scale used anywhere
  *
  * @global object
  * @param $scaleid int
- * @return boolean True if the scale is used by any forum
+ * @return boolean True if the scale is used by any cybrary
  */
-function forum_scale_used_anywhere($scaleid) {
+function cybrary_scale_used_anywhere($scaleid) {
     global $DB;
-    if ($scaleid and $DB->record_exists('forum', array('scale' => -$scaleid))) {
+    if ($scaleid and $DB->record_exists('cybrary', array('scale' => -$scaleid))) {
         return true;
     } else {
         return false;
@@ -1773,21 +1773,21 @@ function forum_scale_used_anywhere($scaleid) {
 // SQL FUNCTIONS ///////////////////////////////////////////////////////////
 
 /**
- * Gets a post with all info ready for forum_print_post
- * Most of these joins are just to get the forum id
+ * Gets a post with all info ready for cybrary_print_post
+ * Most of these joins are just to get the cybrary id
  *
  * @global object
  * @global object
  * @param int $postid
  * @return mixed array of posts or false
  */
-function forum_get_post_full($postid) {
+function cybrary_get_post_full($postid) {
     global $CFG, $DB;
 
     $allnames = get_all_user_name_fields(true, 'u');
-    return $DB->get_record_sql("SELECT p.*, d.forum, $allnames, u.email, u.picture, u.imagealt
-                             FROM {forum_posts} p
-                                  JOIN {forum_discussions} d ON p.discussion = d.id
+    return $DB->get_record_sql("SELECT p.*, d.cybrary, $allnames, u.email, u.picture, u.imagealt
+                             FROM {cybrary_posts} p
+                                  JOIN {cybrary_discussions} d ON p.discussion = d.id
                                   LEFT JOIN {user} u ON p.userid = u.id
                             WHERE p.id = ?", array($postid));
 }
@@ -1800,10 +1800,10 @@ function forum_get_post_full($postid) {
  * @global object
  * @param int $discussionid
  * @param string $sort
- * @param bool $tracking does user track the forum?
+ * @param bool $tracking does user track the cybrary?
  * @return array of posts
  */
-function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
+function cybrary_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
     global $CFG, $DB, $USER;
 
     $tr_sel  = "";
@@ -1812,16 +1812,16 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
 
     if ($tracking) {
         $now = time();
-        $cutoffdate = $now - ($CFG->forum_oldpostdays * 24 * 3600);
+        $cutoffdate = $now - ($CFG->cybrary_oldpostdays * 24 * 3600);
         $tr_sel  = ", fr.id AS postread";
-        $tr_join = "LEFT JOIN {forum_read} fr ON (fr.postid = p.id AND fr.userid = ?)";
+        $tr_join = "LEFT JOIN {cybrary_read} fr ON (fr.postid = p.id AND fr.userid = ?)";
         $params[] = $USER->id;
     }
 
     $allnames = get_all_user_name_fields(true, 'u');
     $params[] = $discussionid;
     if (!$posts = $DB->get_records_sql("SELECT p.*, $allnames, u.email, u.picture, u.imagealt $tr_sel
-                                     FROM {forum_posts} p
+                                     FROM {cybrary_posts} p
                                           LEFT JOIN {user} u ON p.userid = u.id
                                           $tr_join
                                     WHERE p.discussion = ?
@@ -1831,7 +1831,7 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
 
     foreach ($posts as $pid=>$p) {
         if ($tracking) {
-            if (forum_tp_is_post_old($p)) {
+            if (cybrary_tp_is_post_old($p)) {
                  $posts[$pid]->postread = true;
             }
         }
@@ -1865,25 +1865,25 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
 }
 
 /**
- * An array of forum objects that the user is allowed to read/search through.
+ * An array of cybrary objects that the user is allowed to read/search through.
  *
  * @global object
  * @global object
  * @global object
  * @param int $userid
- * @param int $courseid if 0, we look for forums throughout the whole site.
- * @return array of forum objects, or false if no matches
- *         Forum objects have the following attributes:
+ * @param int $courseid if 0, we look for cybraries throughout the whole site.
+ * @return array of cybrary objects, or false if no matches
+ *         Cybrary objects have the following attributes:
  *         id, type, course, cmid, cmvisible, cmgroupmode, accessallgroups,
  *         viewhiddentimedposts
  */
-function forum_get_readable_forums($userid, $courseid=0) {
+function cybrary_get_readable_cybraries($userid, $courseid=0) {
 
     global $CFG, $DB, $USER;
     require_once($CFG->dirroot.'/course/lib.php');
 
-    if (!$forummod = $DB->get_record('modules', array('name' => 'forum'))) {
-        print_error('notinstalled', 'forum');
+    if (!$cybrarymod = $DB->get_record('modules', array('name' => 'cybrary'))) {
+        print_error('notinstalled', 'cybrary');
     }
 
     if ($courseid) {
@@ -1898,69 +1898,69 @@ function forum_get_readable_forums($userid, $courseid=0) {
         return array();
     }
 
-    $readableforums = array();
+    $readablecybraries = array();
 
     foreach ($courses as $course) {
 
         $modinfo = get_fast_modinfo($course);
 
-        if (empty($modinfo->instances['forum'])) {
-            // hmm, no forums?
+        if (empty($modinfo->instances['cybrary'])) {
+            // hmm, no cybraries?
             continue;
         }
 
-        $courseforums = $DB->get_records('forum', array('course' => $course->id));
+        $coursecybraries = $DB->get_records('cybrary', array('course' => $course->id));
 
-        foreach ($modinfo->instances['forum'] as $forumid => $cm) {
-            if (!$cm->uservisible or !isset($courseforums[$forumid])) {
+        foreach ($modinfo->instances['cybrary'] as $cybraryid => $cm) {
+            if (!$cm->uservisible or !isset($coursecybraries[$cybraryid])) {
                 continue;
             }
             $context = context_module::instance($cm->id);
-            $forum = $courseforums[$forumid];
-            $forum->context = $context;
-            $forum->cm = $cm;
+            $cybrary = $coursecybraries[$cybraryid];
+            $cybrary->context = $context;
+            $cybrary->cm = $cm;
 
-            if (!has_capability('mod/forum:viewdiscussion', $context)) {
+            if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
                 continue;
             }
 
          /// group access
             if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $context)) {
 
-                $forum->onlygroups = $modinfo->get_groups($cm->groupingid);
-                $forum->onlygroups[] = -1;
+                $cybrary->onlygroups = $modinfo->get_groups($cm->groupingid);
+                $cybrary->onlygroups[] = -1;
             }
 
         /// hidden timed discussions
-            $forum->viewhiddentimedposts = true;
-            if (!empty($CFG->forum_enabletimedposts)) {
-                if (!has_capability('mod/forum:viewhiddentimedposts', $context)) {
-                    $forum->viewhiddentimedposts = false;
+            $cybrary->viewhiddentimedposts = true;
+            if (!empty($CFG->cybrary_enabletimedposts)) {
+                if (!has_capability('mod/cybrary:viewhiddentimedposts', $context)) {
+                    $cybrary->viewhiddentimedposts = false;
                 }
             }
 
         /// qanda access
-            if ($forum->type == 'qanda'
-                    && !has_capability('mod/forum:viewqandawithoutposting', $context)) {
+            if ($cybrary->type == 'qanda'
+                    && !has_capability('mod/cybrary:viewqandawithoutposting', $context)) {
 
-                // We need to check whether the user has posted in the qanda forum.
-                $forum->onlydiscussions = array();  // Holds discussion ids for the discussions
-                                                    // the user is allowed to see in this forum.
-                if ($discussionspostedin = forum_discussions_user_has_posted_in($forum->id, $USER->id)) {
+                // We need to check whether the user has posted in the qanda cybrary.
+                $cybrary->onlydiscussions = array();  // Holds discussion ids for the discussions
+                                                    // the user is allowed to see in this cybrary.
+                if ($discussionspostedin = cybrary_discussions_user_has_posted_in($cybrary->id, $USER->id)) {
                     foreach ($discussionspostedin as $d) {
-                        $forum->onlydiscussions[] = $d->id;
+                        $cybrary->onlydiscussions[] = $d->id;
                     }
                 }
             }
 
-            $readableforums[$forum->id] = $forum;
+            $readablecybraries[$cybrary->id] = $cybrary;
         }
 
         unset($modinfo);
 
     } // End foreach $courses
 
-    return $readableforums;
+    return $readablecybraries;
 }
 
 /**
@@ -1977,14 +1977,14 @@ function forum_get_readable_forums($userid, $courseid=0) {
  * @param string $extrasql
  * @return array|bool Array of posts found or false
  */
-function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=50,
+function cybrary_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=50,
                             &$totalcount, $extrasql='') {
     global $CFG, $DB, $USER;
     require_once($CFG->libdir.'/searchlib.php');
 
-    $forums = forum_get_readable_forums($USER->id, $courseid);
+    $cybraries = cybrary_get_readable_cybraries($USER->id, $courseid);
 
-    if (count($forums) == 0) {
+    if (count($cybraries) == 0) {
         $totalcount = 0;
         return false;
     }
@@ -1995,21 +1995,21 @@ function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=5
     $where = array();
     $params = array();
 
-    foreach ($forums as $forumid => $forum) {
+    foreach ($cybraries as $cybraryid => $cybrary) {
         $select = array();
 
-        if (!$forum->viewhiddentimedposts) {
-            $select[] = "(d.userid = :userid{$forumid} OR (d.timestart < :timestart{$forumid} AND (d.timeend = 0 OR d.timeend > :timeend{$forumid})))";
-            $params = array_merge($params, array('userid'.$forumid=>$USER->id, 'timestart'.$forumid=>$now, 'timeend'.$forumid=>$now));
+        if (!$cybrary->viewhiddentimedposts) {
+            $select[] = "(d.userid = :userid{$cybraryid} OR (d.timestart < :timestart{$cybraryid} AND (d.timeend = 0 OR d.timeend > :timeend{$cybraryid})))";
+            $params = array_merge($params, array('userid'.$cybraryid=>$USER->id, 'timestart'.$cybraryid=>$now, 'timeend'.$cybraryid=>$now));
         }
 
-        $cm = $forum->cm;
-        $context = $forum->context;
+        $cm = $cybrary->cm;
+        $context = $cybrary->context;
 
-        if ($forum->type == 'qanda'
-            && !has_capability('mod/forum:viewqandawithoutposting', $context)) {
-            if (!empty($forum->onlydiscussions)) {
-                list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($forum->onlydiscussions, SQL_PARAMS_NAMED, 'qanda'.$forumid.'_');
+        if ($cybrary->type == 'qanda'
+            && !has_capability('mod/cybrary:viewqandawithoutposting', $context)) {
+            if (!empty($cybrary->onlydiscussions)) {
+                list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($cybrary->onlydiscussions, SQL_PARAMS_NAMED, 'qanda'.$cybraryid.'_');
                 $params = array_merge($params, $discussionid_params);
                 $select[] = "(d.id $discussionid_sql OR p.parent = 0)";
             } else {
@@ -2017,25 +2017,25 @@ function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=5
             }
         }
 
-        if (!empty($forum->onlygroups)) {
-            list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($forum->onlygroups, SQL_PARAMS_NAMED, 'grps'.$forumid.'_');
+        if (!empty($cybrary->onlygroups)) {
+            list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($cybrary->onlygroups, SQL_PARAMS_NAMED, 'grps'.$cybraryid.'_');
             $params = array_merge($params, $groupid_params);
             $select[] = "d.groupid $groupid_sql";
         }
 
         if ($select) {
             $selects = implode(" AND ", $select);
-            $where[] = "(d.forum = :forum{$forumid} AND $selects)";
-            $params['forum'.$forumid] = $forumid;
+            $where[] = "(d.cybrary = :cybrary{$cybraryid} AND $selects)";
+            $params['cybrary'.$cybraryid] = $cybraryid;
         } else {
-            $fullaccess[] = $forumid;
+            $fullaccess[] = $cybraryid;
         }
     }
 
     if ($fullaccess) {
         list($fullid_sql, $fullid_params) = $DB->get_in_or_equal($fullaccess, SQL_PARAMS_NAMED, 'fula');
         $params = array_merge($params, $fullid_params);
-        $where[] = "(d.forum $fullid_sql)";
+        $where[] = "(d.cybrary $fullid_sql)";
     }
 
     $selectdiscussion = "(".implode(" OR ", $where).")";
@@ -2061,12 +2061,12 @@ function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=5
         $parsearray = $parser->get_parsed_array();
         list($messagesearch, $msparams) = search_generate_SQL($parsearray, 'p.message', 'p.subject',
                                                               'p.userid', 'u.id', 'u.firstname',
-                                                              'u.lastname', 'p.modified', 'd.forum');
+                                                              'u.lastname', 'p.modified', 'd.cybrary');
         $params = array_merge($params, $msparams);
     }
 
-    $fromsql = "{forum_posts} p,
-                  {forum_discussions} d,
+    $fromsql = "{cybrary_posts} p,
+                  {cybrary_discussions} d,
                   {user} u";
 
     $selectsql = " $messagesearch
@@ -2081,7 +2081,7 @@ function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=5
 
     $allnames = get_all_user_name_fields(true, 'u');
     $searchsql = "SELECT p.*,
-                         d.forum,
+                         d.cybrary,
                          $allnames,
                          u.email,
                          u.picture,
@@ -2103,16 +2103,16 @@ function forum_search_posts($searchterms, $courseid=0, $limitfrom=0, $limitnum=5
  * @param int $now used for timed discussions only
  * @return array
  */
-function forum_get_unmailed_posts($starttime, $endtime, $now=null) {
+function cybrary_get_unmailed_posts($starttime, $endtime, $now=null) {
     global $CFG, $DB;
 
     $params = array();
-    $params['mailed'] = FORUM_MAILED_PENDING;
+    $params['mailed'] = CYBRARY_MAILED_PENDING;
     $params['ptimestart'] = $starttime;
     $params['ptimeend'] = $endtime;
     $params['mailnow'] = 1;
 
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         if (empty($now)) {
             $now = time();
         }
@@ -2126,9 +2126,9 @@ function forum_get_unmailed_posts($starttime, $endtime, $now=null) {
         $selectsql = "AND p.created >= :ptimestart";
     }
 
-    return $DB->get_records_sql("SELECT p.*, d.course, d.forum
-                                 FROM {forum_posts} p
-                                 JOIN {forum_discussions} d ON d.id = p.discussion
+    return $DB->get_records_sql("SELECT p.*, d.course, d.cybrary
+                                 FROM {cybrary_posts} p
+                                 JOIN {cybrary_discussions} d ON d.id = p.discussion
                                  WHERE p.mailed = :mailed
                                  $selectsql
                                  AND (p.created < :ptimeend OR p.mailnow = :mailnow)
@@ -2145,7 +2145,7 @@ function forum_get_unmailed_posts($starttime, $endtime, $now=null) {
  * @param int $now Defaults to time()
  * @return bool
  */
-function forum_mark_old_posts_as_mailed($endtime, $now=null) {
+function cybrary_mark_old_posts_as_mailed($endtime, $now=null) {
     global $CFG, $DB;
 
     if (empty($now)) {
@@ -2153,22 +2153,22 @@ function forum_mark_old_posts_as_mailed($endtime, $now=null) {
     }
 
     $params = array();
-    $params['mailedsuccess'] = FORUM_MAILED_SUCCESS;
+    $params['mailedsuccess'] = CYBRARY_MAILED_SUCCESS;
     $params['now'] = $now;
     $params['endtime'] = $endtime;
     $params['mailnow'] = 1;
-    $params['mailedpending'] = FORUM_MAILED_PENDING;
+    $params['mailedpending'] = CYBRARY_MAILED_PENDING;
 
-    if (empty($CFG->forum_enabletimedposts)) {
-        return $DB->execute("UPDATE {forum_posts}
+    if (empty($CFG->cybrary_enabletimedposts)) {
+        return $DB->execute("UPDATE {cybrary_posts}
                              SET mailed = :mailedsuccess
                              WHERE (created < :endtime OR mailnow = :mailnow)
                              AND mailed = :mailedpending", $params);
     } else {
-        return $DB->execute("UPDATE {forum_posts}
+        return $DB->execute("UPDATE {cybrary_posts}
                              SET mailed = :mailedsuccess
                              WHERE discussion NOT IN (SELECT d.id
-                                                      FROM {forum_discussions} d
+                                                      FROM {cybrary_discussions} d
                                                       WHERE d.timestart > :now)
                              AND (created < :endtime OR mailnow = :mailnow)
                              AND mailed = :mailedpending", $params);
@@ -2176,22 +2176,22 @@ function forum_mark_old_posts_as_mailed($endtime, $now=null) {
 }
 
 /**
- * Get all the posts for a user in a forum suitable for forum_print_post
+ * Get all the posts for a user in a cybrary suitable for cybrary_print_post
  *
  * @global object
  * @global object
  * @uses CONTEXT_MODULE
  * @return array
  */
-function forum_get_user_posts($forumid, $userid) {
+function cybrary_get_user_posts($cybraryid, $userid) {
     global $CFG, $DB;
 
     $timedsql = "";
-    $params = array($forumid, $userid);
+    $params = array($cybraryid, $userid);
 
-    if (!empty($CFG->forum_enabletimedposts)) {
-        $cm = get_coursemodule_from_instance('forum', $forumid);
-        if (!has_capability('mod/forum:viewhiddentimedposts' , context_module::instance($cm->id))) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
+        $cm = get_coursemodule_from_instance('cybrary', $cybraryid);
+        if (!has_capability('mod/cybrary:viewhiddentimedposts' , context_module::instance($cm->id))) {
             $now = time();
             $timedsql = "AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
@@ -2200,10 +2200,10 @@ function forum_get_user_posts($forumid, $userid) {
     }
 
     $allnames = get_all_user_name_fields(true, 'u');
-    return $DB->get_records_sql("SELECT p.*, d.forum, $allnames, u.email, u.picture, u.imagealt
-                              FROM {forum} f
-                                   JOIN {forum_discussions} d ON d.forum = f.id
-                                   JOIN {forum_posts} p       ON p.discussion = d.id
+    return $DB->get_records_sql("SELECT p.*, d.cybrary, $allnames, u.email, u.picture, u.imagealt
+                              FROM {cybrary} f
+                                   JOIN {cybrary_discussions} d ON d.cybrary = f.id
+                                   JOIN {cybrary_posts} p       ON p.discussion = d.id
                                    JOIN {user} u              ON u.id = p.userid
                              WHERE f.id = ?
                                    AND p.userid = ?
@@ -2217,18 +2217,18 @@ function forum_get_user_posts($forumid, $userid) {
  * @global object
  * @global object
  * @uses CONTEXT_MODULE
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $userid
  * @return array Array or false
  */
-function forum_get_user_involved_discussions($forumid, $userid) {
+function cybrary_get_user_involved_discussions($cybraryid, $userid) {
     global $CFG, $DB;
 
     $timedsql = "";
-    $params = array($forumid, $userid);
-    if (!empty($CFG->forum_enabletimedposts)) {
-        $cm = get_coursemodule_from_instance('forum', $forumid);
-        if (!has_capability('mod/forum:viewhiddentimedposts' , context_module::instance($cm->id))) {
+    $params = array($cybraryid, $userid);
+    if (!empty($CFG->cybrary_enabletimedposts)) {
+        $cm = get_coursemodule_from_instance('cybrary', $cybraryid);
+        if (!has_capability('mod/cybrary:viewhiddentimedposts' , context_module::instance($cm->id))) {
             $now = time();
             $timedsql = "AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
@@ -2237,31 +2237,31 @@ function forum_get_user_involved_discussions($forumid, $userid) {
     }
 
     return $DB->get_records_sql("SELECT DISTINCT d.*
-                              FROM {forum} f
-                                   JOIN {forum_discussions} d ON d.forum = f.id
-                                   JOIN {forum_posts} p       ON p.discussion = d.id
+                              FROM {cybrary} f
+                                   JOIN {cybrary_discussions} d ON d.cybrary = f.id
+                                   JOIN {cybrary_posts} p       ON p.discussion = d.id
                              WHERE f.id = ?
                                    AND p.userid = ?
                                    $timedsql", $params);
 }
 
 /**
- * Get all the posts for a user in a forum suitable for forum_print_post
+ * Get all the posts for a user in a cybrary suitable for cybrary_print_post
  *
  * @global object
  * @global object
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $userid
  * @return array of counts or false
  */
-function forum_count_user_posts($forumid, $userid) {
+function cybrary_count_user_posts($cybraryid, $userid) {
     global $CFG, $DB;
 
     $timedsql = "";
-    $params = array($forumid, $userid);
-    if (!empty($CFG->forum_enabletimedposts)) {
-        $cm = get_coursemodule_from_instance('forum', $forumid);
-        if (!has_capability('mod/forum:viewhiddentimedposts' , context_module::instance($cm->id))) {
+    $params = array($cybraryid, $userid);
+    if (!empty($CFG->cybrary_enabletimedposts)) {
+        $cm = get_coursemodule_from_instance('cybrary', $cybraryid);
+        if (!has_capability('mod/cybrary:viewhiddentimedposts' , context_module::instance($cm->id))) {
             $now = time();
             $timedsql = "AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
@@ -2270,9 +2270,9 @@ function forum_count_user_posts($forumid, $userid) {
     }
 
     return $DB->get_record_sql("SELECT COUNT(p.id) AS postcount, MAX(p.modified) AS lastpost
-                             FROM {forum} f
-                                  JOIN {forum_discussions} d ON d.forum = f.id
-                                  JOIN {forum_posts} p       ON p.discussion = d.id
+                             FROM {cybrary} f
+                                  JOIN {cybrary_discussions} d ON d.cybrary = f.id
+                                  JOIN {cybrary_posts} p       ON p.discussion = d.id
                                   JOIN {user} u              ON u.id = p.userid
                             WHERE f.id = ?
                                   AND p.userid = ?
@@ -2280,43 +2280,43 @@ function forum_count_user_posts($forumid, $userid) {
 }
 
 /**
- * Given a log entry, return the forum post details for it.
+ * Given a log entry, return the cybrary post details for it.
  *
  * @global object
  * @global object
  * @param object $log
  * @return array|null
  */
-function forum_get_post_from_log($log) {
+function cybrary_get_post_from_log($log) {
     global $CFG, $DB;
 
     $allnames = get_all_user_name_fields(true, 'u');
     if ($log->action == "add post") {
 
-        return $DB->get_record_sql("SELECT p.*, f.type AS forumtype, d.forum, d.groupid, $allnames, u.email, u.picture
-                                 FROM {forum_discussions} d,
-                                      {forum_posts} p,
-                                      {forum} f,
+        return $DB->get_record_sql("SELECT p.*, f.type AS cybrarytype, d.cybrary, d.groupid, $allnames, u.email, u.picture
+                                 FROM {cybrary_discussions} d,
+                                      {cybrary_posts} p,
+                                      {cybrary} f,
                                       {user} u
                                 WHERE p.id = ?
                                   AND d.id = p.discussion
                                   AND p.userid = u.id
                                   AND u.deleted <> '1'
-                                  AND f.id = d.forum", array($log->info));
+                                  AND f.id = d.cybrary", array($log->info));
 
 
     } else if ($log->action == "add discussion") {
 
-        return $DB->get_record_sql("SELECT p.*, f.type AS forumtype, d.forum, d.groupid, $allnames, u.email, u.picture
-                                 FROM {forum_discussions} d,
-                                      {forum_posts} p,
-                                      {forum} f,
+        return $DB->get_record_sql("SELECT p.*, f.type AS cybrarytype, d.cybrary, d.groupid, $allnames, u.email, u.picture
+                                 FROM {cybrary_discussions} d,
+                                      {cybrary_posts} p,
+                                      {cybrary} f,
                                       {user} u
                                 WHERE d.id = ?
                                   AND d.firstpost = p.id
                                   AND p.userid = u.id
                                   AND u.deleted <> '1'
-                                  AND f.id = d.forum", array($log->info));
+                                  AND f.id = d.cybrary", array($log->info));
     }
     return NULL;
 }
@@ -2329,12 +2329,12 @@ function forum_get_post_from_log($log) {
  * @param int $dicsussionid
  * @return array
  */
-function forum_get_firstpost_from_discussion($discussionid) {
+function cybrary_get_firstpost_from_discussion($discussionid) {
     global $CFG, $DB;
 
     return $DB->get_record_sql("SELECT p.*
-                             FROM {forum_discussions} d,
-                                  {forum_posts} p
+                             FROM {cybrary_discussions} d,
+                                  {cybrary_posts} p
                             WHERE d.id = ?
                               AND d.firstpost = p.id ", array($discussionid));
 }
@@ -2344,14 +2344,14 @@ function forum_get_firstpost_from_discussion($discussionid) {
  *
  * @global object
  * @global object
- * @param int $forumid
- * @param string $forumsort
+ * @param int $cybraryid
+ * @param string $cybrariesort
  * @param int $limit
  * @param int $page
  * @param int $perpage
  * @return array
  */
-function forum_count_discussion_replies($forumid, $forumsort="", $limit=-1, $page=-1, $perpage=0) {
+function cybrary_count_discussion_replies($cybraryid, $cybrariesort="", $limit=-1, $page=-1, $perpage=0) {
     global $CFG, $DB;
 
     if ($limit > 0) {
@@ -2365,32 +2365,32 @@ function forum_count_discussion_replies($forumid, $forumsort="", $limit=-1, $pag
         $limitnum  = 0;
     }
 
-    if ($forumsort == "") {
+    if ($cybrariesort == "") {
         $orderby = "";
         $groupby = "";
 
     } else {
-        $orderby = "ORDER BY $forumsort";
-        $groupby = ", ".strtolower($forumsort);
+        $orderby = "ORDER BY $cybrariesort";
+        $groupby = ", ".strtolower($cybrariesort);
         $groupby = str_replace('desc', '', $groupby);
         $groupby = str_replace('asc', '', $groupby);
     }
 
-    if (($limitfrom == 0 and $limitnum == 0) or $forumsort == "") {
+    if (($limitfrom == 0 and $limitnum == 0) or $cybrariesort == "") {
         $sql = "SELECT p.discussion, COUNT(p.id) AS replies, MAX(p.id) AS lastpostid
-                  FROM {forum_posts} p
-                       JOIN {forum_discussions} d ON p.discussion = d.id
-                 WHERE p.parent > 0 AND d.forum = ?
+                  FROM {cybrary_posts} p
+                       JOIN {cybrary_discussions} d ON p.discussion = d.id
+                 WHERE p.parent > 0 AND d.cybrary = ?
               GROUP BY p.discussion";
-        return $DB->get_records_sql($sql, array($forumid));
+        return $DB->get_records_sql($sql, array($cybraryid));
 
     } else {
         $sql = "SELECT p.discussion, (COUNT(p.id) - 1) AS replies, MAX(p.id) AS lastpostid
-                  FROM {forum_posts} p
-                       JOIN {forum_discussions} d ON p.discussion = d.id
-                 WHERE d.forum = ?
+                  FROM {cybrary_posts} p
+                       JOIN {cybrary_discussions} d ON p.discussion = d.id
+                 WHERE d.cybrary = ?
               GROUP BY p.discussion $groupby $orderby";
-        return $DB->get_records_sql($sql, array($forumid), $limitfrom, $limitnum);
+        return $DB->get_records_sql($sql, array($cybraryid), $limitfrom, $limitnum);
     }
 }
 
@@ -2399,12 +2399,12 @@ function forum_count_discussion_replies($forumid, $forumsort="", $limit=-1, $pag
  * @global object
  * @global object
  * @staticvar array $cache
- * @param object $forum
+ * @param object $cybrary
  * @param object $cm
  * @param object $course
  * @return mixed
  */
-function forum_count_discussions($forum, $cm, $course) {
+function cybrary_count_discussions($cybrary, $cm, $course) {
     global $CFG, $DB, $USER;
 
     static $cache = array();
@@ -2414,7 +2414,7 @@ function forum_count_discussions($forum, $cm, $course) {
     $params = array($course->id);
 
     if (!isset($cache[$course->id])) {
-        if (!empty($CFG->forum_enabletimedposts)) {
+        if (!empty($CFG->cybrary_enabletimedposts)) {
             $timedsql = "AND d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?)";
             $params[] = $now;
             $params[] = $now;
@@ -2423,8 +2423,8 @@ function forum_count_discussions($forum, $cm, $course) {
         }
 
         $sql = "SELECT f.id, COUNT(d.id) as dcount
-                  FROM {forum} f
-                       JOIN {forum_discussions} d ON d.forum = f.id
+                  FROM {cybrary} f
+                       JOIN {cybrary_discussions} d ON d.cybrary = f.id
                  WHERE f.course = ?
                        $timedsql
               GROUP BY f.id";
@@ -2439,18 +2439,18 @@ function forum_count_discussions($forum, $cm, $course) {
         }
     }
 
-    if (empty($cache[$course->id][$forum->id])) {
+    if (empty($cache[$course->id][$cybrary->id])) {
         return 0;
     }
 
     $groupmode = groups_get_activity_groupmode($cm, $course);
 
     if ($groupmode != SEPARATEGROUPS) {
-        return $cache[$course->id][$forum->id];
+        return $cache[$course->id][$cybrary->id];
     }
 
     if (has_capability('moodle/site:accessallgroups', context_module::instance($cm->id))) {
-        return $cache[$course->id][$forum->id];
+        return $cache[$course->id][$cybrary->id];
     }
 
     require_once($CFG->dirroot.'/course/lib.php');
@@ -2463,9 +2463,9 @@ function forum_count_discussions($forum, $cm, $course) {
     $mygroups[-1] = -1;
 
     list($mygroups_sql, $params) = $DB->get_in_or_equal($mygroups);
-    $params[] = $forum->id;
+    $params[] = $cybrary->id;
 
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         $timedsql = "AND d.timestart < $now AND (d.timeend = 0 OR d.timeend > $now)";
         $params[] = $now;
         $params[] = $now;
@@ -2474,15 +2474,15 @@ function forum_count_discussions($forum, $cm, $course) {
     }
 
     $sql = "SELECT COUNT(d.id)
-              FROM {forum_discussions} d
-             WHERE d.groupid $mygroups_sql AND d.forum = ?
+              FROM {cybrary_discussions} d
+             WHERE d.groupid $mygroups_sql AND d.cybrary = ?
                    $timedsql";
 
     return $DB->get_field_sql($sql, $params);
 }
 
 /**
- * Get all discussions in a forum
+ * Get all discussions in a cybrary
  *
  * @global object
  * @global object
@@ -2490,7 +2490,7 @@ function forum_count_discussions($forum, $cm, $course) {
  * @uses CONTEXT_MODULE
  * @uses VISIBLEGROUPS
  * @param object $cm
- * @param string $forumsort
+ * @param string $cybrariesort
  * @param bool $fullpost
  * @param int $unused
  * @param int $limit
@@ -2498,10 +2498,10 @@ function forum_count_discussions($forum, $cm, $course) {
  * @param int $page
  * @param int $perpage
  * @param int $groupid if groups enabled, get discussions for this group overriding the current group.
- *                     Use FORUM_POSTS_ALL_USER_GROUPS for all the user groups
+ *                     Use CYBRARY_POSTS_ALL_USER_GROUPS for all the user groups
  * @return array
  */
-function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $limit=-1,
+function cybrary_get_discussions($cm, $cybrariesort="", $fullpost=true, $unused=-1, $limit=-1,
                                 $userlastmodified=false, $page=-1, $perpage=0, $groupid = -1) {
     global $CFG, $DB, $USER;
 
@@ -2512,13 +2512,13 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
 
     $modcontext = context_module::instance($cm->id);
 
-    if (!has_capability('mod/forum:viewdiscussion', $modcontext)) { /// User must have perms to view discussions
+    if (!has_capability('mod/cybrary:viewdiscussion', $modcontext)) { /// User must have perms to view discussions
         return array();
     }
 
-    if (!empty($CFG->forum_enabletimedposts)) { /// Users must fulfill timed posts
+    if (!empty($CFG->cybrary_enabletimedposts)) { /// Users must fulfill timed posts
 
-        if (!has_capability('mod/forum:viewhiddentimedposts', $modcontext)) {
+        if (!has_capability('mod/cybrary:viewhiddentimedposts', $modcontext)) {
             $timelimit = " AND ((d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
             $params[] = $now;
@@ -2595,8 +2595,8 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
     } else {
         $groupselect = "";
     }
-    if (empty($forumsort)) {
-        $forumsort = forum_get_default_sort_order();
+    if (empty($cybrariesort)) {
+        $cybrariesort = cybrary_get_default_sort_order();
     }
     if (empty($fullpost)) {
         $postdata = "p.id,p.subject,p.modified,p.discussion,p.userid";
@@ -2616,13 +2616,13 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
     $allnames = get_all_user_name_fields(true, 'u');
     $sql = "SELECT $postdata, d.name, d.timemodified, d.usermodified, d.groupid, d.timestart, d.timeend, $allnames,
                    u.email, u.picture, u.imagealt $umfields
-              FROM {forum_discussions} d
-                   JOIN {forum_posts} p ON p.discussion = d.id
+              FROM {cybrary_discussions} d
+                   JOIN {cybrary_posts} p ON p.discussion = d.id
                    JOIN {user} u ON p.userid = u.id
                    $umtable
-             WHERE d.forum = ? AND p.parent = 0
+             WHERE d.cybrary = ? AND p.parent = 0
                    $timelimit $groupselect
-          ORDER BY $forumsort";
+          ORDER BY $cybrariesort";
     return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
 }
 
@@ -2634,7 +2634,7 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
  * other mean to sort the records, e.g. we cannot use IDs as a greater ID can have a lower
  * timemodified.
  *
- * For blog-style forums, the calculation is based on the original creation time of the
+ * For blog-style cybraries, the calculation is based on the original creation time of the
  * blog post.
  *
  * Please note that this does not check whether or not the discussion passed is accessible
@@ -2643,16 +2643,16 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
  *
  * @param object $cm The CM record.
  * @param object $discussion The discussion record.
- * @param object $forum The forum instance record.
+ * @param object $cybrary The cybrary instance record.
  * @return array That always contains the keys 'prev' and 'next'. When there is a result
  *               they contain the record with minimal information such as 'id' and 'name'.
  *               When the neighbour is not found the value is false.
  */
-function forum_get_discussion_neighbours($cm, $discussion, $forum) {
+function cybrary_get_discussion_neighbours($cm, $discussion, $cybrary) {
     global $CFG, $DB, $USER;
 
-    if ($cm->instance != $discussion->forum or $discussion->forum != $forum->id or $forum->id != $cm->instance) {
-        throw new coding_exception('Discussion is not part of the same forum.');
+    if ($cm->instance != $discussion->cybrary or $discussion->cybrary != $cybrary->id or $cybrary->id != $cm->instance) {
+        throw new coding_exception('Discussion is not part of the same cybrary.');
     }
 
     $neighbours = array('prev' => false, 'next' => false);
@@ -2665,8 +2665,8 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
 
     // Users must fulfill timed posts.
     $timelimit = '';
-    if (!empty($CFG->forum_enabletimedposts)) {
-        if (!has_capability('mod/forum:viewhiddentimedposts', $modcontext)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
+        if (!has_capability('mod/cybrary:viewhiddentimedposts', $modcontext)) {
             $timelimit = ' AND ((d.timestart <= :tltimestart AND (d.timeend = 0 OR d.timeend > :tltimeend))';
             $params['tltimestart'] = $now;
             $params['tltimeend'] = $now;
@@ -2696,22 +2696,22 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
         }
     }
 
-    if ($forum->type === 'blog') {
-        $params['forumid'] = $cm->instance;
+    if ($cybrary->type === 'blog') {
+        $params['cybraryid'] = $cm->instance;
         $params['discid1'] = $discussion->id;
         $params['discid2'] = $discussion->id;
 
         $sql = "SELECT d.id, d.name, d.timemodified, d.groupid, d.timestart, d.timeend
-                  FROM {forum_discussions} d
-                  JOIN {forum_posts} p ON d.firstpost = p.id
-                 WHERE d.forum = :forumid
+                  FROM {cybrary_discussions} d
+                  JOIN {cybrary_posts} p ON d.firstpost = p.id
+                 WHERE d.cybrary = :cybraryid
                    AND d.id <> :discid1
                        $timelimit
                        $groupselect";
 
         $sub = "SELECT pp.created
-                  FROM {forum_discussions} dd
-                  JOIN {forum_posts} pp ON dd.firstpost = pp.id
+                  FROM {cybrary_discussions} dd
+                  JOIN {cybrary_posts} pp ON dd.firstpost = pp.id
                  WHERE dd.id = :discid2";
 
         $prevsql = $sql . " AND p.created < ($sub)
@@ -2724,18 +2724,18 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
         $neighbours['next'] = $DB->get_record_sql($nextsql, $params, IGNORE_MULTIPLE);
 
     } else {
-        $params['forumid'] = $cm->instance;
+        $params['cybraryid'] = $cm->instance;
         $params['discid'] = $discussion->id;
         $params['disctimemodified'] = $discussion->timemodified;
 
         $sql = "SELECT d.id, d.name, d.timemodified, d.groupid, d.timestart, d.timeend
-                  FROM {forum_discussions} d
-                 WHERE d.forum = :forumid
+                  FROM {cybrary_discussions} d
+                 WHERE d.cybrary = :cybraryid
                    AND d.id <> :discid
                        $timelimit
                        $groupselect";
 
-        if (empty($CFG->forum_enabletimedposts)) {
+        if (empty($CFG->cybrary_enabletimedposts)) {
             $prevsql = $sql . " AND d.timemodified < :disctimemodified";
             $nextsql = $sql . " AND d.timemodified > :disctimemodified";
 
@@ -2761,8 +2761,8 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
             $nextsql = $sql . " AND CASE WHEN d.timemodified < d.timestart
                                     THEN d.timestart ELSE d.timemodified END > :disctimecompare";
         }
-        $prevsql .= ' ORDER BY '.forum_get_default_sort_order();
-        $nextsql .= ' ORDER BY '.forum_get_default_sort_order(false);
+        $prevsql .= ' ORDER BY '.cybrary_get_default_sort_order();
+        $nextsql .= ' ORDER BY '.cybrary_get_default_sort_order(false);
 
         $neighbours['prev'] = $DB->get_record_sql($prevsql, $params, IGNORE_MULTIPLE);
         $neighbours['next'] = $DB->get_record_sql($nextsql, $params, IGNORE_MULTIPLE);
@@ -2772,7 +2772,7 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
 }
 
 /**
- * Get the sql to use in the ORDER BY clause for forum discussions.
+ * Get the sql to use in the ORDER BY clause for cybrary discussions.
  *
  * This has the ordering take timed discussion windows into account.
  *
@@ -2781,7 +2781,7 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
  * @param string $prefix The prefix being used for the discussion table.
  * @return string
  */
-function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified', $prefix = 'd') {
+function cybrary_get_default_sort_order($desc = true, $compare = 'd.timemodified', $prefix = 'd') {
     global $CFG;
 
     if (!empty($prefix)) {
@@ -2791,7 +2791,7 @@ function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified',
     $dir = $desc ? 'DESC' : 'ASC';
 
     $sort = "{$prefix}timemodified";
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         $sort = "CASE WHEN {$compare} < {$prefix}timestart
                  THEN {$prefix}timestart
                  ELSE {$compare}
@@ -2810,11 +2810,11 @@ function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified',
  * @param object $cm
  * @return array
  */
-function forum_get_discussions_unread($cm) {
+function cybrary_get_discussions_unread($cm) {
     global $CFG, $DB, $USER;
 
     $now = round(time(), -2);
-    $cutoffdate = $now - ($CFG->forum_oldpostdays*24*60*60);
+    $cutoffdate = $now - ($CFG->cybrary_oldpostdays*24*60*60);
 
     $params = array();
     $groupmode    = groups_get_activity_groupmode($cm);
@@ -2844,7 +2844,7 @@ function forum_get_discussions_unread($cm) {
         $groupselect = "";
     }
 
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         $timedsql = "AND d.timestart < :now1 AND (d.timeend = 0 OR d.timeend > :now2)";
         $params['now1'] = $now;
         $params['now2'] = $now;
@@ -2853,10 +2853,10 @@ function forum_get_discussions_unread($cm) {
     }
 
     $sql = "SELECT d.id, COUNT(p.id) AS unread
-              FROM {forum_discussions} d
-                   JOIN {forum_posts} p     ON p.discussion = d.id
-                   LEFT JOIN {forum_read} r ON (r.postid = p.id AND r.userid = $USER->id)
-             WHERE d.forum = {$cm->instance}
+              FROM {cybrary_discussions} d
+                   JOIN {cybrary_posts} p     ON p.discussion = d.id
+                   LEFT JOIN {cybrary_read} r ON (r.postid = p.id AND r.userid = $USER->id)
+             WHERE d.cybrary = {$cm->instance}
                    AND p.modified >= :cutoffdate AND r.id is NULL
                    $groupselect
                    $timedsql
@@ -2882,7 +2882,7 @@ function forum_get_discussions_unread($cm) {
  * @param object $cm
  * @return array
  */
-function forum_get_discussions_count($cm) {
+function cybrary_get_discussions_count($cm) {
     global $CFG, $DB, $USER;
 
     $now = round(time(), -2);
@@ -2914,15 +2914,15 @@ function forum_get_discussions_count($cm) {
         $groupselect = "";
     }
 
-    $cutoffdate = $now - ($CFG->forum_oldpostdays*24*60*60);
+    $cutoffdate = $now - ($CFG->cybrary_oldpostdays*24*60*60);
 
     $timelimit = "";
 
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
 
         $modcontext = context_module::instance($cm->id);
 
-        if (!has_capability('mod/forum:viewhiddentimedposts', $modcontext)) {
+        if (!has_capability('mod/cybrary:viewhiddentimedposts', $modcontext)) {
             $timelimit = " AND ((d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?))";
             $params[] = $now;
             $params[] = $now;
@@ -2935,9 +2935,9 @@ function forum_get_discussions_count($cm) {
     }
 
     $sql = "SELECT COUNT(d.id)
-              FROM {forum_discussions} d
-                   JOIN {forum_posts} p ON p.discussion = d.id
-             WHERE d.forum = ? AND p.parent = 0
+              FROM {cybrary_discussions} d
+                   JOIN {cybrary_posts} p ON p.discussion = d.id
+             WHERE d.cybrary = ? AND p.parent = 0
                    $groupselect $timelimit";
 
     return $DB->get_field_sql($sql, $params);
@@ -2953,65 +2953,65 @@ function forum_get_discussions_count($cm) {
  * @param int $courseid
  * @param string $type
  */
-function forum_get_course_forum($courseid, $type) {
-// How to set up special 1-per-course forums
+function cybrary_get_course_cybrary($courseid, $type) {
+// How to set up special 1-per-course cybraries
     global $CFG, $DB, $OUTPUT, $USER;
 
-    if ($forums = $DB->get_records_select("forum", "course = ? AND type = ?", array($courseid, $type), "id ASC")) {
+    if ($cybraries = $DB->get_records_select("cybrary", "course = ? AND type = ?", array($courseid, $type), "id ASC")) {
         // There should always only be ONE, but with the right combination of
         // errors there might be more.  In this case, just return the oldest one (lowest ID).
-        foreach ($forums as $forum) {
-            return $forum;   // ie the first one
+        foreach ($cybraries as $cybrary) {
+            return $cybrary;   // ie the first one
         }
     }
 
     // Doesn't exist, so create one now.
-    $forum = new stdClass();
-    $forum->course = $courseid;
-    $forum->type = "$type";
+    $cybrary = new stdClass();
+    $cybrary->course = $courseid;
+    $cybrary->type = "$type";
     if (!empty($USER->htmleditor)) {
-        $forum->introformat = $USER->htmleditor;
+        $cybrary->introformat = $USER->htmleditor;
     }
-    switch ($forum->type) {
+    switch ($cybrary->type) {
         case "news":
-            $forum->name  = get_string("namenews", "forum");
-            $forum->intro = get_string("intronews", "forum");
-            $forum->forcesubscribe = FORUM_FORCESUBSCRIBE;
-            $forum->assessed = 0;
+            $cybrary->name  = get_string("namenews", "cybrary");
+            $cybrary->intro = get_string("intronews", "cybrary");
+            $cybrary->forcesubscribe = CYBRARY_FORCESUBSCRIBE;
+            $cybrary->assessed = 0;
             if ($courseid == SITEID) {
-                $forum->name  = get_string("sitenews");
-                $forum->forcesubscribe = 0;
+                $cybrary->name  = get_string("sitenews");
+                $cybrary->forcesubscribe = 0;
             }
             break;
         case "social":
-            $forum->name  = get_string("namesocial", "forum");
-            $forum->intro = get_string("introsocial", "forum");
-            $forum->assessed = 0;
-            $forum->forcesubscribe = 0;
+            $cybrary->name  = get_string("namesocial", "cybrary");
+            $cybrary->intro = get_string("introsocial", "cybrary");
+            $cybrary->assessed = 0;
+            $cybrary->forcesubscribe = 0;
             break;
         case "blog":
-            $forum->name = get_string('blogforum', 'forum');
-            $forum->intro = get_string('introblog', 'forum');
-            $forum->assessed = 0;
-            $forum->forcesubscribe = 0;
+            $cybrary->name = get_string('blogcybrary', 'cybrary');
+            $cybrary->intro = get_string('introblog', 'cybrary');
+            $cybrary->assessed = 0;
+            $cybrary->forcesubscribe = 0;
             break;
         default:
-            echo $OUTPUT->notification("That forum type doesn't exist!");
+            echo $OUTPUT->notification("That cybrary type doesn't exist!");
             return false;
             break;
     }
 
-    $forum->timemodified = time();
-    $forum->id = $DB->insert_record("forum", $forum);
+    $cybrary->timemodified = time();
+    $cybrary->id = $DB->insert_record("cybrary", $cybrary);
 
-    if (! $module = $DB->get_record("modules", array("name" => "forum"))) {
-        echo $OUTPUT->notification("Could not find forum module!!");
+    if (! $module = $DB->get_record("modules", array("name" => "cybrary"))) {
+        echo $OUTPUT->notification("Could not find cybrary module!!");
         return false;
     }
     $mod = new stdClass();
     $mod->course = $courseid;
     $mod->module = $module->id;
-    $mod->instance = $forum->id;
+    $mod->instance = $cybrary->id;
     $mod->section = 0;
     include_once("$CFG->dirroot/course/lib.php");
     if (! $mod->coursemodule = add_course_module($mod) ) {
@@ -3019,15 +3019,15 @@ function forum_get_course_forum($courseid, $type) {
         return false;
     }
     $sectionid = course_add_cm_to_section($courseid, $mod->coursemodule, 0);
-    return $DB->get_record("forum", array("id" => "$forum->id"));
+    return $DB->get_record("cybrary", array("id" => "$cybrary->id"));
 }
 
 /**
- * Print a forum post
+ * Print a cybrary post
  *
  * @global object
  * @global object
- * @uses FORUM_MODE_THREADED
+ * @uses CYBRARY_MODE_THREADED
  * @uses PORTFOLIO_FORMAT_PLAINHTML
  * @uses PORTFOLIO_FORMAT_FILE
  * @uses PORTFOLIO_FORMAT_RICHHTML
@@ -3035,7 +3035,7 @@ function forum_get_course_forum($courseid, $type) {
  * @uses CONTEXT_MODULE
  * @param object $post The post to print.
  * @param object $discussion
- * @param object $forum
+ * @param object $cybrary
  * @param object $cm
  * @param object $course
  * @param boolean $ownpost Whether this post belongs to the current user.
@@ -3046,14 +3046,14 @@ function forum_get_course_forum($courseid, $type) {
  * @param int $post_read true, false or -99. If we already know whether this user
  *          has read this post, pass that in, otherwise, pass in -99, and this
  *          function will work it out.
- * @param boolean $dummyifcantsee When forum_user_can_see_post says that
+ * @param boolean $dummyifcantsee When cybrary_user_can_see_post says that
  *          the current user can't see this post, if this argument is true
  *          (the default) then print a dummy 'you can't see this post' post.
  *          If false, don't output anything at all.
  * @param bool|null $istracked
  * @return void
  */
-function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=false, $reply=false, $link=false,
+function cybrary_print_post($post, $discussion, $cybrary, &$cm, $course, $ownpost=false, $reply=false, $link=false,
                           $footer="", $highlight="", $postisread=null, $dummyifcantsee=true, $istracked=null, $return=false) {
     global $USER, $CFG, $OUTPUT;
 
@@ -3065,15 +3065,15 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     $modcontext = context_module::instance($cm->id);
 
     $post->course = $course->id;
-    $post->forum  = $forum->id;
-    $post->message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php', $modcontext->id, 'mod_forum', 'post', $post->id);
+    $post->cybrary  = $cybrary->id;
+    $post->message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php', $modcontext->id, 'mod_cybrary', 'post', $post->id);
     if (!empty($CFG->enableplagiarism)) {
         require_once($CFG->libdir.'/plagiarismlib.php');
         $post->message .= plagiarism_get_links(array('userid' => $post->userid,
             'content' => $post->message,
             'cmid' => $cm->id,
             'course' => $post->course,
-            'forum' => $post->forum));
+            'cybrary' => $post->cybrary));
     }
 
     // caching
@@ -3083,15 +3083,15 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     if (!isset($cm->cache->caps)) {
         $cm->cache->caps = array();
-        $cm->cache->caps['mod/forum:viewdiscussion']   = has_capability('mod/forum:viewdiscussion', $modcontext);
+        $cm->cache->caps['mod/cybrary:viewdiscussion']   = has_capability('mod/cybrary:viewdiscussion', $modcontext);
         $cm->cache->caps['moodle/site:viewfullnames']  = has_capability('moodle/site:viewfullnames', $modcontext);
-        $cm->cache->caps['mod/forum:editanypost']      = has_capability('mod/forum:editanypost', $modcontext);
-        $cm->cache->caps['mod/forum:splitdiscussions'] = has_capability('mod/forum:splitdiscussions', $modcontext);
-        $cm->cache->caps['mod/forum:deleteownpost']    = has_capability('mod/forum:deleteownpost', $modcontext);
-        $cm->cache->caps['mod/forum:deleteanypost']    = has_capability('mod/forum:deleteanypost', $modcontext);
-        $cm->cache->caps['mod/forum:viewanyrating']    = has_capability('mod/forum:viewanyrating', $modcontext);
-        $cm->cache->caps['mod/forum:exportpost']       = has_capability('mod/forum:exportpost', $modcontext);
-        $cm->cache->caps['mod/forum:exportownpost']    = has_capability('mod/forum:exportownpost', $modcontext);
+        $cm->cache->caps['mod/cybrary:editanypost']      = has_capability('mod/cybrary:editanypost', $modcontext);
+        $cm->cache->caps['mod/cybrary:splitdiscussions'] = has_capability('mod/cybrary:splitdiscussions', $modcontext);
+        $cm->cache->caps['mod/cybrary:deleteownpost']    = has_capability('mod/cybrary:deleteownpost', $modcontext);
+        $cm->cache->caps['mod/cybrary:deleteanypost']    = has_capability('mod/cybrary:deleteanypost', $modcontext);
+        $cm->cache->caps['mod/cybrary:viewanyrating']    = has_capability('mod/cybrary:viewanyrating', $modcontext);
+        $cm->cache->caps['mod/cybrary:exportpost']       = has_capability('mod/cybrary:exportpost', $modcontext);
+        $cm->cache->caps['mod/cybrary:exportownpost']    = has_capability('mod/cybrary:exportownpost', $modcontext);
     }
 
     if (!isset($cm->uservisible)) {
@@ -3099,10 +3099,10 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     }
 
     if ($istracked && is_null($postisread)) {
-        $postisread = forum_tp_is_post_read($USER->id, $post);
+        $postisread = cybrary_tp_is_post_read($USER->id, $post);
     }
 
-    if (!forum_user_can_see_post($forum, $discussion, $post, NULL, $cm)) {
+    if (!cybrary_user_can_see_post($cybrary, $discussion, $post, NULL, $cm)) {
         $output = '';
         if (!$dummyifcantsee) {
             if ($return) {
@@ -3112,9 +3112,9 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
             return;
         }
         $output .= html_writer::tag('a', '', array('id'=>'p'.$post->id));
-        $output .= html_writer::start_tag('div', array('class'=>'forumpost clearfix',
+        $output .= html_writer::start_tag('div', array('class'=>'cybrarypost clearfix',
                                                        'role' => 'region',
-                                                       'aria-label' => get_string('hiddenforumpost', 'forum')));
+                                                       'aria-label' => get_string('hiddencybrarypost', 'cybrary')));
         $output .= html_writer::start_tag('div', array('class'=>'row header'));
         $output .= html_writer::tag('div', '', array('class'=>'left picture')); // Picture
         if ($post->parent) {
@@ -3122,17 +3122,17 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         } else {
             $output .= html_writer::start_tag('div', array('class'=>'topic starter'));
         }
-        $output .= html_writer::tag('div', get_string('forumsubjecthidden','forum'), array('class' => 'subject',
+        $output .= html_writer::tag('div', get_string('cybrariesubjecthidden','cybrary'), array('class' => 'subject',
                                                                                            'role' => 'header')); // Subject.
-        $output .= html_writer::tag('div', get_string('forumauthorhidden', 'forum'), array('class' => 'author',
+        $output .= html_writer::tag('div', get_string('cybraryauthorhidden', 'cybrary'), array('class' => 'author',
                                                                                            'role' => 'header')); // Author.
         $output .= html_writer::end_tag('div');
         $output .= html_writer::end_tag('div'); // row
         $output .= html_writer::start_tag('div', array('class'=>'row'));
         $output .= html_writer::tag('div', '&nbsp;', array('class'=>'left side')); // Groups
-        $output .= html_writer::tag('div', get_string('forumbodyhidden','forum'), array('class'=>'content')); // Content
+        $output .= html_writer::tag('div', get_string('cybrarybodyhidden','cybrary'), array('class'=>'content')); // Content
         $output .= html_writer::end_tag('div'); // row
-        $output .= html_writer::end_tag('div'); // forumpost
+        $output .= html_writer::end_tag('div'); // cybrarypost
 
         if ($return) {
             return $output;
@@ -3143,18 +3143,18 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     if (empty($str)) {
         $str = new stdClass;
-        $str->edit         = get_string('edit', 'forum');
-        $str->delete       = get_string('delete', 'forum');
-        $str->reply        = get_string('reply', 'forum');
-        $str->parent       = get_string('parent', 'forum');
-        $str->pruneheading = get_string('pruneheading', 'forum');
-        $str->prune        = get_string('prune', 'forum');
-        $str->displaymode     = get_user_preferences('forum_displaymode', $CFG->forum_displaymode);
-        $str->markread     = get_string('markread', 'forum');
-        $str->markunread   = get_string('markunread', 'forum');
+        $str->edit         = get_string('edit', 'cybrary');
+        $str->delete       = get_string('delete', 'cybrary');
+        $str->reply        = get_string('reply', 'cybrary');
+        $str->parent       = get_string('parent', 'cybrary');
+        $str->pruneheading = get_string('pruneheading', 'cybrary');
+        $str->prune        = get_string('prune', 'cybrary');
+        $str->displaymode     = get_user_preferences('cybrary_displaymode', $CFG->cybrary_displaymode);
+        $str->markread     = get_string('markread', 'cybrary');
+        $str->markunread   = get_string('markunread', 'cybrary');
     }
 
-    $discussionlink = new moodle_url('/mod/forum/discuss.php', array('d'=>$post->discussion));
+    $discussionlink = new moodle_url('/mod/cybrary/discuss.php', array('d'=>$post->discussion));
 
     // Build an object that represents the posting user
     $postuser = new stdClass;
@@ -3177,10 +3177,10 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     }
 
     // Prepare the attachements for the post, files then images
-    list($attachments, $attachedimages) = forum_print_attachments($post, $cm, 'separateimages');
+    list($attachments, $attachedimages) = cybrary_print_attachments($post, $cm, 'separateimages');
 
     // Determine if we need to shorten this post
-    $shortenpost = ($link && (strlen(strip_tags($post->message)) > $CFG->forum_longpost));
+    $shortenpost = ($link && (strlen(strip_tags($post->message)) > $CFG->cybrary_longpost));
 
 
     // Prepare an array of commands
@@ -3188,14 +3188,14 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     // SPECIAL CASE: The front page can display a news item post to non-logged in users.
     // Don't display the mark read / unread controls in this case.
-    if ($istracked && $CFG->forum_usermarksread && isloggedin()) {
+    if ($istracked && $CFG->cybrary_usermarksread && isloggedin()) {
         $url = new moodle_url($discussionlink, array('postid'=>$post->id, 'mark'=>'unread'));
         $text = $str->markunread;
         if (!$postisread) {
             $url->param('mark', 'read');
             $text = $str->markread;
         }
-        if ($str->displaymode == FORUM_MODE_THREADED) {
+        if ($str->displaymode == CYBRARY_MODE_THREADED) {
             $url->param('parent', $post->parent);
         } else {
             $url->set_anchor('p'.$post->id);
@@ -3206,7 +3206,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     // Zoom in to the parent specifically
     if ($post->parent) {
         $url = new moodle_url($discussionlink);
-        if ($str->displaymode == FORUM_MODE_THREADED) {
+        if ($str->displaymode == CYBRARY_MODE_THREADED) {
             $url->param('parent', $post->parent);
         } else {
             $url->set_anchor('p'.$post->parent);
@@ -3216,38 +3216,38 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     // Hack for allow to edit news posts those are not displayed yet until they are displayed
     $age = time() - $post->created;
-    if (!$post->parent && $forum->type == 'news' && $discussion->timestart > time()) {
+    if (!$post->parent && $cybrary->type == 'news' && $discussion->timestart > time()) {
         $age = 0;
     }
 
-    if ($forum->type == 'single' and $discussion->firstpost == $post->id) {
+    if ($cybrary->type == 'single' and $discussion->firstpost == $post->id) {
         if (has_capability('moodle/course:manageactivities', $modcontext)) {
-            // The first post in single simple is the forum description.
+            // The first post in single simple is the cybrary description.
             $commands[] = array('url'=>new moodle_url('/course/modedit.php', array('update'=>$cm->id, 'sesskey'=>sesskey(), 'return'=>1)), 'text'=>$str->edit);
         }
-    } else if (($ownpost && $age < $CFG->maxeditingtime) || $cm->cache->caps['mod/forum:editanypost']) {
-        $commands[] = array('url'=>new moodle_url('/mod/forum/post.php', array('edit'=>$post->id)), 'text'=>$str->edit);
+    } else if (($ownpost && $age < $CFG->maxeditingtime) || $cm->cache->caps['mod/cybrary:editanypost']) {
+        $commands[] = array('url'=>new moodle_url('/mod/cybrary/post.php', array('edit'=>$post->id)), 'text'=>$str->edit);
     }
 
-    if ($cm->cache->caps['mod/forum:splitdiscussions'] && $post->parent && $forum->type != 'single') {
-        $commands[] = array('url'=>new moodle_url('/mod/forum/post.php', array('prune'=>$post->id)), 'text'=>$str->prune, 'title'=>$str->pruneheading);
+    if ($cm->cache->caps['mod/cybrary:splitdiscussions'] && $post->parent && $cybrary->type != 'single') {
+        $commands[] = array('url'=>new moodle_url('/mod/cybrary/post.php', array('prune'=>$post->id)), 'text'=>$str->prune, 'title'=>$str->pruneheading);
     }
 
-    if ($forum->type == 'single' and $discussion->firstpost == $post->id) {
+    if ($cybrary->type == 'single' and $discussion->firstpost == $post->id) {
         // Do not allow deleting of first post in single simple type.
-    } else if (($ownpost && $age < $CFG->maxeditingtime && $cm->cache->caps['mod/forum:deleteownpost']) || $cm->cache->caps['mod/forum:deleteanypost']) {
-        $commands[] = array('url'=>new moodle_url('/mod/forum/post.php', array('delete'=>$post->id)), 'text'=>$str->delete);
+    } else if (($ownpost && $age < $CFG->maxeditingtime && $cm->cache->caps['mod/cybrary:deleteownpost']) || $cm->cache->caps['mod/cybrary:deleteanypost']) {
+        $commands[] = array('url'=>new moodle_url('/mod/cybrary/post.php', array('delete'=>$post->id)), 'text'=>$str->delete);
     }
 
     if ($reply) {
-        $commands[] = array('url'=>new moodle_url('/mod/forum/post.php#mformforum', array('reply'=>$post->id)), 'text'=>$str->reply);
+        $commands[] = array('url'=>new moodle_url('/mod/cybrary/post.php#mformcybrary', array('reply'=>$post->id)), 'text'=>$str->reply);
     }
 
-    if ($CFG->enableportfolios && ($cm->cache->caps['mod/forum:exportpost'] || ($ownpost && $cm->cache->caps['mod/forum:exportownpost']))) {
+    if ($CFG->enableportfolios && ($cm->cache->caps['mod/cybrary:exportpost'] || ($ownpost && $cm->cache->caps['mod/cybrary:exportownpost']))) {
         $p = array('postid' => $post->id);
         require_once($CFG->libdir.'/portfoliolib.php');
         $button = new portfolio_add_button();
-        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id), 'mod_forum');
+        $button->set_callback_options('cybrary_portfolio_caller', array('postid' => $post->id), 'mod_cybrary');
         if (empty($attachments)) {
             $button->set_formats(PORTFOLIO_FORMAT_PLAINHTML);
         } else {
@@ -3268,14 +3268,14 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     if ($istracked) {
         if ($postisread) {
-            $forumpostclass = ' read';
+            $cybrarypostclass = ' read';
         } else {
-            $forumpostclass = ' unread';
+            $cybrarypostclass = ' unread';
             $output .= html_writer::tag('a', '', array('name'=>'unread'));
         }
     } else {
         // ignore trackign status if not tracked or tracked param missing
-        $forumpostclass = '';
+        $cybrarypostclass = '';
     }
 
     $topicclass = '';
@@ -3284,15 +3284,15 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     }
 
     if (!empty($post->lastpost)) {
-        $forumpostclass .= ' lastpost';
+        $cybrarypostclass .= ' lastpost';
     }
 
     $postbyuser = new stdClass;
     $postbyuser->post = $post->subject;
     $postbyuser->user = $postuser->fullname;
-    $discussionbyuser = get_string('postbyuser', 'forum', $postbyuser);
+    $discussionbyuser = get_string('postbyuser', 'cybrary', $postbyuser);
     $output .= html_writer::tag('a', '', array('id'=>'p'.$post->id));
-    $output .= html_writer::start_tag('div', array('class'=>'forumpost clearfix'.$forumpostclass.$topicclass,
+    $output .= html_writer::start_tag('div', array('class'=>'cybrarypost clearfix'.$cybrarypostclass.$topicclass,
                                                    'role' => 'region',
                                                    'aria-label' => $discussionbyuser));
     $output .= html_writer::start_tag('div', array('class'=>'row header clearfix'));
@@ -3314,7 +3314,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     $by = new stdClass();
     $by->name = html_writer::link($postuser->profilelink, $postuser->fullname);
     $by->date = userdate($post->modified);
-    $output .= html_writer::tag('div', get_string('bynameondate', 'forum', $by), array('class'=>'author',
+    $output .= html_writer::tag('div', get_string('bynameondate', 'cybrary', $by), array('class'=>'author',
                                                                                        'role' => 'heading',
                                                                                        'aria-level' => '2'));
 
@@ -3345,8 +3345,8 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         // Prepare shortened version by filtering the text then shortening it.
         $postclass    = 'shortenedpost';
         $postcontent  = format_text($post->message, $post->messageformat, $options);
-        $postcontent  = shorten_text($postcontent, $CFG->forum_shortpost);
-        $postcontent .= html_writer::link($discussionlink, get_string('readtherest', 'forum'));
+        $postcontent  = shorten_text($postcontent, $CFG->cybrary_shortpost);
+        $postcontent .= html_writer::link($discussionlink, get_string('readtherest', 'cybrary'));
         $postcontent .= html_writer::tag('div', '('.get_string('numwords', 'moodle', count_words($post->message)).')',
             array('class'=>'post-word-count'));
     } else {
@@ -3356,7 +3356,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         if (!empty($highlight)) {
             $postcontent = highlight($highlight, $postcontent);
         }
-        if (!empty($forum->displaywordcount)) {
+        if (!empty($cybrary->displaywordcount)) {
             $postcontent .= html_writer::tag('div', get_string('numwords', 'moodle', count_words($post->message)),
                 array('class'=>'post-word-count'));
         }
@@ -3379,7 +3379,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     // Output ratings
     if (!empty($post->rating)) {
-        $output .= html_writer::tag('div', $OUTPUT->render($post->rating), array('class'=>'forum-post-rating'));
+        $output .= html_writer::tag('div', $OUTPUT->render($post->rating), array('class'=>'cybrary-post-rating'));
     }
 
     // Output the commands
@@ -3394,24 +3394,24 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     $output .= html_writer::tag('div', implode(' | ', $commandhtml), array('class'=>'commands'));
 
     // Output link to post if required
-    if ($link && forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext)) {
+    if ($link && cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $modcontext)) {
         if ($post->replies == 1) {
-            $replystring = get_string('repliesone', 'forum', $post->replies);
+            $replystring = get_string('repliesone', 'cybrary', $post->replies);
         } else {
-            $replystring = get_string('repliesmany', 'forum', $post->replies);
+            $replystring = get_string('repliesmany', 'cybrary', $post->replies);
         }
         if (!empty($discussion->unread) && $discussion->unread !== '-') {
             $replystring .= ' <span class="sep">/</span> <span class="unread">';
             if ($discussion->unread == 1) {
-                $replystring .= get_string('unreadpostsone', 'forum');
+                $replystring .= get_string('unreadpostsone', 'cybrary');
             } else {
-                $replystring .= get_string('unreadpostsnumber', 'forum', $discussion->unread);
+                $replystring .= get_string('unreadpostsnumber', 'cybrary', $discussion->unread);
             }
             $replystring .= '</span>';
         }
 
         $output .= html_writer::start_tag('div', array('class'=>'link'));
-        $output .= html_writer::link($discussionlink, get_string('discussthistopic', 'forum'));
+        $output .= html_writer::link($discussionlink, get_string('discussthistopic', 'cybrary'));
         $output .= '&nbsp;('.$replystring.')';
         $output .= html_writer::end_tag('div'); // link
     }
@@ -3424,11 +3424,11 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     // Close remaining open divs
     $output .= html_writer::end_tag('div'); // content
     $output .= html_writer::end_tag('div'); // row
-    $output .= html_writer::end_tag('div'); // forumpost
+    $output .= html_writer::end_tag('div'); // cybrarypost
 
-    // Mark the forum post as read if required
-    if ($istracked && !$CFG->forum_usermarksread && !$postisread) {
-        forum_tp_mark_post_read($USER->id, $post, $forum->id);
+    // Mark the cybrary post as read if required
+    if ($istracked && !$CFG->cybrary_usermarksread && !$postisread) {
+        cybrary_tp_mark_post_read($USER->id, $post, $cybrary->id);
     }
 
     if ($return) {
@@ -3444,18 +3444,18 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
  * @param string $options the context id
  * @return array an associative array of the user's rating permissions
  */
-function forum_rating_permissions($contextid, $component, $ratingarea) {
+function cybrary_rating_permissions($contextid, $component, $ratingarea) {
     $context = context::instance_by_id($contextid, MUST_EXIST);
-    if ($component != 'mod_forum' || $ratingarea != 'post') {
+    if ($component != 'mod_cybrary' || $ratingarea != 'post') {
         // We don't know about this component/ratingarea so just return null to get the
         // default restrictive permissions.
         return null;
     }
     return array(
-        'view'    => has_capability('mod/forum:viewrating', $context),
-        'viewany' => has_capability('mod/forum:viewanyrating', $context),
-        'viewall' => has_capability('mod/forum:viewallratings', $context),
-        'rate'    => has_capability('mod/forum:rate', $context)
+        'view'    => has_capability('mod/cybrary:viewrating', $context),
+        'viewany' => has_capability('mod/cybrary:viewanyrating', $context),
+        'viewall' => has_capability('mod/cybrary:viewallratings', $context),
+        'rate'    => has_capability('mod/cybrary:rate', $context)
     );
 }
 
@@ -3463,7 +3463,7 @@ function forum_rating_permissions($contextid, $component, $ratingarea) {
  * Validates a submitted rating
  * @param array $params submitted data
  *            context => object the context in which the rated items exists [required]
- *            component => The component for this module - should always be mod_forum [required]
+ *            component => The component for this module - should always be mod_cybrary [required]
  *            ratingarea => object the context in which the rated items exists [required]
  *            itemid => int the ID of the object being rated [required]
  *            scaleid => int the scale from which the user can select a rating. Used for bounds checking. [required]
@@ -3472,15 +3472,15 @@ function forum_rating_permissions($contextid, $component, $ratingarea) {
  *            aggregation => int the aggregation method to apply when calculating grades ie RATING_AGGREGATE_AVERAGE [required]
  * @return boolean true if the rating is valid. Will throw rating_exception if not
  */
-function forum_rating_validate($params) {
+function cybrary_rating_validate($params) {
     global $DB, $USER;
 
-    // Check the component is mod_forum
-    if ($params['component'] != 'mod_forum') {
+    // Check the component is mod_cybrary
+    if ($params['component'] != 'mod_cybrary') {
         throw new rating_exception('invalidcomponent');
     }
 
-    // Check the ratingarea is post (the only rating area in forum)
+    // Check the ratingarea is post (the only rating area in cybrary)
     if ($params['ratingarea'] != 'post') {
         throw new rating_exception('invalidratingarea');
     }
@@ -3490,27 +3490,27 @@ function forum_rating_validate($params) {
         throw new rating_exception('nopermissiontorate');
     }
 
-    // Fetch all the related records ... we need to do this anyway to call forum_user_can_see_post
-    $post = $DB->get_record('forum_posts', array('id' => $params['itemid'], 'userid' => $params['rateduserid']), '*', MUST_EXIST);
-    $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
-    $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id , false, MUST_EXIST);
+    // Fetch all the related records ... we need to do this anyway to call cybrary_user_can_see_post
+    $post = $DB->get_record('cybrary_posts', array('id' => $params['itemid'], 'userid' => $params['rateduserid']), '*', MUST_EXIST);
+    $discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
+    $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary), '*', MUST_EXIST);
+    $course = $DB->get_record('course', array('id' => $cybrary->course), '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id , false, MUST_EXIST);
     $context = context_module::instance($cm->id);
 
-    // Make sure the context provided is the context of the forum
+    // Make sure the context provided is the context of the cybrary
     if ($context->id != $params['context']->id) {
         throw new rating_exception('invalidcontext');
     }
 
-    if ($forum->scale != $params['scaleid']) {
+    if ($cybrary->scale != $params['scaleid']) {
         //the scale being submitted doesnt match the one in the database
         throw new rating_exception('invalidscaleid');
     }
 
     // check the item we're rating was created in the assessable time window
-    if (!empty($forum->assesstimestart) && !empty($forum->assesstimefinish)) {
-        if ($post->created < $forum->assesstimestart || $post->created > $forum->assesstimefinish) {
+    if (!empty($cybrary->assesstimestart) && !empty($cybrary->assesstimefinish)) {
+        if ($post->created < $cybrary->assesstimestart || $post->created > $cybrary->assesstimefinish) {
             throw new rating_exception('notavailable');
         }
     }
@@ -3523,9 +3523,9 @@ function forum_rating_validate($params) {
     }
 
     // upper limit
-    if ($forum->scale < 0) {
+    if ($cybrary->scale < 0) {
         //its a custom scale
-        $scalerecord = $DB->get_record('scale', array('id' => -$forum->scale));
+        $scalerecord = $DB->get_record('scale', array('id' => -$cybrary->scale));
         if ($scalerecord) {
             $scalearray = explode(',', $scalerecord->scale);
             if ($params['rating'] > count($scalearray)) {
@@ -3534,7 +3534,7 @@ function forum_rating_validate($params) {
         } else {
             throw new rating_exception('invalidscaleid');
         }
-    } else if ($params['rating'] > $forum->scale) {
+    } else if ($params['rating'] > $cybrary->scale) {
         //if its numeric and submitted rating is above maximum
         throw new rating_exception('invalidnum');
     }
@@ -3552,7 +3552,7 @@ function forum_rating_validate($params) {
     }
 
     // perform some final capability checks
-    if (!forum_user_can_see_post($forum, $discussion, $post, $USER, $cm)) {
+    if (!cybrary_user_can_see_post($cybrary, $discussion, $post, $USER, $cm)) {
         throw new rating_exception('nopermissiontorate');
     }
 
@@ -3564,7 +3564,7 @@ function forum_rating_validate($params) {
  *
  * @param array $params submitted data
  *            contextid => int contextid [required]
- *            component => The component for this module - should always be mod_forum [required]
+ *            component => The component for this module - should always be mod_cybrary [required]
  *            ratingarea => object the context in which the rated items exists [required]
  *            itemid => int the ID of the object being rated [required]
  *            scaleid => int scale id [optional]
@@ -3572,15 +3572,15 @@ function forum_rating_validate($params) {
  * @throws coding_exception
  * @throws rating_exception
  */
-function mod_forum_rating_can_see_item_ratings($params) {
+function mod_cybrary_rating_can_see_item_ratings($params) {
     global $DB, $USER;
 
-    // Check the component is mod_forum.
-    if (!isset($params['component']) || $params['component'] != 'mod_forum') {
+    // Check the component is mod_cybrary.
+    if (!isset($params['component']) || $params['component'] != 'mod_cybrary') {
         throw new rating_exception('invalidcomponent');
     }
 
-    // Check the ratingarea is post (the only rating area in forum).
+    // Check the ratingarea is post (the only rating area in cybrary).
     if (!isset($params['ratingarea']) || $params['ratingarea'] != 'post') {
         throw new rating_exception('invalidratingarea');
     }
@@ -3589,38 +3589,38 @@ function mod_forum_rating_can_see_item_ratings($params) {
         throw new rating_exception('invaliditemid');
     }
 
-    $post = $DB->get_record('forum_posts', array('id' => $params['itemid']), '*', MUST_EXIST);
-    $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
-    $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id , false, MUST_EXIST);
+    $post = $DB->get_record('cybrary_posts', array('id' => $params['itemid']), '*', MUST_EXIST);
+    $discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
+    $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary), '*', MUST_EXIST);
+    $course = $DB->get_record('course', array('id' => $cybrary->course), '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id , false, MUST_EXIST);
 
     // Perform some final capability checks.
-    if (!forum_user_can_see_post($forum, $discussion, $post, $USER, $cm)) {
+    if (!cybrary_user_can_see_post($cybrary, $discussion, $post, $USER, $cm)) {
         return false;
     }
     return true;
 }
 
 /**
- * This function prints the overview of a discussion in the forum listing.
+ * This function prints the overview of a discussion in the cybrary listing.
  * It needs some discussion information and some post information, these
  * happen to be combined for efficiency in the $post parameter by the function
- * that calls this one: forum_print_latest_discussions()
+ * that calls this one: cybrary_print_latest_discussions()
  *
  * @global object
  * @global object
  * @param object $post The post object (passed by reference for speed).
- * @param object $forum The forum object.
+ * @param object $cybrary The cybrary object.
  * @param int $group Current group.
  * @param string $datestring Format to use for the dates.
- * @param boolean $cantrack Is tracking enabled for this forum.
- * @param boolean $forumtracked Is the user tracking this forum.
+ * @param boolean $cantrack Is tracking enabled for this cybrary.
+ * @param boolean $cybrarytracked Is the user tracking this cybrary.
  * @param boolean $canviewparticipants True if user has the viewparticipants permission for this course
- * @param boolean $canviewhiddentimedposts True if user has the viewhiddentimedposts permission for this forum
+ * @param boolean $canviewhiddentimedposts True if user has the viewhiddentimedposts permission for this cybrary
  */
-function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring = "",
-                                        $cantrack = true, $forumtracked = true, $canviewparticipants = true, $modcontext = null,
+function cybrary_print_discussion_header(&$post, $cybrary, $group = -1, $datestring = "",
+                                        $cantrack = true, $cybrarytracked = true, $canviewparticipants = true, $modcontext = null,
                                         $canviewhiddentimedposts = false) {
 
     global $COURSE, $USER, $CFG, $OUTPUT, $PAGE;
@@ -3629,7 +3629,7 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     static $strmarkalldread;
 
     if (empty($modcontext)) {
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
+        if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course)) {
             print_error('invalidcoursemodule');
         }
         $modcontext = context_module::instance($cm->id);
@@ -3637,14 +3637,14 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
 
     if (!isset($rowcount)) {
         $rowcount = 0;
-        $strmarkalldread = get_string('markalldread', 'forum');
+        $strmarkalldread = get_string('markalldread', 'cybrary');
     } else {
         $rowcount = ($rowcount + 1) % 2;
     }
 
     $post->subject = format_string($post->subject,true);
 
-    $timeddiscussion = !empty($CFG->forum_enabletimedposts) && ($post->timestart || $post->timeend);
+    $timeddiscussion = !empty($CFG->cybrary_enabletimedposts) && ($post->timestart || $post->timeend);
     $timedoutsidewindow = '';
     if ($timeddiscussion && ($post->timestart > time() || ($post->timeend != 0 && $post->timeend < time()))) {
         $timedoutsidewindow = ' dimmed_text';
@@ -3658,10 +3658,10 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
 
     $canalwaysseetimedpost = $USER->id == $post->userid || $canviewhiddentimedposts;
     if ($timeddiscussion && $canalwaysseetimedpost) {
-        echo $PAGE->get_renderer('mod_forum')->timed_discussion_tooltip($post, empty($timedoutsidewindow));
+        echo $PAGE->get_renderer('mod_cybrary')->timed_discussion_tooltip($post, empty($timedoutsidewindow));
     }
 
-    echo '<a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'">'.$post->subject.'</a>';
+    echo '<a href="'.$CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'">'.$post->subject.'</a>';
     echo "</td>\n";
 
     // Picture
@@ -3670,13 +3670,13 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     $postuser = username_load_fields_from_object($postuser, $post, null, $postuserfields);
     $postuser->id = $post->userid;
     echo '<td class="picture">';
-    echo $OUTPUT->user_picture($postuser, array('courseid'=>$forum->course));
+    echo $OUTPUT->user_picture($postuser, array('courseid'=>$cybrary->course));
     echo "</td>\n";
 
     // User name
     $fullname = fullname($postuser, has_capability('moodle/site:viewfullnames', $modcontext));
     echo '<td class="author">';
-    echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->userid.'&amp;course='.$forum->course.'">'.$fullname.'</a>';
+    echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->userid.'&amp;course='.$cybrary->course.'">'.$fullname.'</a>';
     echo "</td>\n";
 
     // Group picture
@@ -3688,10 +3688,10 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
             } else {
                 $picturelink = false;
             }
-            print_group_picture($group, $forum->course, false, false, $picturelink);
+            print_group_picture($group, $cybrary->course, false, false, $picturelink);
         } else if (isset($group->id)) {
             if ($canviewparticipants && $COURSE->groupmode) {
-                echo '<a href="'.$CFG->wwwroot.'/user/index.php?id='.$forum->course.'&amp;group='.$group->id.'">'.$group->name.'</a>';
+                echo '<a href="'.$CFG->wwwroot.'/user/index.php?id='.$cybrary->course.'&amp;group='.$group->id.'">'.$group->name.'</a>';
             } else {
                 echo $group->name;
             }
@@ -3699,22 +3699,22 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
         echo "</td>\n";
     }
 
-    if (has_capability('mod/forum:viewdiscussion', $modcontext)) {   // Show the column with replies
+    if (has_capability('mod/cybrary:viewdiscussion', $modcontext)) {   // Show the column with replies
         echo '<td class="replies">';
-        echo '<a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'">';
+        echo '<a href="'.$CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'">';
         echo $post->replies.'</a>';
         echo "</td>\n";
 
         if ($cantrack) {
             echo '<td class="replies">';
-            if ($forumtracked) {
+            if ($cybrarytracked) {
                 if ($post->unread > 0) {
                     echo '<span class="unread">';
-                    echo '<a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'#unread">';
+                    echo '<a href="'.$CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'#unread">';
                     echo $post->unread;
                     echo '</a>';
-                    echo '<a title="'.$strmarkalldread.'" href="'.$CFG->wwwroot.'/mod/forum/markposts.php?f='.
-                         $forum->id.'&amp;d='.$post->discussion.'&amp;mark=read&amp;returnpage=view.php">' .
+                    echo '<a title="'.$strmarkalldread.'" href="'.$CFG->wwwroot.'/mod/cybrary/markposts.php?f='.
+                         $cybrary->id.'&amp;d='.$post->discussion.'&amp;mark=read&amp;returnpage=view.php">' .
                          '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.$strmarkalldread.'" /></a>';
                     echo '</span>';
                 } else {
@@ -3738,24 +3738,24 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     $usermodified->id = $post->usermodified;
     $usermodified = username_load_fields_from_object($usermodified, $post, 'um');
 
-    // In QA forums we check that the user can view participants.
-    if ($forum->type !== 'qanda' || $canviewparticipants) {
-        echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->usermodified.'&amp;course='.$forum->course.'">'.
+    // In QA cybraries we check that the user can view participants.
+    if ($cybrary->type !== 'qanda' || $canviewparticipants) {
+        echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->usermodified.'&amp;course='.$cybrary->course.'">'.
              fullname($usermodified).'</a><br />';
         $parenturl = (empty($post->lastpostid)) ? '' : '&amp;parent='.$post->lastpostid;
     }
 
-    echo '<a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.$parenturl.'">'.
+    echo '<a href="'.$CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.$parenturl.'">'.
           userdate($usedate, $datestring).'</a>';
     echo "</td>\n";
 
     // is_guest should be used here as this also checks whether the user is a guest in the current course.
     // Guests and visitors cannot subscribe - only enrolled users.
-    if ((!is_guest($modcontext, $USER) && isloggedin()) && has_capability('mod/forum:viewdiscussion', $modcontext)) {
+    if ((!is_guest($modcontext, $USER) && isloggedin()) && has_capability('mod/cybrary:viewdiscussion', $modcontext)) {
         // Discussion subscription.
-        if (\mod_forum\subscriptions::is_subscribable($forum)) {
+        if (\mod_cybrary\subscriptions::is_subscribable($cybrary)) {
             echo '<td class="discussionsubscription">';
-            echo forum_get_discussion_subscription_icon($forum, $post->discussion);
+            echo cybrary_get_discussion_subscription_icon($cybrary, $post->discussion);
             echo '</td>';
         }
     }
@@ -3767,11 +3767,11 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
 /**
  * Return the markup for the discussion subscription toggling icon.
  *
- * @param stdClass $forum The forum object.
+ * @param stdClass $cybrary The cybrary object.
  * @param int $discussionid The discussion to create an icon for.
  * @return string The generated markup.
  */
-function forum_get_discussion_subscription_icon($forum, $discussionid, $returnurl = null, $includetext = false) {
+function cybrary_get_discussion_subscription_icon($cybrary, $discussionid, $returnurl = null, $includetext = false) {
     global $USER, $OUTPUT, $PAGE;
 
     if ($returnurl === null && $PAGE->url) {
@@ -3779,42 +3779,42 @@ function forum_get_discussion_subscription_icon($forum, $discussionid, $returnur
     }
 
     $o = '';
-    $subscriptionstatus = \mod_forum\subscriptions::is_subscribed($USER->id, $forum, $discussionid);
-    $subscriptionlink = new moodle_url('/mod/forum/subscribe.php', array(
+    $subscriptionstatus = \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary, $discussionid);
+    $subscriptionlink = new moodle_url('/mod/cybrary/subscribe.php', array(
         'sesskey' => sesskey(),
-        'id' => $forum->id,
+        'id' => $cybrary->id,
         'd' => $discussionid,
         'returnurl' => $returnurl,
     ));
 
     if ($includetext) {
-        $o .= $subscriptionstatus ? get_string('subscribed', 'mod_forum') : get_string('notsubscribed', 'mod_forum');
+        $o .= $subscriptionstatus ? get_string('subscribed', 'mod_cybrary') : get_string('notsubscribed', 'mod_cybrary');
     }
 
     if ($subscriptionstatus) {
-        $output = $OUTPUT->pix_icon('t/subscribed', get_string('clicktounsubscribe', 'forum'), 'mod_forum');
+        $output = $OUTPUT->pix_icon('t/subscribed', get_string('clicktounsubscribe', 'cybrary'), 'mod_cybrary');
         if ($includetext) {
-            $output .= get_string('subscribed', 'mod_forum');
+            $output .= get_string('subscribed', 'mod_cybrary');
         }
 
         return html_writer::link($subscriptionlink, $output, array(
-                'title' => get_string('clicktounsubscribe', 'forum'),
+                'title' => get_string('clicktounsubscribe', 'cybrary'),
                 'class' => 'discussiontoggle iconsmall',
-                'data-forumid' => $forum->id,
+                'data-cybraryid' => $cybrary->id,
                 'data-discussionid' => $discussionid,
                 'data-includetext' => $includetext,
             ));
 
     } else {
-        $output = $OUTPUT->pix_icon('t/unsubscribed', get_string('clicktosubscribe', 'forum'), 'mod_forum');
+        $output = $OUTPUT->pix_icon('t/unsubscribed', get_string('clicktosubscribe', 'cybrary'), 'mod_cybrary');
         if ($includetext) {
-            $output .= get_string('notsubscribed', 'mod_forum');
+            $output .= get_string('notsubscribed', 'mod_cybrary');
         }
 
         return html_writer::link($subscriptionlink, $output, array(
-                'title' => get_string('clicktosubscribe', 'forum'),
+                'title' => get_string('clicktosubscribe', 'cybrary'),
                 'class' => 'discussiontoggle iconsmall',
-                'data-forumid' => $forum->id,
+                'data-cybraryid' => $cybrary->id,
                 'data-discussionid' => $discussionid,
                 'data-includetext' => $includetext,
             ));
@@ -3827,7 +3827,7 @@ function forum_get_discussion_subscription_icon($forum, $discussionid, $returnur
  *
  * @return string The generated markup
  */
-function forum_get_discussion_subscription_icon_preloaders() {
+function cybrary_get_discussion_subscription_icon_preloaders() {
     $o = '';
     $o .= html_writer::span('&nbsp;', 'preload-subscribe');
     $o .= html_writer::span('&nbsp;', 'preload-unsubscribe');
@@ -3838,20 +3838,20 @@ function forum_get_discussion_subscription_icon_preloaders() {
  * Print the drop down that allows the user to select how they want to have
  * the discussion displayed.
  *
- * @param int $id forum id if $forumtype is 'single',
- *              discussion id for any other forum type
- * @param mixed $mode forum layout mode
- * @param string $forumtype optional
+ * @param int $id cybrary id if $cybrarytype is 'single',
+ *              discussion id for any other cybrary type
+ * @param mixed $mode cybrary layout mode
+ * @param string $cybrarytype optional
  */
-function forum_print_mode_form($id, $mode, $forumtype='') {
+function cybrary_print_mode_form($id, $mode, $cybrarytype='') {
     global $OUTPUT;
-    if ($forumtype == 'single') {
-        $select = new single_select(new moodle_url("/mod/forum/view.php", array('f'=>$id)), 'mode', forum_get_layout_modes(), $mode, null, "mode");
-        $select->set_label(get_string('displaymode', 'forum'), array('class' => 'accesshide'));
-        $select->class = "forummode";
+    if ($cybrarytype == 'single') {
+        $select = new single_select(new moodle_url("/mod/cybrary/view.php", array('f'=>$id)), 'mode', cybrary_get_layout_modes(), $mode, null, "mode");
+        $select->set_label(get_string('displaymode', 'cybrary'), array('class' => 'accesshide'));
+        $select->class = "cybrarymode";
     } else {
-        $select = new single_select(new moodle_url("/mod/forum/discuss.php", array('d'=>$id)), 'mode', forum_get_layout_modes(), $mode, null, "mode");
-        $select->set_label(get_string('displaymode', 'forum'), array('class' => 'accesshide'));
+        $select = new single_select(new moodle_url("/mod/cybrary/discuss.php", array('d'=>$id)), 'mode', cybrary_get_layout_modes(), $mode, null, "mode");
+        $select->set_label(get_string('displaymode', 'cybrary'), array('class' => 'accesshide'));
     }
     echo $OUTPUT->render($select);
 }
@@ -3862,17 +3862,17 @@ function forum_print_mode_form($id, $mode, $forumtype='') {
  * @param string $search
  * @return string
  */
-function forum_search_form($course, $search='') {
+function cybrary_search_form($course, $search='') {
     global $CFG, $OUTPUT;
 
-    $output  = '<div class="forumsearch">';
-    $output .= '<form action="'.$CFG->wwwroot.'/mod/forum/search.php" style="display:inline">';
+    $output  = '<div class="cybrariesearch">';
+    $output .= '<form action="'.$CFG->wwwroot.'/mod/cybrary/search.php" style="display:inline">';
     $output .= '<fieldset class="invisiblefieldset">';
     $output .= $OUTPUT->help_icon('search');
-    $output .= '<label class="accesshide" for="search" >'.get_string('search', 'forum').'</label>';
+    $output .= '<label class="accesshide" for="search" >'.get_string('search', 'cybrary').'</label>';
     $output .= '<input id="search" name="search" type="text" size="18" value="'.s($search, true).'" />';
-    $output .= '<label class="accesshide" for="searchforums" >'.get_string('searchforums', 'forum').'</label>';
-    $output .= '<input id="searchforums" value="'.get_string('searchforums', 'forum').'" type="submit" />';
+    $output .= '<label class="accesshide" for="searchcybraries" >'.get_string('searchcybraries', 'cybrary').'</label>';
+    $output .= '<input id="searchcybraries" value="'.get_string('searchcybraries', 'cybrary').'" type="submit" />';
     $output .= '<input name="id" type="hidden" value="'.$course->id.'" />';
     $output .= '</fieldset>';
     $output .= '</form>';
@@ -3886,7 +3886,7 @@ function forum_search_form($course, $search='') {
  * @global object
  * @global object
  */
-function forum_set_return() {
+function cybrary_set_return() {
     global $CFG, $SESSION;
 
     if (! isset($SESSION->fromdiscussion)) {
@@ -3904,7 +3904,7 @@ function forum_set_return() {
  * @param string|\moodle_url $default
  * @return string
  */
-function forum_go_back_to($default) {
+function cybrary_go_back_to($default) {
     global $SESSION;
 
     if (!empty($SESSION->fromdiscussion)) {
@@ -3917,43 +3917,43 @@ function forum_go_back_to($default) {
 }
 
 /**
- * Given a discussion object that is being moved to $forumto,
+ * Given a discussion object that is being moved to $cybraryto,
  * this function checks all posts in that discussion
  * for attachments, and if any are found, these are
- * moved to the new forum directory.
+ * moved to the new cybrary directory.
  *
  * @global object
  * @param object $discussion
- * @param int $forumfrom source forum id
- * @param int $forumto target forum id
+ * @param int $cybraryfrom source cybrary id
+ * @param int $cybraryto target cybrary id
  * @return bool success
  */
-function forum_move_attachments($discussion, $forumfrom, $forumto) {
+function cybrary_move_attachments($discussion, $cybraryfrom, $cybraryto) {
     global $DB;
 
     $fs = get_file_storage();
 
-    $newcm = get_coursemodule_from_instance('forum', $forumto);
-    $oldcm = get_coursemodule_from_instance('forum', $forumfrom);
+    $newcm = get_coursemodule_from_instance('cybrary', $cybraryto);
+    $oldcm = get_coursemodule_from_instance('cybrary', $cybraryfrom);
 
     $newcontext = context_module::instance($newcm->id);
     $oldcontext = context_module::instance($oldcm->id);
 
     // loop through all posts, better not use attachment flag ;-)
-    if ($posts = $DB->get_records('forum_posts', array('discussion'=>$discussion->id), '', 'id, attachment')) {
+    if ($posts = $DB->get_records('cybrary_posts', array('discussion'=>$discussion->id), '', 'id, attachment')) {
         foreach ($posts as $post) {
             $fs->move_area_files_to_new_context($oldcontext->id,
-                    $newcontext->id, 'mod_forum', 'post', $post->id);
+                    $newcontext->id, 'mod_cybrary', 'post', $post->id);
             $attachmentsmoved = $fs->move_area_files_to_new_context($oldcontext->id,
-                    $newcontext->id, 'mod_forum', 'attachment', $post->id);
+                    $newcontext->id, 'mod_cybrary', 'attachment', $post->id);
             if ($attachmentsmoved > 0 && $post->attachment != '1') {
                 // Weird - let's fix it
                 $post->attachment = '1';
-                $DB->update_record('forum_posts', $post);
+                $DB->update_record('cybrary_posts', $post);
             } else if ($attachmentsmoved == 0 && $post->attachment != '') {
                 // Weird - let's fix it
                 $post->attachment = '';
-                $DB->update_record('forum_posts', $post);
+                $DB->update_record('cybrary_posts', $post);
             }
         }
     }
@@ -3972,7 +3972,7 @@ function forum_move_attachments($discussion, $forumfrom, $forumto) {
  * @param string $type html/text/separateimages
  * @return mixed string or array of (html text withouth images and image HTML)
  */
-function forum_print_attachments($post, $cm, $type) {
+function cybrary_print_attachments($post, $cm, $type) {
     global $CFG, $DB, $USER, $OUTPUT;
 
     if (empty($post->attachment)) {
@@ -3986,14 +3986,14 @@ function forum_print_attachments($post, $cm, $type) {
     if (!$context = context_module::instance($cm->id)) {
         return $type !== 'separateimages' ? '' : array('', '');
     }
-    $strattachment = get_string('attachment', 'forum');
+    $strattachment = get_string('attachment', 'cybrary');
 
     $fs = get_file_storage();
 
     $imagereturn = '';
     $output = '';
 
-    $canexport = !empty($CFG->enableportfolios) && (has_capability('mod/forum:exportpost', $context) || ($post->userid == $USER->id && has_capability('mod/forum:exportownpost', $context)));
+    $canexport = !empty($CFG->enableportfolios) && (has_capability('mod/cybrary:exportpost', $context) || ($post->userid == $USER->id && has_capability('mod/cybrary:exportownpost', $context)));
 
     if ($canexport) {
         require_once($CFG->libdir.'/portfoliolib.php');
@@ -4001,7 +4001,7 @@ function forum_print_attachments($post, $cm, $type) {
 
     // We retrieve all files according to the time that they were created.  In the case that several files were uploaded
     // at the sametime (e.g. in the case of drag/drop upload) we revert to using the filename.
-    $files = $fs->get_area_files($context->id, 'mod_forum', 'attachment', $post->id, "filename", false);
+    $files = $fs->get_area_files($context->id, 'mod_cybrary', 'attachment', $post->id, "filename", false);
     if ($files) {
         if ($canexport) {
             $button = new portfolio_add_button();
@@ -4010,13 +4010,13 @@ function forum_print_attachments($post, $cm, $type) {
             $filename = $file->get_filename();
             $mimetype = $file->get_mimetype();
             $iconimage = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', array('class' => 'icon'));
-            $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$context->id.'/mod_forum/attachment/'.$post->id.'/'.$filename);
+            $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$context->id.'/mod_cybrary/attachment/'.$post->id.'/'.$filename);
 
             if ($type == 'html') {
                 $output .= "<a href=\"$path\">$iconimage</a> ";
                 $output .= "<a href=\"$path\">".s($filename)."</a>";
                 if ($canexport) {
-                    $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_forum');
+                    $button->set_callback_options('cybrary_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_cybrary');
                     $button->set_format_by_file($file);
                     $output .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
                 }
@@ -4030,7 +4030,7 @@ function forum_print_attachments($post, $cm, $type) {
                     // Image attachments don't get printed as links
                     $imagereturn .= "<br /><img src=\"$path\" alt=\"\" />";
                     if ($canexport) {
-                        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_forum');
+                        $button->set_callback_options('cybrary_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_cybrary');
                         $button->set_format_by_file($file);
                         $imagereturn .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
                     }
@@ -4038,7 +4038,7 @@ function forum_print_attachments($post, $cm, $type) {
                     $output .= "<a href=\"$path\">$iconimage</a> ";
                     $output .= format_text("<a href=\"$path\">".s($filename)."</a>", FORMAT_HTML, array('context'=>$context));
                     if ($canexport) {
-                        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_forum');
+                        $button->set_callback_options('cybrary_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), 'mod_cybrary');
                         $button->set_format_by_file($file);
                         $output .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
                     }
@@ -4052,7 +4052,7 @@ function forum_print_attachments($post, $cm, $type) {
                     'file' => $file,
                     'cmid' => $cm->id,
                     'course' => $cm->course,
-                    'forum' => $cm->instance));
+                    'cybrary' => $cm->instance));
                 $output .= '<br />';
             }
         }
@@ -4073,24 +4073,24 @@ function forum_print_attachments($post, $cm, $type) {
 /**
  * Lists all browsable file areas
  *
- * @package  mod_forum
+ * @package  mod_cybrary
  * @category files
  * @param stdClass $course course object
  * @param stdClass $cm course module object
  * @param stdClass $context context object
  * @return array
  */
-function forum_get_file_areas($course, $cm, $context) {
+function cybrary_get_file_areas($course, $cm, $context) {
     return array(
-        'attachment' => get_string('areaattachment', 'mod_forum'),
-        'post' => get_string('areapost', 'mod_forum'),
+        'attachment' => get_string('areaattachment', 'mod_cybrary'),
+        'post' => get_string('areapost', 'mod_cybrary'),
     );
 }
 
 /**
- * File browsing support for forum module.
+ * File browsing support for cybrary module.
  *
- * @package  mod_forum
+ * @package  mod_cybrary
  * @category files
  * @param stdClass $browser file browser object
  * @param stdClass $areas file areas
@@ -4103,7 +4103,7 @@ function forum_get_file_areas($course, $cm, $context) {
  * @param string $filename file name
  * @return file_info instance or null if not found
  */
-function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename) {
+function cybrary_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename) {
     global $CFG, $DB, $USER;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -4115,20 +4115,20 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
         return null;
     }
 
-    // Note that forum_user_can_see_post() additionally allows access for parent roles
-    // and it explicitly checks qanda forum type, too. One day, when we stop requiring
+    // Note that cybrary_user_can_see_post() additionally allows access for parent roles
+    // and it explicitly checks qanda cybrary type, too. One day, when we stop requiring
     // course:managefiles, we will need to extend this.
-    if (!has_capability('mod/forum:viewdiscussion', $context)) {
+    if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
         return null;
     }
 
     if (is_null($itemid)) {
-        require_once($CFG->dirroot.'/mod/forum/locallib.php');
-        return new forum_file_info_container($browser, $course, $cm, $context, $areas, $filearea);
+        require_once($CFG->dirroot.'/mod/cybrary/locallib.php');
+        return new cybrary_file_info_container($browser, $course, $cm, $context, $areas, $filearea);
     }
 
     static $cached = array();
-    // $cached will store last retrieved post, discussion and forum. To make sure that the cache
+    // $cached will store last retrieved post, discussion and cybrary. To make sure that the cache
     // is cleared between unit tests we check if this is the same session
     if (!isset($cached['sesskey']) || $cached['sesskey'] != sesskey()) {
         $cached = array('sesskey' => sesskey());
@@ -4136,7 +4136,7 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
 
     if (isset($cached['post']) && $cached['post']->id == $itemid) {
         $post = $cached['post'];
-    } else if ($post = $DB->get_record('forum_posts', array('id' => $itemid))) {
+    } else if ($post = $DB->get_record('cybrary_posts', array('id' => $itemid))) {
         $cached['post'] = $post;
     } else {
         return null;
@@ -4144,16 +4144,16 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
 
     if (isset($cached['discussion']) && $cached['discussion']->id == $post->discussion) {
         $discussion = $cached['discussion'];
-    } else if ($discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion))) {
+    } else if ($discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion))) {
         $cached['discussion'] = $discussion;
     } else {
         return null;
     }
 
-    if (isset($cached['forum']) && $cached['forum']->id == $cm->instance) {
-        $forum = $cached['forum'];
-    } else if ($forum = $DB->get_record('forum', array('id' => $cm->instance))) {
-        $cached['forum'] = $forum;
+    if (isset($cached['cybrary']) && $cached['cybrary']->id == $cm->instance) {
+        $cybrary = $cached['cybrary'];
+    } else if ($cybrary = $DB->get_record('cybrary', array('id' => $cm->instance))) {
+        $cached['cybrary'] = $cybrary;
     } else {
         return null;
     }
@@ -4161,7 +4161,7 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
     $fs = get_file_storage();
     $filepath = is_null($filepath) ? '/' : $filepath;
     $filename = is_null($filename) ? '.' : $filename;
-    if (!($storedfile = $fs->get_file($context->id, 'mod_forum', $filearea, $itemid, $filepath, $filename))) {
+    if (!($storedfile = $fs->get_file($context->id, 'mod_cybrary', $filearea, $itemid, $filepath, $filename))) {
         return null;
     }
 
@@ -4179,7 +4179,7 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
     }
 
     // Make sure we're allowed to see it...
-    if (!forum_user_can_see_post($forum, $discussion, $post, NULL, $cm)) {
+    if (!cybrary_user_can_see_post($cybrary, $discussion, $post, NULL, $cm)) {
         return null;
     }
 
@@ -4188,9 +4188,9 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
 }
 
 /**
- * Serves the forum attachments. Implements needed access control ;-)
+ * Serves the cybrary attachments. Implements needed access control ;-)
  *
- * @package  mod_forum
+ * @package  mod_cybrary
  * @category files
  * @param stdClass $course course object
  * @param stdClass $cm course module object
@@ -4201,7 +4201,7 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
  * @param array $options additional options affecting the file serving
  * @return bool false if file not found, does not return if found - justsend the file
  */
-function forum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function cybrary_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
     global $CFG, $DB;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -4210,7 +4210,7 @@ function forum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
 
     require_course_login($course, true, $cm);
 
-    $areas = forum_get_file_areas($course, $cm, $context);
+    $areas = cybrary_get_file_areas($course, $cm, $context);
 
     // filearea must contain a real area
     if (!isset($areas[$filearea])) {
@@ -4219,21 +4219,21 @@ function forum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
 
     $postid = (int)array_shift($args);
 
-    if (!$post = $DB->get_record('forum_posts', array('id'=>$postid))) {
+    if (!$post = $DB->get_record('cybrary_posts', array('id'=>$postid))) {
         return false;
     }
 
-    if (!$discussion = $DB->get_record('forum_discussions', array('id'=>$post->discussion))) {
+    if (!$discussion = $DB->get_record('cybrary_discussions', array('id'=>$post->discussion))) {
         return false;
     }
 
-    if (!$forum = $DB->get_record('forum', array('id'=>$cm->instance))) {
+    if (!$cybrary = $DB->get_record('cybrary', array('id'=>$cm->instance))) {
         return false;
     }
 
     $fs = get_file_storage();
     $relativepath = implode('/', $args);
-    $fullpath = "/$context->id/mod_forum/$filearea/$postid/$relativepath";
+    $fullpath = "/$context->id/mod_cybrary/$filearea/$postid/$relativepath";
     if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
         return false;
     }
@@ -4249,7 +4249,7 @@ function forum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
     }
 
     // Make sure we're allowed to see it...
-    if (!forum_user_can_see_post($forum, $discussion, $post, NULL, $cm)) {
+    if (!cybrary_user_can_see_post($cybrary, $discussion, $post, NULL, $cm)) {
         return false;
     }
 
@@ -4261,14 +4261,14 @@ function forum_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
  * If successful, this function returns the name of the file
  *
  * @global object
- * @param object $post is a full post record, including course and forum
- * @param object $forum
+ * @param object $post is a full post record, including course and cybrary
+ * @param object $cybrary
  * @param object $cm
  * @param mixed $mform
  * @param string $unused
  * @return bool
  */
-function forum_add_attachment($post, $forum, $cm, $mform=null, $unused=null) {
+function cybrary_add_attachment($post, $cybrary, $cm, $mform=null, $unused=null) {
     global $DB;
 
     if (empty($mform)) {
@@ -4283,10 +4283,10 @@ function forum_add_attachment($post, $forum, $cm, $mform=null, $unused=null) {
 
     $info = file_get_draft_area_info($post->attachments);
     $present = ($info['filecount']>0) ? '1' : '';
-    file_save_draft_area_files($post->attachments, $context->id, 'mod_forum', 'attachment', $post->id,
-            mod_forum_post_form::attachment_options($forum));
+    file_save_draft_area_files($post->attachments, $context->id, 'mod_cybrary', 'attachment', $post->id,
+            mod_cybrary_post_form::attachment_options($cybrary));
 
-    $DB->set_field('forum_posts', 'attachment', $present, array('id'=>$post->id));
+    $DB->set_field('cybrary_posts', 'attachment', $present, array('id'=>$post->id));
 
     return true;
 }
@@ -4302,16 +4302,16 @@ function forum_add_attachment($post, $forum, $cm, $mform=null, $unused=null) {
  * @param string $unused formerly $message, renamed in 2.8 as it was unused.
  * @return int
  */
-function forum_add_new_post($post, $mform, $unused = null) {
+function cybrary_add_new_post($post, $mform, $unused = null) {
     global $USER, $CFG, $DB;
 
-    $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion));
-    $forum      = $DB->get_record('forum', array('id' => $discussion->forum));
-    $cm         = get_coursemodule_from_instance('forum', $forum->id);
+    $discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion));
+    $cybrary      = $DB->get_record('cybrary', array('id' => $discussion->cybrary));
+    $cm         = get_coursemodule_from_instance('cybrary', $cybrary->id);
     $context    = context_module::instance($cm->id);
 
     $post->created    = $post->modified = time();
-    $post->mailed     = FORUM_MAILED_PENDING;
+    $post->mailed     = CYBRARY_MAILED_PENDING;
     $post->userid     = $USER->id;
     $post->attachment = "";
     if (!isset($post->totalscore)) {
@@ -4321,22 +4321,22 @@ function forum_add_new_post($post, $mform, $unused = null) {
         $post->mailnow    = 0;
     }
 
-    $post->id = $DB->insert_record("forum_posts", $post);
-    $post->message = file_save_draft_area_files($post->itemid, $context->id, 'mod_forum', 'post', $post->id,
-            mod_forum_post_form::editor_options($context, null), $post->message);
-    $DB->set_field('forum_posts', 'message', $post->message, array('id'=>$post->id));
-    forum_add_attachment($post, $forum, $cm, $mform);
+    $post->id = $DB->insert_record("cybrary_posts", $post);
+    $post->message = file_save_draft_area_files($post->itemid, $context->id, 'mod_cybrary', 'post', $post->id,
+            mod_cybrary_post_form::editor_options($context, null), $post->message);
+    $DB->set_field('cybrary_posts', 'message', $post->message, array('id'=>$post->id));
+    cybrary_add_attachment($post, $cybrary, $cm, $mform);
 
     // Update discussion modified date
-    $DB->set_field("forum_discussions", "timemodified", $post->modified, array("id" => $post->discussion));
-    $DB->set_field("forum_discussions", "usermodified", $post->userid, array("id" => $post->discussion));
+    $DB->set_field("cybrary_discussions", "timemodified", $post->modified, array("id" => $post->discussion));
+    $DB->set_field("cybrary_discussions", "usermodified", $post->userid, array("id" => $post->discussion));
 
-    if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
-        forum_tp_mark_post_read($post->userid, $post, $post->forum);
+    if (cybrary_tp_can_track_cybraries($cybrary) && cybrary_tp_is_tracked($cybrary)) {
+        cybrary_tp_mark_post_read($post->userid, $post, $post->cybrary);
     }
 
     // Let Moodle know that assessable content is uploaded (eg for plagiarism detection)
-    forum_trigger_content_uploaded_event($post, $cm, 'forum_add_new_post');
+    cybrary_trigger_content_uploaded_event($post, $cm, 'cybrary_add_new_post');
 
     return $post->id;
 }
@@ -4352,17 +4352,17 @@ function forum_add_new_post($post, $mform, $unused = null) {
  * @param string $message
  * @return bool
  */
-function forum_update_post($post, $mform, &$message) {
+function cybrary_update_post($post, $mform, &$message) {
     global $USER, $CFG, $DB;
 
-    $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion));
-    $forum      = $DB->get_record('forum', array('id' => $discussion->forum));
-    $cm         = get_coursemodule_from_instance('forum', $forum->id);
+    $discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion));
+    $cybrary      = $DB->get_record('cybrary', array('id' => $discussion->cybrary));
+    $cm         = get_coursemodule_from_instance('cybrary', $cybrary->id);
     $context    = context_module::instance($cm->id);
 
     $post->modified = time();
 
-    $DB->update_record('forum_posts', $post);
+    $DB->update_record('cybrary_posts', $post);
 
     $discussion->timemodified = $post->modified; // last modified tracking
     $discussion->usermodified = $post->userid;   // last modified tracking
@@ -4372,20 +4372,20 @@ function forum_update_post($post, $mform, &$message) {
         $discussion->timestart = $post->timestart;
         $discussion->timeend   = $post->timeend;
     }
-    $post->message = file_save_draft_area_files($post->itemid, $context->id, 'mod_forum', 'post', $post->id,
-            mod_forum_post_form::editor_options($context, $post->id), $post->message);
-    $DB->set_field('forum_posts', 'message', $post->message, array('id'=>$post->id));
+    $post->message = file_save_draft_area_files($post->itemid, $context->id, 'mod_cybrary', 'post', $post->id,
+            mod_cybrary_post_form::editor_options($context, $post->id), $post->message);
+    $DB->set_field('cybrary_posts', 'message', $post->message, array('id'=>$post->id));
 
-    $DB->update_record('forum_discussions', $discussion);
+    $DB->update_record('cybrary_discussions', $discussion);
 
-    forum_add_attachment($post, $forum, $cm, $mform, $message);
+    cybrary_add_attachment($post, $cybrary, $cm, $mform, $message);
 
-    if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
-        forum_tp_mark_post_read($post->userid, $post, $post->forum);
+    if (cybrary_tp_can_track_cybraries($cybrary) && cybrary_tp_is_tracked($cybrary)) {
+        cybrary_tp_mark_post_read($post->userid, $post, $post->cybrary);
     }
 
     // Let Moodle know that assessable content is uploaded (eg for plagiarism detection)
-    forum_trigger_content_uploaded_event($post, $cm, 'forum_update_post');
+    cybrary_trigger_content_uploaded_event($post, $cm, 'cybrary_update_post');
 
     return true;
 }
@@ -4400,7 +4400,7 @@ function forum_update_post($post, $mform, &$message) {
  * @param int $userid
  * @return object
  */
-function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=null) {
+function cybrary_add_discussion($discussion, $mform=null, $unused=null, $userid=null) {
     global $USER, $CFG, $DB;
 
     $timenow = time();
@@ -4412,8 +4412,8 @@ function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=nu
     // The first post is stored as a real post, and linked
     // to from the discuss entry.
 
-    $forum = $DB->get_record('forum', array('id'=>$discussion->forum));
-    $cm    = get_coursemodule_from_instance('forum', $forum->id);
+    $cybrary = $DB->get_record('cybrary', array('id'=>$discussion->cybrary));
+    $cm    = get_coursemodule_from_instance('cybrary', $cybrary->id);
 
     $post = new stdClass();
     $post->discussion    = 0;
@@ -4421,24 +4421,24 @@ function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=nu
     $post->userid        = $userid;
     $post->created       = $timenow;
     $post->modified      = $timenow;
-    $post->mailed        = FORUM_MAILED_PENDING;
+    $post->mailed        = CYBRARY_MAILED_PENDING;
     $post->subject       = $discussion->name;
     $post->message       = $discussion->message;
     $post->messageformat = $discussion->messageformat;
     $post->messagetrust  = $discussion->messagetrust;
     $post->attachments   = isset($discussion->attachments) ? $discussion->attachments : null;
-    $post->forum         = $forum->id;     // speedup
-    $post->course        = $forum->course; // speedup
+    $post->cybrary         = $cybrary->id;     // speedup
+    $post->course        = $cybrary->course; // speedup
     $post->mailnow       = $discussion->mailnow;
 
-    $post->id = $DB->insert_record("forum_posts", $post);
+    $post->id = $DB->insert_record("cybrary_posts", $post);
 
     // TODO: Fix the calling code so that there always is a $cm when this function is called
     if (!empty($cm->id) && !empty($discussion->itemid)) {   // In "single simple discussions" this may not exist yet
         $context = context_module::instance($cm->id);
-        $text = file_save_draft_area_files($discussion->itemid, $context->id, 'mod_forum', 'post', $post->id,
-                mod_forum_post_form::editor_options($context, null), $post->message);
-        $DB->set_field('forum_posts', 'message', $text, array('id'=>$post->id));
+        $text = file_save_draft_area_files($discussion->itemid, $context->id, 'mod_cybrary', 'post', $post->id,
+                mod_cybrary_post_form::editor_options($context, null), $post->message);
+        $DB->set_field('cybrary_posts', 'message', $text, array('id'=>$post->id));
     }
 
     // Now do the main entry for the discussion, linking to this first post
@@ -4449,22 +4449,22 @@ function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=nu
     $discussion->userid       = $userid;
     $discussion->assessed     = 0;
 
-    $post->discussion = $DB->insert_record("forum_discussions", $discussion);
+    $post->discussion = $DB->insert_record("cybrary_discussions", $discussion);
 
     // Finally, set the pointer on the post.
-    $DB->set_field("forum_posts", "discussion", $post->discussion, array("id"=>$post->id));
+    $DB->set_field("cybrary_posts", "discussion", $post->discussion, array("id"=>$post->id));
 
     if (!empty($cm->id)) {
-        forum_add_attachment($post, $forum, $cm, $mform, $unused);
+        cybrary_add_attachment($post, $cybrary, $cm, $mform, $unused);
     }
 
-    if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
-        forum_tp_mark_post_read($post->userid, $post, $post->forum);
+    if (cybrary_tp_can_track_cybraries($cybrary) && cybrary_tp_is_tracked($cybrary)) {
+        cybrary_tp_mark_post_read($post->userid, $post, $post->cybrary);
     }
 
     // Let Moodle know that assessable content is uploaded (eg for plagiarism detection)
     if (!empty($cm->id)) {
-        forum_trigger_content_uploaded_event($post, $cm, 'forum_add_discussion');
+        cybrary_trigger_content_uploaded_event($post, $cm, 'cybrary_add_discussion');
     }
 
     return $post->discussion;
@@ -4476,33 +4476,33 @@ function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=nu
  *
  * @global object
  * @param object $discussion Discussion to delete
- * @param bool $fulldelete True when deleting entire forum
+ * @param bool $fulldelete True when deleting entire cybrary
  * @param object $course Course
  * @param object $cm Course-module
- * @param object $forum Forum
+ * @param object $cybrary Cybrary
  * @return bool
  */
-function forum_delete_discussion($discussion, $fulldelete, $course, $cm, $forum) {
+function cybrary_delete_discussion($discussion, $fulldelete, $course, $cm, $cybrary) {
     global $DB, $CFG;
     require_once($CFG->libdir.'/completionlib.php');
 
     $result = true;
 
-    if ($posts = $DB->get_records("forum_posts", array("discussion" => $discussion->id))) {
+    if ($posts = $DB->get_records("cybrary_posts", array("discussion" => $discussion->id))) {
         foreach ($posts as $post) {
             $post->course = $discussion->course;
-            $post->forum  = $discussion->forum;
-            if (!forum_delete_post($post, 'ignore', $course, $cm, $forum, $fulldelete)) {
+            $post->cybrary  = $discussion->cybrary;
+            if (!cybrary_delete_post($post, 'ignore', $course, $cm, $cybrary, $fulldelete)) {
                 $result = false;
             }
         }
     }
 
-    forum_tp_delete_read_records(-1, -1, $discussion->id);
+    cybrary_tp_delete_read_records(-1, -1, $discussion->id);
 
     // Discussion subscriptions must be removed before discussions because of key constraints.
-    $DB->delete_records('forum_discussion_subs', array('discussion' => $discussion->id));
-    if (!$DB->delete_records("forum_discussions", array("id" => $discussion->id))) {
+    $DB->delete_records('cybrary_discussion_subs', array('discussion' => $discussion->id));
+    if (!$DB->delete_records("cybrary_discussions", array("id" => $discussion->id))) {
         $result = false;
     }
 
@@ -4511,7 +4511,7 @@ function forum_delete_discussion($discussion, $fulldelete, $course, $cm, $forum)
     if (!$fulldelete) {
         $completion = new completion_info($course);
         if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC &&
-           ($forum->completiondiscussions || $forum->completionreplies || $forum->completionposts)) {
+           ($cybrary->completiondiscussions || $cybrary->completionreplies || $cybrary->completionposts)) {
             $completion->update_state($cm, COMPLETION_INCOMPLETE, $discussion->userid);
         }
     }
@@ -4521,10 +4521,10 @@ function forum_delete_discussion($discussion, $fulldelete, $course, $cm, $forum)
 
 
 /**
- * Deletes a single forum post.
+ * Deletes a single cybrary post.
  *
  * @global object
- * @param object $post Forum post object
+ * @param object $post Cybrary post object
  * @param mixed $children Whether to delete children. If false, returns false
  *   if there are any children (without deleting the post). If true,
  *   recursively deletes all children. If set to special value 'ignore', deletes
@@ -4532,21 +4532,21 @@ function forum_delete_discussion($discussion, $fulldelete, $course, $cm, $forum)
  *   in a disussion).
  * @param object $course Course
  * @param object $cm Course-module
- * @param object $forum Forum
+ * @param object $cybrary Cybrary
  * @param bool $skipcompletion True to skip updating completion state if it
- *   would otherwise be updated, i.e. when deleting entire forum anyway.
+ *   would otherwise be updated, i.e. when deleting entire cybrary anyway.
  * @return bool
  */
-function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompletion=false) {
+function cybrary_delete_post($post, $children, $course, $cm, $cybrary, $skipcompletion=false) {
     global $DB, $CFG, $USER;
     require_once($CFG->libdir.'/completionlib.php');
 
     $context = context_module::instance($cm->id);
 
-    if ($children !== 'ignore' && ($childposts = $DB->get_records('forum_posts', array('parent'=>$post->id)))) {
+    if ($children !== 'ignore' && ($childposts = $DB->get_records('cybrary_posts', array('parent'=>$post->id)))) {
        if ($children) {
            foreach ($childposts as $childpost) {
-               forum_delete_post($childpost, true, $course, $cm, $forum, $skipcompletion);
+               cybrary_delete_post($childpost, true, $course, $cm, $cybrary, $skipcompletion);
            }
        } else {
            return false;
@@ -4557,7 +4557,7 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
     require_once($CFG->dirroot.'/rating/lib.php');
     $delopt = new stdClass;
     $delopt->contextid = $context->id;
-    $delopt->component = 'mod_forum';
+    $delopt->component = 'mod_cybrary';
     $delopt->ratingarea = 'post';
     $delopt->itemid = $post->id;
     $rm = new rating_manager();
@@ -4565,21 +4565,21 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
 
     // Delete attachments.
     $fs = get_file_storage();
-    $fs->delete_area_files($context->id, 'mod_forum', 'attachment', $post->id);
-    $fs->delete_area_files($context->id, 'mod_forum', 'post', $post->id);
+    $fs->delete_area_files($context->id, 'mod_cybrary', 'attachment', $post->id);
+    $fs->delete_area_files($context->id, 'mod_cybrary', 'post', $post->id);
 
     // Delete cached RSS feeds.
     if (!empty($CFG->enablerssfeeds)) {
-        require_once($CFG->dirroot.'/mod/forum/rsslib.php');
-        forum_rss_delete_file($forum);
+        require_once($CFG->dirroot.'/mod/cybrary/rsslib.php');
+        cybrary_rss_delete_file($cybrary);
     }
 
-    if ($DB->delete_records("forum_posts", array("id" => $post->id))) {
+    if ($DB->delete_records("cybrary_posts", array("id" => $post->id))) {
 
-        forum_tp_delete_read_records(-1, $post->id);
+        cybrary_tp_delete_read_records(-1, $post->id);
 
     // Just in case we are deleting the last post
-        forum_discussion_update_last_post($post->discussion);
+        cybrary_discussion_update_last_post($post->discussion);
 
         // Update completion state if we are tracking completion based on number of posts
         // But don't bother when deleting whole thing
@@ -4587,7 +4587,7 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
         if (!$skipcompletion) {
             $completion = new completion_info($course);
             if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC &&
-               ($forum->completiondiscussions || $forum->completionreplies || $forum->completionposts)) {
+               ($cybrary->completiondiscussions || $cybrary->completionreplies || $cybrary->completionposts)) {
                 $completion->update_state($cm, COMPLETION_INCOMPLETE, $post->userid);
             }
         }
@@ -4597,15 +4597,15 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
             'objectid' => $post->id,
             'other' => array(
                 'discussionid' => $post->discussion,
-                'forumid' => $forum->id,
-                'forumtype' => $forum->type,
+                'cybraryid' => $cybrary->id,
+                'cybrarytype' => $cybrary->type,
             )
         );
         if ($post->userid !== $USER->id) {
             $params['relateduserid'] = $post->userid;
         }
-        $event = \mod_forum\event\post_deleted::create($params);
-        $event->add_record_snapshot('forum_posts', $post);
+        $event = \mod_cybrary\event\post_deleted::create($params);
+        $event->add_record_snapshot('cybrary_posts', $post);
         $event->trigger();
 
         return true;
@@ -4615,15 +4615,15 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
 
 /**
  * Sends post content to plagiarism plugin
- * @param object $post Forum post object
+ * @param object $post Cybrary post object
  * @param object $cm Course-module
  * @param string $name
  * @return bool
 */
-function forum_trigger_content_uploaded_event($post, $cm, $name) {
+function cybrary_trigger_content_uploaded_event($post, $cm, $name) {
     $context = context_module::instance($cm->id);
     $fs = get_file_storage();
-    $files = $fs->get_area_files($context->id, 'mod_forum', 'attachment', $post->id, "timemodified", false);
+    $files = $fs->get_area_files($context->id, 'mod_cybrary', 'attachment', $post->id, "timemodified", false);
     $params = array(
         'context' => $context,
         'objectid' => $post->id,
@@ -4634,7 +4634,7 @@ function forum_trigger_content_uploaded_event($post, $cm, $name) {
             'triggeredfrom' => $name,
         )
     );
-    $event = \mod_forum\event\assessable_uploaded::create($params);
+    $event = \mod_cybrary\event\assessable_uploaded::create($params);
     $event->trigger();
     return true;
 }
@@ -4645,19 +4645,19 @@ function forum_trigger_content_uploaded_event($post, $cm, $name) {
  * @param bool $children
  * @return int
  */
-function forum_count_replies($post, $children=true) {
+function cybrary_count_replies($post, $children=true) {
     global $DB;
     $count = 0;
 
     if ($children) {
-        if ($childposts = $DB->get_records('forum_posts', array('parent' => $post->id))) {
+        if ($childposts = $DB->get_records('cybrary_posts', array('parent' => $post->id))) {
            foreach ($childposts as $childpost) {
                $count ++;                   // For this child
-               $count += forum_count_replies($childpost, true);
+               $count += cybrary_count_replies($childpost, true);
            }
         }
     } else {
-        $count += $DB->count_records('forum_posts', array('parent' => $post->id));
+        $count += $DB->count_records('cybrary_posts', array('parent' => $post->id));
     }
 
     return $count;
@@ -4668,20 +4668,20 @@ function forum_count_replies($post, $children=true) {
  * Returns some text which describes what happened.
  *
  * @param object $fromform The submitted form
- * @param stdClass $forum The forum record
- * @param stdClass $discussion The forum discussion record
+ * @param stdClass $cybrary The cybrary record
+ * @param stdClass $discussion The cybrary discussion record
  * @return string
  */
-function forum_post_subscription($fromform, $forum, $discussion) {
+function cybrary_post_subscription($fromform, $cybrary, $discussion) {
     global $USER;
 
-    if (\mod_forum\subscriptions::is_forcesubscribed($forum)) {
+    if (\mod_cybrary\subscriptions::is_forcesubscribed($cybrary)) {
         return "";
-    } else if (\mod_forum\subscriptions::subscription_disabled($forum)) {
-        $subscribed = \mod_forum\subscriptions::is_subscribed($USER->id, $forum);
-        if ($subscribed && !has_capability('moodle/course:manageactivities', context_course::instance($forum->course), $USER->id)) {
-            // This user should not be subscribed to the forum.
-            \mod_forum\subscriptions::unsubscribe_user($USER->id, $forum);
+    } else if (\mod_cybrary\subscriptions::subscription_disabled($cybrary)) {
+        $subscribed = \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary);
+        if ($subscribed && !has_capability('moodle/course:manageactivities', context_course::instance($cybrary->course), $USER->id)) {
+            // This user should not be subscribed to the cybrary.
+            \mod_cybrary\subscriptions::unsubscribe_user($USER->id, $cybrary);
         }
         return "";
     }
@@ -4689,15 +4689,15 @@ function forum_post_subscription($fromform, $forum, $discussion) {
     $info = new stdClass();
     $info->name  = fullname($USER);
     $info->discussion = format_string($discussion->name);
-    $info->forum = format_string($forum->name);
+    $info->cybrary = format_string($cybrary->name);
 
     if (isset($fromform->discussionsubscribe) && $fromform->discussionsubscribe) {
-        if ($result = \mod_forum\subscriptions::subscribe_user_to_discussion($USER->id, $discussion)) {
-            return html_writer::tag('p', get_string('discussionnowsubscribed', 'forum', $info));
+        if ($result = \mod_cybrary\subscriptions::subscribe_user_to_discussion($USER->id, $discussion)) {
+            return html_writer::tag('p', get_string('discussionnowsubscribed', 'cybrary', $info));
         }
     } else {
-        if ($result = \mod_forum\subscriptions::unsubscribe_user_from_discussion($USER->id, $discussion)) {
-            return html_writer::tag('p', get_string('discussionnownotsubscribed', 'forum', $info));
+        if ($result = \mod_cybrary\subscriptions::unsubscribe_user_from_discussion($USER->id, $discussion)) {
+            return html_writer::tag('p', get_string('discussionnownotsubscribed', 'cybrary', $info));
         }
     }
 
@@ -4705,10 +4705,10 @@ function forum_post_subscription($fromform, $forum, $discussion) {
 }
 
 /**
- * Generate and return the subscribe or unsubscribe link for a forum.
+ * Generate and return the subscribe or unsubscribe link for a cybrary.
  *
- * @param object $forum the forum. Fields used are $forum->id and $forum->forcesubscribe.
- * @param object $context the context object for this forum.
+ * @param object $cybrary the cybrary. Fields used are $cybrary->id and $cybrary->forcesubscribe.
+ * @param object $context the context object for this cybrary.
  * @param array $messages text used for the link in its various states
  *      (subscribed, unsubscribed, forcesubscribed or cantsubscribe).
  *      Any strings not passed in are taken from the $defaultmessages array
@@ -4716,24 +4716,24 @@ function forum_post_subscription($fromform, $forum, $discussion) {
  * @param bool $cantaccessagroup
  * @param bool $fakelink
  * @param bool $backtoindex
- * @param array $subscribed_forums
+ * @param array $subscribed_cybraries
  * @return string
  */
-function forum_get_subscribe_link($forum, $context, $messages = array(), $cantaccessagroup = false, $fakelink=true, $backtoindex=false, $subscribed_forums=null) {
+function cybrary_get_subscribe_link($cybrary, $context, $messages = array(), $cantaccessagroup = false, $fakelink=true, $backtoindex=false, $subscribed_cybraries=null) {
     global $CFG, $USER, $PAGE, $OUTPUT;
     $defaultmessages = array(
-        'subscribed' => get_string('unsubscribe', 'forum'),
-        'unsubscribed' => get_string('subscribe', 'forum'),
+        'subscribed' => get_string('unsubscribe', 'cybrary'),
+        'unsubscribed' => get_string('subscribe', 'cybrary'),
         'cantaccessgroup' => get_string('no'),
-        'forcesubscribed' => get_string('everyoneissubscribed', 'forum'),
-        'cantsubscribe' => get_string('disallowsubscribe','forum')
+        'forcesubscribed' => get_string('everyoneissubscribed', 'cybrary'),
+        'cantsubscribe' => get_string('disallowsubscribe','cybrary')
     );
     $messages = $messages + $defaultmessages;
 
-    if (\mod_forum\subscriptions::is_forcesubscribed($forum)) {
+    if (\mod_cybrary\subscriptions::is_forcesubscribed($cybrary)) {
         return $messages['forcesubscribed'];
-    } else if (\mod_forum\subscriptions::subscription_disabled($forum) &&
-            !has_capability('mod/forum:managesubscriptions', $context)) {
+    } else if (\mod_cybrary\subscriptions::subscription_disabled($cybrary) &&
+            !has_capability('mod/cybrary:managesubscriptions', $context)) {
         return $messages['cantsubscribe'];
     } else if ($cantaccessagroup) {
         return $messages['cantaccessgroup'];
@@ -4742,13 +4742,13 @@ function forum_get_subscribe_link($forum, $context, $messages = array(), $cantac
             return '';
         }
 
-        $subscribed = \mod_forum\subscriptions::is_subscribed($USER->id, $forum);
+        $subscribed = \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary);
         if ($subscribed) {
             $linktext = $messages['subscribed'];
-            $linktitle = get_string('subscribestop', 'forum');
+            $linktitle = get_string('subscribestop', 'cybrary');
         } else {
             $linktext = $messages['unsubscribed'];
-            $linktitle = get_string('subscribestart', 'forum');
+            $linktitle = get_string('subscribestart', 'cybrary');
         }
 
         $options = array();
@@ -4761,13 +4761,13 @@ function forum_get_subscribe_link($forum, $context, $messages = array(), $cantac
         $link = '';
 
         if ($fakelink) {
-            $PAGE->requires->js('/mod/forum/forum.js');
-            $PAGE->requires->js_function_call('forum_produce_subscribe_link', array($forum->id, $backtoindexlink, $linktext, $linktitle));
+            $PAGE->requires->js('/mod/cybrary/cybrary.js');
+            $PAGE->requires->js_function_call('cybrary_produce_subscribe_link', array($cybrary->id, $backtoindexlink, $linktext, $linktitle));
             $link = "<noscript>";
         }
-        $options['id'] = $forum->id;
+        $options['id'] = $cybrary->id;
         $options['sesskey'] = sesskey();
-        $url = new moodle_url('/mod/forum/subscribe.php', $options);
+        $url = new moodle_url('/mod/cybrary/subscribe.php', $options);
         $link .= $OUTPUT->single_button($url, $linktext, 'get', array('title'=>$linktitle));
         if ($fakelink) {
             $link .= '</noscript>';
@@ -4780,19 +4780,19 @@ function forum_get_subscribe_link($forum, $context, $messages = array(), $cantac
 /**
  * Returns true if user created new discussion already.
  *
- * @param int $forumid  The forum to check for postings
+ * @param int $cybraryid  The cybrary to check for postings
  * @param int $userid   The user to check for postings
  * @param int $groupid  The group to restrict the check to
  * @return bool
  */
-function forum_user_has_posted_discussion($forumid, $userid, $groupid = null) {
+function cybrary_user_has_posted_discussion($cybraryid, $userid, $groupid = null) {
     global $CFG, $DB;
 
     $sql = "SELECT 'x'
-              FROM {forum_discussions} d, {forum_posts} p
-             WHERE d.forum = ? AND p.discussion = d.id AND p.parent = 0 AND p.userid = ?";
+              FROM {cybrary_discussions} d, {cybrary_posts} p
+             WHERE d.cybrary = ? AND p.discussion = d.id AND p.parent = 0 AND p.userid = ?";
 
-    $params = [$forumid, $userid];
+    $params = [$cybraryid, $userid];
 
     if ($groupid) {
         $sql .= " AND d.groupid = ?";
@@ -4805,44 +4805,44 @@ function forum_user_has_posted_discussion($forumid, $userid, $groupid = null) {
 /**
  * @global object
  * @global object
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $userid
  * @return array
  */
-function forum_discussions_user_has_posted_in($forumid, $userid) {
+function cybrary_discussions_user_has_posted_in($cybraryid, $userid) {
     global $CFG, $DB;
 
     $haspostedsql = "SELECT d.id AS id,
                             d.*
-                       FROM {forum_posts} p,
-                            {forum_discussions} d
+                       FROM {cybrary_posts} p,
+                            {cybrary_discussions} d
                       WHERE p.discussion = d.id
-                        AND d.forum = ?
+                        AND d.cybrary = ?
                         AND p.userid = ?";
 
-    return $DB->get_records_sql($haspostedsql, array($forumid, $userid));
+    return $DB->get_records_sql($haspostedsql, array($cybraryid, $userid));
 }
 
 /**
  * @global object
  * @global object
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $did
  * @param int $userid
  * @return bool
  */
-function forum_user_has_posted($forumid, $did, $userid) {
+function cybrary_user_has_posted($cybraryid, $did, $userid) {
     global $DB;
 
     if (empty($did)) {
-        // posted in any forum discussion?
+        // posted in any cybrary discussion?
         $sql = "SELECT 'x'
-                  FROM {forum_posts} p
-                  JOIN {forum_discussions} d ON d.id = p.discussion
-                 WHERE p.userid = :userid AND d.forum = :forumid";
-        return $DB->record_exists_sql($sql, array('forumid'=>$forumid,'userid'=>$userid));
+                  FROM {cybrary_posts} p
+                  JOIN {cybrary_discussions} d ON d.id = p.discussion
+                 WHERE p.userid = :userid AND d.cybrary = :cybraryid";
+        return $DB->record_exists_sql($sql, array('cybraryid'=>$cybraryid,'userid'=>$userid));
     } else {
-        return $DB->record_exists('forum_posts', array('discussion'=>$did,'userid'=>$userid));
+        return $DB->record_exists('cybrary_posts', array('discussion'=>$did,'userid'=>$userid));
     }
 }
 
@@ -4853,10 +4853,10 @@ function forum_user_has_posted($forumid, $did, $userid) {
  * @param int $userid User id
  * @return int|bool post creation time stamp or return false
  */
-function forum_get_user_posted_time($did, $userid) {
+function cybrary_get_user_posted_time($did, $userid) {
     global $DB;
 
-    $posttime = $DB->get_field('forum_posts', 'MIN(created)', array('userid'=>$userid, 'discussion'=>$did));
+    $posttime = $DB->get_field('cybrary_posts', 'MIN(created)', array('userid'=>$userid, 'discussion'=>$did));
     if (empty($posttime)) {
         return false;
     }
@@ -4865,15 +4865,15 @@ function forum_get_user_posted_time($did, $userid) {
 
 /**
  * @global object
- * @param object $forum
+ * @param object $cybrary
  * @param object $currentgroup
  * @param int $unused
  * @param object $cm
  * @param object $context
  * @return bool
  */
-function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, $cm=NULL, $context=NULL) {
-// $forum is an object
+function cybrary_user_can_post_discussion($cybrary, $currentgroup=null, $unused=-1, $cm=NULL, $context=NULL) {
+// $cybrary is an object
     global $USER;
 
     // shortcut - guest and not-logged-in users can not post
@@ -4883,7 +4883,7 @@ function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, 
 
     if (!$cm) {
         debugging('missing cm', DEBUG_DEVELOPER);
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
+        if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course)) {
             print_error('invalidcoursemodule');
         }
     }
@@ -4898,24 +4898,24 @@ function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, 
 
     $groupmode = groups_get_activity_groupmode($cm);
 
-    if ($forum->type == 'news') {
-        $capname = 'mod/forum:addnews';
-    } else if ($forum->type == 'qanda') {
-        $capname = 'mod/forum:addquestion';
+    if ($cybrary->type == 'news') {
+        $capname = 'mod/cybrary:addnews';
+    } else if ($cybrary->type == 'qanda') {
+        $capname = 'mod/cybrary:addquestion';
     } else {
-        $capname = 'mod/forum:startdiscussion';
+        $capname = 'mod/cybrary:startdiscussion';
     }
 
     if (!has_capability($capname, $context)) {
         return false;
     }
 
-    if ($forum->type == 'single') {
+    if ($cybrary->type == 'single') {
         return false;
     }
 
-    if ($forum->type == 'eachuser') {
-        if (forum_user_has_posted_discussion($forum->id, $USER->id, $currentgroup)) {
+    if ($cybrary->type == 'eachuser') {
+        if (cybrary_user_has_posted_discussion($cybrary->id, $USER->id, $currentgroup)) {
             return false;
         }
     }
@@ -4934,8 +4934,8 @@ function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, 
 }
 
 /**
- * This function checks whether the user can reply to posts in a forum
- * discussion. Use forum_user_can_post_discussion() to check whether the user
+ * This function checks whether the user can reply to posts in a cybrary
+ * discussion. Use cybrary_user_can_post_discussion() to check whether the user
  * can start discussions.
  *
  * @global object
@@ -4943,7 +4943,7 @@ function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, 
  * @uses DEBUG_DEVELOPER
  * @uses CONTEXT_MODULE
  * @uses VISIBLEGROUPS
- * @param object $forum forum object
+ * @param object $cybrary cybrary object
  * @param object $discussion
  * @param object $user
  * @param object $cm
@@ -4951,7 +4951,7 @@ function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, 
  * @param object $context
  * @return bool
  */
-function forum_user_can_post($forum, $discussion, $user=NULL, $cm=NULL, $course=NULL, $context=NULL) {
+function cybrary_user_can_post($cybrary, $discussion, $user=NULL, $cm=NULL, $course=NULL, $context=NULL) {
     global $USER, $DB;
     if (empty($user)) {
         $user = $USER;
@@ -4969,14 +4969,14 @@ function forum_user_can_post($forum, $discussion, $user=NULL, $cm=NULL, $course=
 
     if (!$cm) {
         debugging('missing cm', DEBUG_DEVELOPER);
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
+        if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course)) {
             print_error('invalidcoursemodule');
         }
     }
 
     if (!$course) {
         debugging('missing course', DEBUG_DEVELOPER);
-        if (!$course = $DB->get_record('course', array('id' => $forum->course))) {
+        if (!$course = $DB->get_record('course', array('id' => $cybrary->course))) {
             print_error('invalidcourseid');
         }
     }
@@ -4990,10 +4990,10 @@ function forum_user_can_post($forum, $discussion, $user=NULL, $cm=NULL, $course=
         return false;
     }
 
-    if ($forum->type == 'news') {
-        $capname = 'mod/forum:replynews';
+    if ($cybrary->type == 'news') {
+        $capname = 'mod/cybrary:replynews';
     } else {
-        $capname = 'mod/forum:replypost';
+        $capname = 'mod/cybrary:replypost';
     }
 
     if (!has_capability($capname, $context, $user->id)) {
@@ -5032,15 +5032,15 @@ function forum_user_can_post($forum, $discussion, $user=NULL, $cm=NULL, $course=
 * @param object $context
 * @return boolean returns true if they can view post, false otherwise
 */
-function forum_user_can_see_timed_discussion($discussion, $user, $context) {
+function cybrary_user_can_see_timed_discussion($discussion, $user, $context) {
     global $CFG;
 
     // Check that the user can view a discussion that is normally hidden due to access times.
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         $time = time();
         if (($discussion->timestart != 0 && $discussion->timestart > $time)
             || ($discussion->timeend != 0 && $discussion->timeend < $time)) {
-            if (!has_capability('mod/forum:viewhiddentimedposts', $context, $user->id)) {
+            if (!has_capability('mod/cybrary:viewhiddentimedposts', $context, $user->id)) {
                 return false;
             }
         }
@@ -5057,7 +5057,7 @@ function forum_user_can_see_timed_discussion($discussion, $user, $context) {
 * @param object $context
 * @return boolean returns true if they can view post, false otherwise
 */
-function forum_user_can_see_group_discussion($discussion, $cm, $context) {
+function cybrary_user_can_see_group_discussion($discussion, $cm, $context) {
 
     // If it's a grouped discussion, make sure the user is a member.
     if ($discussion->groupid > 0) {
@@ -5074,13 +5074,13 @@ function forum_user_can_see_group_discussion($discussion, $cm, $context) {
  * @global object
  * @global object
  * @uses DEBUG_DEVELOPER
- * @param object $forum
+ * @param object $cybrary
  * @param object $discussion
  * @param object $context
  * @param object $user
  * @return bool
  */
-function forum_user_can_see_discussion($forum, $discussion, $context, $user=NULL) {
+function cybrary_user_can_see_discussion($cybrary, $discussion, $context, $user=NULL) {
     global $USER, $DB;
 
     if (empty($user) || empty($user->id)) {
@@ -5088,31 +5088,31 @@ function forum_user_can_see_discussion($forum, $discussion, $context, $user=NULL
     }
 
     // retrieve objects (yuk)
-    if (is_numeric($forum)) {
-        debugging('missing full forum', DEBUG_DEVELOPER);
-        if (!$forum = $DB->get_record('forum',array('id'=>$forum))) {
+    if (is_numeric($cybrary)) {
+        debugging('missing full cybrary', DEBUG_DEVELOPER);
+        if (!$cybrary = $DB->get_record('cybrary',array('id'=>$cybrary))) {
             return false;
         }
     }
     if (is_numeric($discussion)) {
         debugging('missing full discussion', DEBUG_DEVELOPER);
-        if (!$discussion = $DB->get_record('forum_discussions',array('id'=>$discussion))) {
+        if (!$discussion = $DB->get_record('cybrary_discussions',array('id'=>$discussion))) {
             return false;
         }
     }
-    if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
+    if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course)) {
         print_error('invalidcoursemodule');
     }
 
-    if (!has_capability('mod/forum:viewdiscussion', $context)) {
+    if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
         return false;
     }
 
-    if (!forum_user_can_see_timed_discussion($discussion, $user, $context)) {
+    if (!cybrary_user_can_see_timed_discussion($discussion, $user, $context)) {
         return false;
     }
 
-    if (!forum_user_can_see_group_discussion($discussion, $cm, $context)) {
+    if (!cybrary_user_can_see_group_discussion($discussion, $cm, $context)) {
         return false;
     }
 
@@ -5122,36 +5122,36 @@ function forum_user_can_see_discussion($forum, $discussion, $context, $user=NULL
 /**
  * @global object
  * @global object
- * @param object $forum
+ * @param object $cybrary
  * @param object $discussion
  * @param object $post
  * @param object $user
  * @param object $cm
  * @return bool
  */
-function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NULL) {
+function cybrary_user_can_see_post($cybrary, $discussion, $post, $user=NULL, $cm=NULL) {
     global $CFG, $USER, $DB;
 
     // Context used throughout function.
     $modcontext = context_module::instance($cm->id);
 
     // retrieve objects (yuk)
-    if (is_numeric($forum)) {
-        debugging('missing full forum', DEBUG_DEVELOPER);
-        if (!$forum = $DB->get_record('forum',array('id'=>$forum))) {
+    if (is_numeric($cybrary)) {
+        debugging('missing full cybrary', DEBUG_DEVELOPER);
+        if (!$cybrary = $DB->get_record('cybrary',array('id'=>$cybrary))) {
             return false;
         }
     }
 
     if (is_numeric($discussion)) {
         debugging('missing full discussion', DEBUG_DEVELOPER);
-        if (!$discussion = $DB->get_record('forum_discussions',array('id'=>$discussion))) {
+        if (!$discussion = $DB->get_record('cybrary_discussions',array('id'=>$discussion))) {
             return false;
         }
     }
     if (is_numeric($post)) {
         debugging('missing full post', DEBUG_DEVELOPER);
-        if (!$post = $DB->get_record('forum_posts',array('id'=>$post))) {
+        if (!$post = $DB->get_record('cybrary_posts',array('id'=>$post))) {
             return false;
         }
     }
@@ -5162,7 +5162,7 @@ function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NUL
 
     if (!$cm) {
         debugging('missing cm', DEBUG_DEVELOPER);
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
+        if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course)) {
             print_error('invalidcoursemodule');
         }
     }
@@ -5171,7 +5171,7 @@ function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NUL
         $user = $USER;
     }
 
-    $canviewdiscussion = !empty($cm->cache->caps['mod/forum:viewdiscussion']) || has_capability('mod/forum:viewdiscussion', $modcontext, $user->id);
+    $canviewdiscussion = !empty($cm->cache->caps['mod/cybrary:viewdiscussion']) || has_capability('mod/cybrary:viewdiscussion', $modcontext, $user->id);
     if (!$canviewdiscussion && !has_all_capabilities(array('moodle/user:viewdetails', 'moodle/user:readuserposts'), context_user::instance($post->userid))) {
         return false;
     }
@@ -5186,56 +5186,56 @@ function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NUL
         }
     }
 
-    if (!forum_user_can_see_timed_discussion($discussion, $user, $modcontext)) {
+    if (!cybrary_user_can_see_timed_discussion($discussion, $user, $modcontext)) {
         return false;
     }
 
-    if (!forum_user_can_see_group_discussion($discussion, $cm, $modcontext)) {
+    if (!cybrary_user_can_see_group_discussion($discussion, $cm, $modcontext)) {
         return false;
     }
 
-    if ($forum->type == 'qanda') {
-        $firstpost = forum_get_firstpost_from_discussion($discussion->id);
-        $userfirstpost = forum_get_user_posted_time($discussion->id, $user->id);
+    if ($cybrary->type == 'qanda') {
+        $firstpost = cybrary_get_firstpost_from_discussion($discussion->id);
+        $userfirstpost = cybrary_get_user_posted_time($discussion->id, $user->id);
 
         return (($userfirstpost !== false && (time() - $userfirstpost >= $CFG->maxeditingtime)) ||
                 $firstpost->id == $post->id || $post->userid == $user->id || $firstpost->userid == $user->id ||
-                has_capability('mod/forum:viewqandawithoutposting', $modcontext, $user->id));
+                has_capability('mod/cybrary:viewqandawithoutposting', $modcontext, $user->id));
     }
     return true;
 }
 
 
 /**
- * Prints the discussion view screen for a forum.
+ * Prints the discussion view screen for a cybrary.
  *
  * @global object
  * @global object
  * @param object $course The current course object.
- * @param object $forum Forum to be printed.
+ * @param object $cybrary Cybrary to be printed.
  * @param int $maxdiscussions .
  * @param string $displayformat The display format to use (optional).
  * @param string $sort Sort arguments for database query (optional).
- * @param int $groupmode Group mode of the forum (optional).
+ * @param int $groupmode Group mode of the cybrary (optional).
  * @param void $unused (originally current group)
  * @param int $page Page mode, page to display (optional).
  * @param int $perpage The maximum number of discussions per page(optional)
  * @param boolean $subscriptionstatus Whether the user is currently subscribed to the discussion in some fashion.
  *
  */
-function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $displayformat = 'plain', $sort = '',
+function cybrary_print_latest_discussions($course, $cybrary, $maxdiscussions = -1, $displayformat = 'plain', $sort = '',
                                         $currentgroup = -1, $groupmode = -1, $page = -1, $perpage = 100, $cm = null) {
     global $CFG, $USER, $OUTPUT;
 
     if (!$cm) {
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
+        if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course)) {
             print_error('invalidcoursemodule');
         }
     }
     $context = context_module::instance($cm->id);
 
     if (empty($sort)) {
-        $sort = forum_get_default_sort_order();
+        $sort = cybrary_get_default_sort_order();
     }
 
     $olddiscussionlink = false;
@@ -5279,8 +5279,8 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
 // button for it. We do not show the button if we are showing site news
 // and the current user is a guest.
 
-    $canstart = forum_user_can_post_discussion($forum, $currentgroup, $groupmode, $cm, $context);
-    if (!$canstart and $forum->type !== 'news') {
+    $canstart = cybrary_user_can_post_discussion($cybrary, $currentgroup, $groupmode, $cm, $context);
+    if (!$canstart and $cybrary->type !== 'news') {
         if (isguestuser() or !isloggedin()) {
             $canstart = true;
         }
@@ -5293,20 +5293,20 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
     }
 
     if ($canstart) {
-        echo '<div class="singlebutton forumaddnew">';
-        echo "<form id=\"newdiscussionform\" method=\"get\" action=\"$CFG->wwwroot/mod/forum/post.php\">";
+        echo '<div class="singlebutton cybraryaddnew">';
+        echo "<form id=\"newdiscussionform\" method=\"get\" action=\"$CFG->wwwroot/mod/cybrary/post.php\">";
         echo '<div>';
-        echo "<input type=\"hidden\" name=\"forum\" value=\"$forum->id\" />";
-        switch ($forum->type) {
+        echo "<input type=\"hidden\" name=\"cybrary\" value=\"$cybrary->id\" />";
+        switch ($cybrary->type) {
             case 'news':
             case 'blog':
-                $buttonadd = get_string('addanewtopic', 'forum');
+                $buttonadd = get_string('addanewtopic', 'cybrary');
                 break;
             case 'qanda':
-                $buttonadd = get_string('addanewquestion', 'forum');
+                $buttonadd = get_string('addanewquestion', 'cybrary');
                 break;
             default:
-                $buttonadd = get_string('addanewdiscussion', 'forum');
+                $buttonadd = get_string('addanewdiscussion', 'cybrary');
                 break;
         }
         echo '<input type="submit" value="'.$buttonadd.'" />';
@@ -5314,17 +5314,17 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
         echo '</form>';
         echo "</div>\n";
 
-    } else if (isguestuser() or !isloggedin() or $forum->type == 'news' or
-        $forum->type == 'qanda' and !has_capability('mod/forum:addquestion', $context) or
-        $forum->type != 'qanda' and !has_capability('mod/forum:startdiscussion', $context)) {
+    } else if (isguestuser() or !isloggedin() or $cybrary->type == 'news' or
+        $cybrary->type == 'qanda' and !has_capability('mod/cybrary:addquestion', $context) or
+        $cybrary->type != 'qanda' and !has_capability('mod/cybrary:startdiscussion', $context)) {
         // no button and no info
 
     } else if ($groupmode and !has_capability('moodle/site:accessallgroups', $context)) {
         // inform users why they can not post new discussion
         if (!$currentgroup) {
-            echo $OUTPUT->notification(get_string('cannotadddiscussionall', 'forum'));
+            echo $OUTPUT->notification(get_string('cannotadddiscussionall', 'cybrary'));
         } else if (!groups_is_member($currentgroup)) {
-            echo $OUTPUT->notification(get_string('cannotadddiscussion', 'forum'));
+            echo $OUTPUT->notification(get_string('cannotadddiscussion', 'cybrary'));
         }
     }
 
@@ -5332,14 +5332,14 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
 
     $getuserlastmodified = ($displayformat == 'header');
 
-    if (! $discussions = forum_get_discussions($cm, $sort, $fullpost, null, $maxdiscussions, $getuserlastmodified, $page, $perpage) ) {
-        echo '<div class="forumnodiscuss">';
-        if ($forum->type == 'news') {
-            echo '('.get_string('nonews', 'forum').')';
-        } else if ($forum->type == 'qanda') {
-            echo '('.get_string('noquestions','forum').')';
+    if (! $discussions = cybrary_get_discussions($cm, $sort, $fullpost, null, $maxdiscussions, $getuserlastmodified, $page, $perpage) ) {
+        echo '<div class="cybrarynodiscuss">';
+        if ($cybrary->type == 'news') {
+            echo '('.get_string('nonews', 'cybrary').')';
+        } else if ($cybrary->type == 'qanda') {
+            echo '('.get_string('noquestions','cybrary').')';
         } else {
-            echo '('.get_string('nodiscussions', 'forum').')';
+            echo '('.get_string('nodiscussions', 'cybrary').')';
         }
         echo "</div>\n";
         return;
@@ -5348,19 +5348,19 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
 // If we want paging
     if ($page != -1) {
         ///Get the number of discussions found
-        $numdiscussions = forum_get_discussions_count($cm);
+        $numdiscussions = cybrary_get_discussions_count($cm);
 
         ///Show the paging bar
-        echo $OUTPUT->paging_bar($numdiscussions, $page, $perpage, "view.php?f=$forum->id");
+        echo $OUTPUT->paging_bar($numdiscussions, $page, $perpage, "view.php?f=$cybrary->id");
         if ($numdiscussions > 1000) {
-            // saves some memory on sites with very large forums
-            $replies = forum_count_discussion_replies($forum->id, $sort, $maxdiscussions, $page, $perpage);
+            // saves some memory on sites with very large cybraries
+            $replies = cybrary_count_discussion_replies($cybrary->id, $sort, $maxdiscussions, $page, $perpage);
         } else {
-            $replies = forum_count_discussion_replies($forum->id);
+            $replies = cybrary_count_discussion_replies($cybrary->id);
         }
 
     } else {
-        $replies = forum_count_discussion_replies($forum->id);
+        $replies = cybrary_count_discussion_replies($cybrary->id);
 
         if ($maxdiscussions > 0 and $maxdiscussions <= count($discussions)) {
             $olddiscussionlink = true;
@@ -5368,51 +5368,51 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
     }
 
     $canviewparticipants = has_capability('moodle/course:viewparticipants',$context);
-    $canviewhiddentimedposts = has_capability('mod/forum:viewhiddentimedposts', $context);
+    $canviewhiddentimedposts = has_capability('mod/cybrary:viewhiddentimedposts', $context);
 
     $strdatestring = get_string('strftimerecentfull');
 
-    // Check if the forum is tracked.
-    if ($cantrack = forum_tp_can_track_forums($forum)) {
-        $forumtracked = forum_tp_is_tracked($forum);
+    // Check if the cybrary is tracked.
+    if ($cantrack = cybrary_tp_can_track_cybraries($cybrary)) {
+        $cybrarytracked = cybrary_tp_is_tracked($cybrary);
     } else {
-        $forumtracked = false;
+        $cybrarytracked = false;
     }
 
-    if ($forumtracked) {
-        $unreads = forum_get_discussions_unread($cm);
+    if ($cybrarytracked) {
+        $unreads = cybrary_get_discussions_unread($cm);
     } else {
         $unreads = array();
     }
 
     if ($displayformat == 'header') {
-        echo '<table cellspacing="0" class="forumheaderlist">';
+        echo '<table cellspacing="0" class="cybraryheaderlist">';
         echo '<thead>';
         echo '<tr>';
-        echo '<th class="header topic" scope="col">'.get_string('discussion', 'forum').'</th>';
-        echo '<th class="header author" colspan="2" scope="col">'.get_string('startedby', 'forum').'</th>';
+        echo '<th class="header topic" scope="col">'.get_string('discussion', 'cybrary').'</th>';
+        echo '<th class="header author" colspan="2" scope="col">'.get_string('startedby', 'cybrary').'</th>';
         if ($groupmode > 0) {
             echo '<th class="header group" scope="col">'.get_string('group').'</th>';
         }
-        if (has_capability('mod/forum:viewdiscussion', $context)) {
-            echo '<th class="header replies" scope="col">'.get_string('replies', 'forum').'</th>';
-            // If the forum can be tracked, display the unread column.
+        if (has_capability('mod/cybrary:viewdiscussion', $context)) {
+            echo '<th class="header replies" scope="col">'.get_string('replies', 'cybrary').'</th>';
+            // If the cybrary can be tracked, display the unread column.
             if ($cantrack) {
-                echo '<th class="header replies" scope="col">'.get_string('unread', 'forum');
-                if ($forumtracked) {
-                    echo '<a title="'.get_string('markallread', 'forum').
-                         '" href="'.$CFG->wwwroot.'/mod/forum/markposts.php?f='.
-                         $forum->id.'&amp;mark=read&amp;returnpage=view.php">'.
-                         '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.get_string('markallread', 'forum').'" /></a>';
+                echo '<th class="header replies" scope="col">'.get_string('unread', 'cybrary');
+                if ($cybrarytracked) {
+                    echo '<a title="'.get_string('markallread', 'cybrary').
+                         '" href="'.$CFG->wwwroot.'/mod/cybrary/markposts.php?f='.
+                         $cybrary->id.'&amp;mark=read&amp;returnpage=view.php">'.
+                         '<img src="'.$OUTPUT->pix_url('t/markasread') . '" class="iconsmall" alt="'.get_string('markallread', 'cybrary').'" /></a>';
                 }
                 echo '</th>';
             }
         }
-        echo '<th class="header lastpost" scope="col">'.get_string('lastpost', 'forum').'</th>';
-        if ((!is_guest($context, $USER) && isloggedin()) && has_capability('mod/forum:viewdiscussion', $context)) {
-            if (\mod_forum\subscriptions::is_subscribable($forum)) {
+        echo '<th class="header lastpost" scope="col">'.get_string('lastpost', 'cybrary').'</th>';
+        if ((!is_guest($context, $USER) && isloggedin()) && has_capability('mod/cybrary:viewdiscussion', $context)) {
+            if (\mod_cybrary\subscriptions::is_subscribable($cybrary)) {
                 echo '<th class="header discussionsubscription" scope="col">';
-                echo forum_get_discussion_subscription_icon_preloaders();
+                echo cybrary_get_discussion_subscription_icon_preloaders();
                 echo '</th>';
             }
         }
@@ -5422,8 +5422,8 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
     }
 
     foreach ($discussions as $discussion) {
-        if ($forum->type == 'qanda' && !has_capability('mod/forum:viewqandawithoutposting', $context) &&
-            !forum_user_has_posted($forum->id, $discussion->discussion, $USER->id)) {
+        if ($cybrary->type == 'qanda' && !has_capability('mod/cybrary:viewqandawithoutposting', $context) &&
+            !cybrary_user_has_posted($cybrary->id, $discussion->discussion, $USER->id)) {
             $canviewparticipants = false;
         }
 
@@ -5436,7 +5436,7 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
 
         // SPECIAL CASE: The front page can display a news item post to non-logged in users.
         // All posts are read in this case.
-        if (!$forumtracked) {
+        if (!$cybrarytracked) {
             $discussion->unread = '-';
         } else if (empty($USER)) {
             $discussion->unread = 0;
@@ -5467,7 +5467,7 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
                 } else {
                     $group = -1;
                 }
-                forum_print_discussion_header($discussion, $forum, $group, $strdatestring, $cantrack, $forumtracked,
+                cybrary_print_discussion_header($discussion, $cybrary, $group, $strdatestring, $cantrack, $cybrarytracked,
                     $canviewparticipants, $context, $canviewhiddentimedposts);
             break;
             default:
@@ -5477,13 +5477,13 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
                     $link = true;
                 } else {
                     $modcontext = context_module::instance($cm->id);
-                    $link = forum_user_can_see_discussion($forum, $discussion, $modcontext, $USER);
+                    $link = cybrary_user_can_see_discussion($cybrary, $discussion, $modcontext, $USER);
                 }
 
-                $discussion->forum = $forum->id;
+                $discussion->cybrary = $cybrary->id;
 
-                forum_print_post($discussion, $discussion, $forum, $cm, $course, $ownpost, 0, $link, false,
-                        '', null, true, $forumtracked);
+                cybrary_print_post($discussion, $discussion, $cybrary, $cm, $course, $ownpost, 0, $link, false,
+                        '', null, true, $cybrarytracked);
             break;
         }
     }
@@ -5494,40 +5494,40 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
     }
 
     if ($olddiscussionlink) {
-        if ($forum->type == 'news') {
-            $strolder = get_string('oldertopics', 'forum');
+        if ($cybrary->type == 'news') {
+            $strolder = get_string('oldertopics', 'cybrary');
         } else {
-            $strolder = get_string('olderdiscussions', 'forum');
+            $strolder = get_string('olderdiscussions', 'cybrary');
         }
-        echo '<div class="forumolddiscuss">';
-        echo '<a href="'.$CFG->wwwroot.'/mod/forum/view.php?f='.$forum->id.'&amp;showall=1">';
+        echo '<div class="cybraryolddiscuss">';
+        echo '<a href="'.$CFG->wwwroot.'/mod/cybrary/view.php?f='.$cybrary->id.'&amp;showall=1">';
         echo $strolder.'</a> ...</div>';
     }
 
     if ($page != -1) { ///Show the paging bar
-        echo $OUTPUT->paging_bar($numdiscussions, $page, $perpage, "view.php?f=$forum->id");
+        echo $OUTPUT->paging_bar($numdiscussions, $page, $perpage, "view.php?f=$cybrary->id");
     }
 }
 
 
 /**
- * Prints a forum discussion
+ * Prints a cybrary discussion
  *
  * @uses CONTEXT_MODULE
- * @uses FORUM_MODE_FLATNEWEST
- * @uses FORUM_MODE_FLATOLDEST
- * @uses FORUM_MODE_THREADED
- * @uses FORUM_MODE_NESTED
+ * @uses CYBRARY_MODE_FLATNEWEST
+ * @uses CYBRARY_MODE_FLATOLDEST
+ * @uses CYBRARY_MODE_THREADED
+ * @uses CYBRARY_MODE_NESTED
  * @param stdClass $course
  * @param stdClass $cm
- * @param stdClass $forum
+ * @param stdClass $cybrary
  * @param stdClass $discussion
  * @param stdClass $post
  * @param int $mode
  * @param mixed $canreply
  * @param bool $canrate
  */
-function forum_print_discussion($course, $cm, $forum, $discussion, $post, $mode, $canreply=NULL, $canrate=false) {
+function cybrary_print_discussion($course, $cm, $cybrary, $discussion, $post, $mode, $canreply=NULL, $canrate=false) {
     global $USER, $CFG;
 
     require_once($CFG->dirroot.'/rating/lib.php');
@@ -5536,12 +5536,12 @@ function forum_print_discussion($course, $cm, $forum, $discussion, $post, $mode,
 
     $modcontext = context_module::instance($cm->id);
     if ($canreply === NULL) {
-        $reply = forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext);
+        $reply = cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $modcontext);
     } else {
         $reply = $canreply;
     }
 
-    // $cm holds general cache for forum functions
+    // $cm holds general cache for cybrary functions
     $cm->cache = new stdClass;
     $cm->cache->groups      = groups_get_all_groups($course->id, 0, $cm->groupingid);
     $cm->cache->usersgroups = array();
@@ -5549,14 +5549,14 @@ function forum_print_discussion($course, $cm, $forum, $discussion, $post, $mode,
     $posters = array();
 
     // preload all posts - TODO: improve...
-    if ($mode == FORUM_MODE_FLATNEWEST) {
+    if ($mode == CYBRARY_MODE_FLATNEWEST) {
         $sort = "p.created DESC";
     } else {
         $sort = "p.created ASC";
     }
 
-    $forumtracked = forum_tp_is_tracked($forum);
-    $posts = forum_get_all_discussion_posts($discussion->id, $sort, $forumtracked);
+    $cybrarytracked = cybrary_tp_is_tracked($cybrary);
+    $posts = cybrary_get_all_discussion_posts($discussion->id, $sort, $cybrarytracked);
     $post = $posts[$post->id];
 
     foreach ($posts as $pid=>$p) {
@@ -5575,51 +5575,51 @@ function forum_print_discussion($course, $cm, $forum, $discussion, $post, $mode,
     }
 
     //load ratings
-    if ($forum->assessed != RATING_AGGREGATE_NONE) {
+    if ($cybrary->assessed != RATING_AGGREGATE_NONE) {
         $ratingoptions = new stdClass;
         $ratingoptions->context = $modcontext;
-        $ratingoptions->component = 'mod_forum';
+        $ratingoptions->component = 'mod_cybrary';
         $ratingoptions->ratingarea = 'post';
         $ratingoptions->items = $posts;
-        $ratingoptions->aggregate = $forum->assessed;//the aggregation method
-        $ratingoptions->scaleid = $forum->scale;
+        $ratingoptions->aggregate = $cybrary->assessed;//the aggregation method
+        $ratingoptions->scaleid = $cybrary->scale;
         $ratingoptions->userid = $USER->id;
-        if ($forum->type == 'single' or !$discussion->id) {
-            $ratingoptions->returnurl = "$CFG->wwwroot/mod/forum/view.php?id=$cm->id";
+        if ($cybrary->type == 'single' or !$discussion->id) {
+            $ratingoptions->returnurl = "$CFG->wwwroot/mod/cybrary/view.php?id=$cm->id";
         } else {
-            $ratingoptions->returnurl = "$CFG->wwwroot/mod/forum/discuss.php?d=$discussion->id";
+            $ratingoptions->returnurl = "$CFG->wwwroot/mod/cybrary/discuss.php?d=$discussion->id";
         }
-        $ratingoptions->assesstimestart = $forum->assesstimestart;
-        $ratingoptions->assesstimefinish = $forum->assesstimefinish;
+        $ratingoptions->assesstimestart = $cybrary->assesstimestart;
+        $ratingoptions->assesstimefinish = $cybrary->assesstimefinish;
 
         $rm = new rating_manager();
         $posts = $rm->get_ratings($ratingoptions);
     }
 
 
-    $post->forum = $forum->id;   // Add the forum id to the post object, later used by forum_print_post
-    $post->forumtype = $forum->type;
+    $post->cybrary = $cybrary->id;   // Add the cybrary id to the post object, later used by cybrary_print_post
+    $post->cybrarytype = $cybrary->type;
 
     $post->subject = format_string($post->subject);
 
     $postread = !empty($post->postread);
 
-    forum_print_post($post, $discussion, $forum, $cm, $course, $ownpost, $reply, false,
-                         '', '', $postread, true, $forumtracked);
+    cybrary_print_post($post, $discussion, $cybrary, $cm, $course, $ownpost, $reply, false,
+                         '', '', $postread, true, $cybrarytracked);
 
     switch ($mode) {
-        case FORUM_MODE_FLATOLDEST :
-        case FORUM_MODE_FLATNEWEST :
+        case CYBRARY_MODE_FLATOLDEST :
+        case CYBRARY_MODE_FLATNEWEST :
         default:
-            forum_print_posts_flat($course, $cm, $forum, $discussion, $post, $mode, $reply, $forumtracked, $posts);
+            cybrary_print_posts_flat($course, $cm, $cybrary, $discussion, $post, $mode, $reply, $cybrarytracked, $posts);
             break;
 
-        case FORUM_MODE_THREADED :
-            forum_print_posts_threaded($course, $cm, $forum, $discussion, $post, 0, $reply, $forumtracked, $posts);
+        case CYBRARY_MODE_THREADED :
+            cybrary_print_posts_threaded($course, $cm, $cybrary, $discussion, $post, 0, $reply, $cybrarytracked, $posts);
             break;
 
-        case FORUM_MODE_NESTED :
-            forum_print_posts_nested($course, $cm, $forum, $discussion, $post, $reply, $forumtracked, $posts);
+        case CYBRARY_MODE_NESTED :
+            cybrary_print_posts_nested($course, $cm, $cybrary, $discussion, $post, $reply, $cybrarytracked, $posts);
             break;
     }
 }
@@ -5628,24 +5628,24 @@ function forum_print_discussion($course, $cm, $forum, $discussion, $post, $mode,
 /**
  * @global object
  * @global object
- * @uses FORUM_MODE_FLATNEWEST
+ * @uses CYBRARY_MODE_FLATNEWEST
  * @param object $course
  * @param object $cm
- * @param object $forum
+ * @param object $cybrary
  * @param object $discussion
  * @param object $post
  * @param object $mode
  * @param bool $reply
- * @param bool $forumtracked
+ * @param bool $cybrarytracked
  * @param array $posts
  * @return void
  */
-function forum_print_posts_flat($course, &$cm, $forum, $discussion, $post, $mode, $reply, $forumtracked, $posts) {
+function cybrary_print_posts_flat($course, &$cm, $cybrary, $discussion, $post, $mode, $reply, $cybrarytracked, $posts) {
     global $USER, $CFG;
 
     $link  = false;
 
-    if ($mode == FORUM_MODE_FLATNEWEST) {
+    if ($mode == CYBRARY_MODE_FLATNEWEST) {
         $sort = "ORDER BY created DESC";
     } else {
         $sort = "ORDER BY created ASC";
@@ -5660,8 +5660,8 @@ function forum_print_posts_flat($course, &$cm, $forum, $discussion, $post, $mode
 
         $postread = !empty($post->postread);
 
-        forum_print_post($post, $discussion, $forum, $cm, $course, $ownpost, $reply, $link,
-                             '', '', $postread, true, $forumtracked);
+        cybrary_print_post($post, $discussion, $cybrary, $cm, $course, $ownpost, $reply, $link,
+                             '', '', $postread, true, $cybrarytracked);
     }
 }
 
@@ -5673,7 +5673,7 @@ function forum_print_posts_flat($course, &$cm, $forum, $discussion, $post, $mode
  * @uses CONTEXT_MODULE
  * @return void
  */
-function forum_print_posts_threaded($course, &$cm, $forum, $discussion, $parent, $depth, $reply, $forumtracked, $posts) {
+function cybrary_print_posts_threaded($course, &$cm, $cybrary, $discussion, $parent, $depth, $reply, $cybrarytracked, $posts) {
     global $USER, $CFG;
 
     $link  = false;
@@ -5693,10 +5693,10 @@ function forum_print_posts_threaded($course, &$cm, $forum, $discussion, $parent,
 
                 $postread = !empty($post->postread);
 
-                forum_print_post($post, $discussion, $forum, $cm, $course, $ownpost, $reply, $link,
-                                     '', '', $postread, true, $forumtracked);
+                cybrary_print_post($post, $discussion, $cybrary, $cm, $course, $ownpost, $reply, $link,
+                                     '', '', $postread, true, $cybrarytracked);
             } else {
-                if (!forum_user_can_see_post($forum, $discussion, $post, NULL, $cm)) {
+                if (!cybrary_user_can_see_post($cybrary, $discussion, $post, NULL, $cm)) {
                     echo "</div>\n";
                     continue;
                 }
@@ -5704,22 +5704,22 @@ function forum_print_posts_threaded($course, &$cm, $forum, $discussion, $parent,
                 $by->name = fullname($post, $canviewfullnames);
                 $by->date = userdate($post->modified);
 
-                if ($forumtracked) {
+                if ($cybrarytracked) {
                     if (!empty($post->postread)) {
-                        $style = '<span class="forumthread read">';
+                        $style = '<span class="cybrarythread read">';
                     } else {
-                        $style = '<span class="forumthread unread">';
+                        $style = '<span class="cybrarythread unread">';
                     }
                 } else {
-                    $style = '<span class="forumthread">';
+                    $style = '<span class="cybrarythread">';
                 }
                 echo $style."<a name=\"$post->id\"></a>".
                      "<a href=\"discuss.php?d=$post->discussion&amp;parent=$post->id\">".format_string($post->subject,true)."</a> ";
-                print_string("bynameondate", "forum", $by);
+                print_string("bynameondate", "cybrary", $by);
                 echo "</span>";
             }
 
-            forum_print_posts_threaded($course, $cm, $forum, $discussion, $post, $depth-1, $reply, $forumtracked, $posts);
+            cybrary_print_posts_threaded($course, $cm, $cybrary, $discussion, $post, $depth-1, $reply, $cybrarytracked, $posts);
             echo "</div>\n";
         }
     }
@@ -5731,7 +5731,7 @@ function forum_print_posts_threaded($course, &$cm, $forum, $discussion, $parent,
  * @global object
  * @return void
  */
-function forum_print_posts_nested($course, &$cm, $forum, $discussion, $parent, $reply, $forumtracked, $posts) {
+function cybrary_print_posts_nested($course, &$cm, $cybrary, $discussion, $parent, $reply, $cybrarytracked, $posts) {
     global $USER, $CFG;
 
     $link  = false;
@@ -5751,16 +5751,16 @@ function forum_print_posts_nested($course, &$cm, $forum, $discussion, $parent, $
             $post->subject = format_string($post->subject);
             $postread = !empty($post->postread);
 
-            forum_print_post($post, $discussion, $forum, $cm, $course, $ownpost, $reply, $link,
-                                 '', '', $postread, true, $forumtracked);
-            forum_print_posts_nested($course, $cm, $forum, $discussion, $post, $reply, $forumtracked, $posts);
+            cybrary_print_post($post, $discussion, $cybrary, $cm, $course, $ownpost, $reply, $link,
+                                 '', '', $postread, true, $cybrarytracked);
+            cybrary_print_posts_nested($course, $cm, $cybrary, $discussion, $post, $reply, $cybrarytracked, $posts);
             echo "</div>\n";
         }
     }
 }
 
 /**
- * Returns all forum posts since a given time in specified forum.
+ * Returns all cybrary posts since a given time in specified cybrary.
  *
  * @todo Document this functions args
  * @global object
@@ -5768,7 +5768,7 @@ function forum_print_posts_nested($course, &$cm, $forum, $discussion, $parent, $
  * @global object
  * @global object
  */
-function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0)  {
+function cybrary_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0)  {
     global $CFG, $COURSE, $USER, $DB;
 
     if ($COURSE->id == $courseid) {
@@ -5797,12 +5797,12 @@ function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $cours
     }
 
     $allnames = get_all_user_name_fields(true, 'u');
-    if (!$posts = $DB->get_records_sql("SELECT p.*, f.type AS forumtype, d.forum, d.groupid,
+    if (!$posts = $DB->get_records_sql("SELECT p.*, f.type AS cybrarytype, d.cybrary, d.groupid,
                                               d.timestart, d.timeend, d.userid AS duserid,
                                               $allnames, u.email, u.picture, u.imagealt, u.email
-                                         FROM {forum_posts} p
-                                              JOIN {forum_discussions} d ON d.id = p.discussion
-                                              JOIN {forum} f             ON f.id = d.forum
+                                         FROM {cybrary_posts} p
+                                              JOIN {cybrary_discussions} d ON d.id = p.discussion
+                                              JOIN {cybrary} f             ON f.id = d.cybrary
                                               JOIN {user} u              ON u.id = p.userid
                                         WHERE p.created > ? AND f.id = ?
                                               $userselect $groupselect
@@ -5812,13 +5812,13 @@ function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $cours
 
     $groupmode       = groups_get_activity_groupmode($cm, $course);
     $cm_context      = context_module::instance($cm->id);
-    $viewhiddentimed = has_capability('mod/forum:viewhiddentimedposts', $cm_context);
+    $viewhiddentimed = has_capability('mod/cybrary:viewhiddentimedposts', $cm_context);
     $accessallgroups = has_capability('moodle/site:accessallgroups', $cm_context);
 
     $printposts = array();
     foreach ($posts as $post) {
 
-        if (!empty($CFG->forum_enabletimedposts) and $USER->id != $post->duserid
+        if (!empty($CFG->cybrary_enabletimedposts) and $USER->id != $post->duserid
           and (($post->timestart > 0 and $post->timestart > time()) or ($post->timeend > 0 and $post->timeend < time()))) {
             if (!$viewhiddentimed) {
                 continue;
@@ -5853,7 +5853,7 @@ function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $cours
     foreach ($printposts as $post) {
         $tmpactivity = new stdClass();
 
-        $tmpactivity->type         = 'forum';
+        $tmpactivity->type         = 'cybrary';
         $tmpactivity->cmid         = $cm->id;
         $tmpactivity->name         = $aname;
         $tmpactivity->sectionnum   = $cm->sectionnum;
@@ -5881,7 +5881,7 @@ function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $cours
  * @todo Document this function
  * @global object
  */
-function forum_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames) {
+function cybrary_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames) {
     global $CFG, $OUTPUT;
 
     if ($activity->content->parent) {
@@ -5890,7 +5890,7 @@ function forum_print_recent_mod_activity($activity, $courseid, $detail, $modname
         $class = 'discussion';
     }
 
-    echo '<table border="0" cellpadding="3" cellspacing="0" class="forum-recent">';
+    echo '<table border="0" cellpadding="3" cellspacing="0" class="cybrary-recent">';
 
     echo "<tr><td class=\"userpicture\" valign=\"top\">";
     echo $OUTPUT->user_picture($activity->user, array('courseid'=>$courseid));
@@ -5908,7 +5908,7 @@ function forum_print_recent_mod_activity($activity, $courseid, $detail, $modname
         echo "<img src=\"" . $OUTPUT->pix_url('icon', $activity->type) . "\" ".
              "class=\"icon\" alt=\"{$aname}\" />";
     }
-    echo "<a href=\"$CFG->wwwroot/mod/forum/discuss.php?d={$activity->content->discussion}"
+    echo "<a href=\"$CFG->wwwroot/mod/cybrary/discuss.php?d={$activity->content->discussion}"
          ."#p{$activity->content->id}\">{$activity->content->subject}</a>";
     echo '</div>';
 
@@ -5931,12 +5931,12 @@ function forum_print_recent_mod_activity($activity, $courseid, $detail, $modname
  * @param int $discussionid
  * @return bool
  */
-function forum_change_discussionid($postid, $discussionid) {
+function cybrary_change_discussionid($postid, $discussionid) {
     global $DB;
-    $DB->set_field('forum_posts', 'discussion', $discussionid, array('id' => $postid));
-    if ($posts = $DB->get_records('forum_posts', array('parent' => $postid))) {
+    $DB->set_field('cybrary_posts', 'discussion', $discussionid, array('id' => $postid));
+    if ($posts = $DB->get_records('cybrary_posts', array('parent' => $postid))) {
         foreach ($posts as $post) {
-            forum_change_discussionid($post->id, $discussionid);
+            cybrary_change_discussionid($post->id, $discussionid);
         }
     }
     return true;
@@ -5948,10 +5948,10 @@ function forum_change_discussionid($postid, $discussionid) {
  * @global object
  * @global object
  * @param int $courseid
- * @param int $forumid
+ * @param int $cybraryid
  * @return string
  */
-function forum_update_subscriptions_button($courseid, $forumid) {
+function cybrary_update_subscriptions_button($courseid, $cybraryid) {
     global $CFG, $USER;
 
     if (!empty($USER->subscriptionsediting)) {
@@ -5962,8 +5962,8 @@ function forum_update_subscriptions_button($courseid, $forumid) {
         $edit = "on";
     }
 
-    return "<form method=\"get\" action=\"$CFG->wwwroot/mod/forum/subscribers.php\">".
-           "<input type=\"hidden\" name=\"id\" value=\"$forumid\" />".
+    return "<form method=\"get\" action=\"$CFG->wwwroot/mod/cybrary/subscribers.php\">".
+           "<input type=\"hidden\" name=\"id\" value=\"$cybraryid\" />".
            "<input type=\"hidden\" name=\"edit\" value=\"$edit\" />".
            "<input type=\"submit\" value=\"$string\" /></form>";
 }
@@ -5979,24 +5979,24 @@ function forum_update_subscriptions_button($courseid, $forumid) {
  * @param array $postids array of post ids
  * @return boolean success
  */
-function forum_tp_mark_posts_read($user, $postids) {
+function cybrary_tp_mark_posts_read($user, $postids) {
     global $CFG, $DB;
 
-    if (!forum_tp_can_track_forums(false, $user)) {
+    if (!cybrary_tp_can_track_cybraries(false, $user)) {
         return true;
     }
 
     $status = true;
 
     $now = time();
-    $cutoffdate = $now - ($CFG->forum_oldpostdays * 24 * 3600);
+    $cutoffdate = $now - ($CFG->cybrary_oldpostdays * 24 * 3600);
 
     if (empty($postids)) {
         return true;
 
     } else if (count($postids) > 200) {
         while ($part = array_splice($postids, 0, 200)) {
-            $status = forum_tp_mark_posts_read($user, $part) && $status;
+            $status = cybrary_tp_mark_posts_read($user, $part) && $status;
         }
         return $status;
     }
@@ -6013,27 +6013,27 @@ function forum_tp_mark_posts_read($user, $postids) {
     );
     $params = array_merge($postidparams, $insertparams);
 
-    if ($CFG->forum_allowforcedreadtracking) {
-        $trackingsql = "AND (f.trackingtype = ".FORUM_TRACKING_FORCED."
-                        OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND tf.id IS NULL))";
+    if ($CFG->cybrary_allowforcedreadtracking) {
+        $trackingsql = "AND (f.trackingtype = ".CYBRARY_TRACKING_FORCED."
+                        OR (f.trackingtype = ".CYBRARY_TRACKING_OPTIONAL." AND tf.id IS NULL))";
     } else {
-        $trackingsql = "AND ((f.trackingtype = ".FORUM_TRACKING_OPTIONAL."  OR f.trackingtype = ".FORUM_TRACKING_FORCED.")
+        $trackingsql = "AND ((f.trackingtype = ".CYBRARY_TRACKING_OPTIONAL."  OR f.trackingtype = ".CYBRARY_TRACKING_FORCED.")
                             AND tf.id IS NULL)";
     }
 
     // First insert any new entries.
-    $sql = "INSERT INTO {forum_read} (userid, postid, discussionid, forumid, firstread, lastread)
+    $sql = "INSERT INTO {cybrary_read} (userid, postid, discussionid, cybraryid, firstread, lastread)
 
-            SELECT :userid1, p.id, p.discussion, d.forum, :firstread, :lastread
-                FROM {forum_posts} p
-                    JOIN {forum_discussions} d       ON d.id = p.discussion
-                    JOIN {forum} f                   ON f.id = d.forum
-                    LEFT JOIN {forum_track_prefs} tf ON (tf.userid = :userid2 AND tf.forumid = f.id)
-                    LEFT JOIN {forum_read} fr        ON (
+            SELECT :userid1, p.id, p.discussion, d.cybrary, :firstread, :lastread
+                FROM {cybrary_posts} p
+                    JOIN {cybrary_discussions} d       ON d.id = p.discussion
+                    JOIN {cybrary} f                   ON f.id = d.cybrary
+                    LEFT JOIN {cybrary_track_prefs} tf ON (tf.userid = :userid2 AND tf.cybraryid = f.id)
+                    LEFT JOIN {cybrary_read} fr        ON (
                             fr.userid = :userid3
                         AND fr.postid = p.id
                         AND fr.discussionid = d.id
-                        AND fr.forumid = f.id
+                        AND fr.cybraryid = f.id
                     )
                 WHERE p.id $usql
                     AND p.modified >= :cutoffdate
@@ -6048,7 +6048,7 @@ function forum_tp_mark_posts_read($user, $postids) {
         'lastread' => $now,
     );
     $params = array_merge($postidparams, $updateparams);
-    $status = $DB->set_field_select('forum_read', 'lastread', $now, '
+    $status = $DB->set_field_select('cybrary_read', 'lastread', $now, '
                 userid      =  :userid
             AND lastread    <> :lastread
             AND postid      ' . $usql,
@@ -6064,23 +6064,23 @@ function forum_tp_mark_posts_read($user, $postids) {
  * @param int $userid
  * @param int $postid
  */
-function forum_tp_add_read_record($userid, $postid) {
+function cybrary_tp_add_read_record($userid, $postid) {
     global $CFG, $DB;
 
     $now = time();
-    $cutoffdate = $now - ($CFG->forum_oldpostdays * 24 * 3600);
+    $cutoffdate = $now - ($CFG->cybrary_oldpostdays * 24 * 3600);
 
-    if (!$DB->record_exists('forum_read', array('userid' => $userid, 'postid' => $postid))) {
-        $sql = "INSERT INTO {forum_read} (userid, postid, discussionid, forumid, firstread, lastread)
+    if (!$DB->record_exists('cybrary_read', array('userid' => $userid, 'postid' => $postid))) {
+        $sql = "INSERT INTO {cybrary_read} (userid, postid, discussionid, cybraryid, firstread, lastread)
 
-                SELECT ?, p.id, p.discussion, d.forum, ?, ?
-                  FROM {forum_posts} p
-                       JOIN {forum_discussions} d ON d.id = p.discussion
+                SELECT ?, p.id, p.discussion, d.cybrary, ?, ?
+                  FROM {cybrary_posts} p
+                       JOIN {cybrary_discussions} d ON d.id = p.discussion
                  WHERE p.id = ? AND p.modified >= ?";
         return $DB->execute($sql, array($userid, $now, $now, $postid, $cutoffdate));
 
     } else {
-        $sql = "UPDATE {forum_read}
+        $sql = "UPDATE {cybrary_read}
                    SET lastread = ?
                  WHERE userid = ? AND postid = ?";
         return $DB->execute($sql, array($now, $userid, $userid));
@@ -6092,31 +6092,31 @@ function forum_tp_add_read_record($userid, $postid) {
  *
  * @return bool
  */
-function forum_tp_mark_post_read($userid, $post, $forumid) {
-    if (!forum_tp_is_post_old($post)) {
-        return forum_tp_add_read_record($userid, $post->id);
+function cybrary_tp_mark_post_read($userid, $post, $cybraryid) {
+    if (!cybrary_tp_is_post_old($post)) {
+        return cybrary_tp_add_read_record($userid, $post->id);
     } else {
         return true;
     }
 }
 
 /**
- * Marks a whole forum as read, for a given user
+ * Marks a whole cybrary as read, for a given user
  *
  * @global object
  * @global object
  * @param object $user
- * @param int $forumid
+ * @param int $cybraryid
  * @param int|bool $groupid
  * @return bool
  */
-function forum_tp_mark_forum_read($user, $forumid, $groupid=false) {
+function cybrary_tp_mark_cybrary_read($user, $cybraryid, $groupid=false) {
     global $CFG, $DB;
 
-    $cutoffdate = time() - ($CFG->forum_oldpostdays*24*60*60);
+    $cutoffdate = time() - ($CFG->cybrary_oldpostdays*24*60*60);
 
     $groupsel = "";
-    $params = array($user->id, $forumid, $cutoffdate);
+    $params = array($user->id, $cybraryid, $cutoffdate);
 
     if ($groupid !== false) {
         $groupsel = " AND (d.groupid = ? OR d.groupid = -1)";
@@ -6124,16 +6124,16 @@ function forum_tp_mark_forum_read($user, $forumid, $groupid=false) {
     }
 
     $sql = "SELECT p.id
-              FROM {forum_posts} p
-                   LEFT JOIN {forum_discussions} d ON d.id = p.discussion
-                   LEFT JOIN {forum_read} r        ON (r.postid = p.id AND r.userid = ?)
-             WHERE d.forum = ?
+              FROM {cybrary_posts} p
+                   LEFT JOIN {cybrary_discussions} d ON d.id = p.discussion
+                   LEFT JOIN {cybrary_read} r        ON (r.postid = p.id AND r.userid = ?)
+             WHERE d.cybrary = ?
                    AND p.modified >= ? AND r.id is NULL
                    $groupsel";
 
     if ($posts = $DB->get_records_sql($sql, $params)) {
         $postids = array_keys($posts);
-        return forum_tp_mark_posts_read($user, $postids);
+        return cybrary_tp_mark_posts_read($user, $postids);
     }
 
     return true;
@@ -6148,20 +6148,20 @@ function forum_tp_mark_forum_read($user, $forumid, $groupid=false) {
  * @param int $discussionid
  * @return bool
  */
-function forum_tp_mark_discussion_read($user, $discussionid) {
+function cybrary_tp_mark_discussion_read($user, $discussionid) {
     global $CFG, $DB;
 
-    $cutoffdate = time() - ($CFG->forum_oldpostdays*24*60*60);
+    $cutoffdate = time() - ($CFG->cybrary_oldpostdays*24*60*60);
 
     $sql = "SELECT p.id
-              FROM {forum_posts} p
-                   LEFT JOIN {forum_read} r ON (r.postid = p.id AND r.userid = ?)
+              FROM {cybrary_posts} p
+                   LEFT JOIN {cybrary_read} r ON (r.postid = p.id AND r.userid = ?)
              WHERE p.discussion = ?
                    AND p.modified >= ? AND r.id is NULL";
 
     if ($posts = $DB->get_records_sql($sql, array($user->id, $discussionid, $cutoffdate))) {
         $postids = array_keys($posts);
-        return forum_tp_mark_posts_read($user, $postids);
+        return cybrary_tp_mark_posts_read($user, $postids);
     }
 
     return true;
@@ -6172,10 +6172,10 @@ function forum_tp_mark_discussion_read($user, $discussionid) {
  * @param int $userid
  * @param object $post
  */
-function forum_tp_is_post_read($userid, $post) {
+function cybrary_tp_is_post_read($userid, $post) {
     global $DB;
-    return (forum_tp_is_post_old($post) ||
-            $DB->record_exists('forum_read', array('userid' => $userid, 'postid' => $post->id)));
+    return (cybrary_tp_is_post_old($post) ||
+            $DB->record_exists('cybrary_read', array('userid' => $userid, 'postid' => $post->id)));
 }
 
 /**
@@ -6183,13 +6183,13 @@ function forum_tp_is_post_read($userid, $post) {
  * @param object $post
  * @param int $time Defautls to time()
  */
-function forum_tp_is_post_old($post, $time=null) {
+function cybrary_tp_is_post_old($post, $time=null) {
     global $CFG;
 
     if (is_null($time)) {
         $time = time();
     }
-    return ($post->modified < ($time - ($CFG->forum_oldpostdays * 24 * 3600)));
+    return ($post->modified < ($time - ($CFG->cybrary_oldpostdays * 24 * 3600)));
 }
 
 /**
@@ -6202,14 +6202,14 @@ function forum_tp_is_post_old($post, $time=null) {
  * @param int $courseid
  * @return array
  */
-function forum_tp_get_course_unread_posts($userid, $courseid) {
+function cybrary_tp_get_course_unread_posts($userid, $courseid) {
     global $CFG, $DB;
 
     $now = round(time(), -2); // DB cache friendliness.
-    $cutoffdate = $now - ($CFG->forum_oldpostdays * 24 * 60 * 60);
+    $cutoffdate = $now - ($CFG->cybrary_oldpostdays * 24 * 60 * 60);
     $params = array($userid, $userid, $courseid, $cutoffdate, $userid);
 
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         $timedsql = "AND d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?)";
         $params[] = $now;
         $params[] = $now;
@@ -6217,23 +6217,23 @@ function forum_tp_get_course_unread_posts($userid, $courseid) {
         $timedsql = "";
     }
 
-    if ($CFG->forum_allowforcedreadtracking) {
-        $trackingsql = "AND (f.trackingtype = ".FORUM_TRACKING_FORCED."
-                            OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND tf.id IS NULL
-                                AND (SELECT trackforums FROM {user} WHERE id = ?) = 1))";
+    if ($CFG->cybrary_allowforcedreadtracking) {
+        $trackingsql = "AND (f.trackingtype = ".CYBRARY_TRACKING_FORCED."
+                            OR (f.trackingtype = ".CYBRARY_TRACKING_OPTIONAL." AND tf.id IS NULL
+                                AND (SELECT trackcybraries FROM {user} WHERE id = ?) = 1))";
     } else {
-        $trackingsql = "AND ((f.trackingtype = ".FORUM_TRACKING_OPTIONAL." OR f.trackingtype = ".FORUM_TRACKING_FORCED.")
+        $trackingsql = "AND ((f.trackingtype = ".CYBRARY_TRACKING_OPTIONAL." OR f.trackingtype = ".CYBRARY_TRACKING_FORCED.")
                             AND tf.id IS NULL
-                            AND (SELECT trackforums FROM {user} WHERE id = ?) = 1)";
+                            AND (SELECT trackcybraries FROM {user} WHERE id = ?) = 1)";
     }
 
     $sql = "SELECT f.id, COUNT(p.id) AS unread
-              FROM {forum_posts} p
-                   JOIN {forum_discussions} d       ON d.id = p.discussion
-                   JOIN {forum} f                   ON f.id = d.forum
+              FROM {cybrary_posts} p
+                   JOIN {cybrary_discussions} d       ON d.id = p.discussion
+                   JOIN {cybrary} f                   ON f.id = d.cybrary
                    JOIN {course} c                  ON c.id = f.course
-                   LEFT JOIN {forum_read} r         ON (r.postid = p.id AND r.userid = ?)
-                   LEFT JOIN {forum_track_prefs} tf ON (tf.userid = ? AND tf.forumid = f.id)
+                   LEFT JOIN {cybrary_read} r         ON (r.postid = p.id AND r.userid = ?)
+                   LEFT JOIN {cybrary_track_prefs} tf ON (tf.userid = ? AND tf.cybraryid = f.id)
              WHERE f.course = ?
                    AND p.modified >= ? AND r.id is NULL
                    $trackingsql
@@ -6248,7 +6248,7 @@ function forum_tp_get_course_unread_posts($userid, $courseid) {
 }
 
 /**
- * Returns the count of records for the provided user and forum and [optionally] group.
+ * Returns the count of records for the provided user and cybrary and [optionally] group.
  *
  * @global object
  * @global object
@@ -6257,23 +6257,23 @@ function forum_tp_get_course_unread_posts($userid, $courseid) {
  * @param object $course
  * @return int
  */
-function forum_tp_count_forum_unread_posts($cm, $course) {
+function cybrary_tp_count_cybrary_unread_posts($cm, $course) {
     global $CFG, $USER, $DB;
 
     static $readcache = array();
 
-    $forumid = $cm->instance;
+    $cybraryid = $cm->instance;
 
     if (!isset($readcache[$course->id])) {
         $readcache[$course->id] = array();
-        if ($counts = forum_tp_get_course_unread_posts($USER->id, $course->id)) {
+        if ($counts = cybrary_tp_get_course_unread_posts($USER->id, $course->id)) {
             foreach ($counts as $count) {
                 $readcache[$course->id][$count->id] = $count->unread;
             }
         }
     }
 
-    if (empty($readcache[$course->id][$forumid])) {
+    if (empty($readcache[$course->id][$cybraryid])) {
         // no need to check group mode ;-)
         return 0;
     }
@@ -6281,11 +6281,11 @@ function forum_tp_count_forum_unread_posts($cm, $course) {
     $groupmode = groups_get_activity_groupmode($cm, $course);
 
     if ($groupmode != SEPARATEGROUPS) {
-        return $readcache[$course->id][$forumid];
+        return $readcache[$course->id][$cybraryid];
     }
 
     if (has_capability('moodle/site:accessallgroups', context_module::instance($cm->id))) {
-        return $readcache[$course->id][$forumid];
+        return $readcache[$course->id][$cybraryid];
     }
 
     require_once($CFG->dirroot.'/course/lib.php');
@@ -6300,10 +6300,10 @@ function forum_tp_count_forum_unread_posts($cm, $course) {
     list ($groups_sql, $groups_params) = $DB->get_in_or_equal($mygroups);
 
     $now = round(time(), -2); // db cache friendliness
-    $cutoffdate = $now - ($CFG->forum_oldpostdays*24*60*60);
-    $params = array($USER->id, $forumid, $cutoffdate);
+    $cutoffdate = $now - ($CFG->cybrary_oldpostdays*24*60*60);
+    $params = array($USER->id, $cybraryid, $cutoffdate);
 
-    if (!empty($CFG->forum_enabletimedposts)) {
+    if (!empty($CFG->cybrary_enabletimedposts)) {
         $timedsql = "AND d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?)";
         $params[] = $now;
         $params[] = $now;
@@ -6314,10 +6314,10 @@ function forum_tp_count_forum_unread_posts($cm, $course) {
     $params = array_merge($params, $groups_params);
 
     $sql = "SELECT COUNT(p.id)
-              FROM {forum_posts} p
-                   JOIN {forum_discussions} d ON p.discussion = d.id
-                   LEFT JOIN {forum_read} r   ON (r.postid = p.id AND r.userid = ?)
-             WHERE d.forum = ?
+              FROM {cybrary_posts} p
+                   JOIN {cybrary_discussions} d ON p.discussion = d.id
+                   LEFT JOIN {cybrary_read} r   ON (r.postid = p.id AND r.userid = ?)
+             WHERE d.cybrary = ?
                    AND p.modified >= ? AND r.id is NULL
                    $timedsql
                    AND d.groupid $groups_sql";
@@ -6332,10 +6332,10 @@ function forum_tp_count_forum_unread_posts($cm, $course) {
  * @param int $userid
  * @param int $postid
  * @param int $discussionid
- * @param int $forumid
+ * @param int $cybraryid
  * @return bool
  */
-function forum_tp_delete_read_records($userid=-1, $postid=-1, $discussionid=-1, $forumid=-1) {
+function cybrary_tp_delete_read_records($userid=-1, $postid=-1, $discussionid=-1, $cybraryid=-1) {
     global $DB;
     $params = array();
 
@@ -6355,52 +6355,52 @@ function forum_tp_delete_read_records($userid=-1, $postid=-1, $discussionid=-1, 
         $select .= 'discussionid = ?';
         $params[] = $discussionid;
     }
-    if ($forumid > -1) {
+    if ($cybraryid > -1) {
         if ($select != '') $select .= ' AND ';
-        $select .= 'forumid = ?';
-        $params[] = $forumid;
+        $select .= 'cybraryid = ?';
+        $params[] = $cybraryid;
     }
     if ($select == '') {
         return false;
     }
     else {
-        return $DB->delete_records_select('forum_read', $select, $params);
+        return $DB->delete_records_select('cybrary_read', $select, $params);
     }
 }
 /**
- * Get a list of forums not tracked by the user.
+ * Get a list of cybraries not tracked by the user.
  *
  * @global object
  * @global object
  * @param int $userid The id of the user to use.
  * @param int $courseid The id of the course being checked.
- * @return mixed An array indexed by forum id, or false.
+ * @return mixed An array indexed by cybrary id, or false.
  */
-function forum_tp_get_untracked_forums($userid, $courseid) {
+function cybrary_tp_get_untracked_cybraries($userid, $courseid) {
     global $CFG, $DB;
 
-    if ($CFG->forum_allowforcedreadtracking) {
-        $trackingsql = "AND (f.trackingtype = ".FORUM_TRACKING_OFF."
-                            OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND (ft.id IS NOT NULL
-                                OR (SELECT trackforums FROM {user} WHERE id = ?) = 0)))";
+    if ($CFG->cybrary_allowforcedreadtracking) {
+        $trackingsql = "AND (f.trackingtype = ".CYBRARY_TRACKING_OFF."
+                            OR (f.trackingtype = ".CYBRARY_TRACKING_OPTIONAL." AND (ft.id IS NOT NULL
+                                OR (SELECT trackcybraries FROM {user} WHERE id = ?) = 0)))";
     } else {
-        $trackingsql = "AND (f.trackingtype = ".FORUM_TRACKING_OFF."
-                            OR ((f.trackingtype = ".FORUM_TRACKING_OPTIONAL." OR f.trackingtype = ".FORUM_TRACKING_FORCED.")
+        $trackingsql = "AND (f.trackingtype = ".CYBRARY_TRACKING_OFF."
+                            OR ((f.trackingtype = ".CYBRARY_TRACKING_OPTIONAL." OR f.trackingtype = ".CYBRARY_TRACKING_FORCED.")
                                 AND (ft.id IS NOT NULL
-                                    OR (SELECT trackforums FROM {user} WHERE id = ?) = 0)))";
+                                    OR (SELECT trackcybraries FROM {user} WHERE id = ?) = 0)))";
     }
 
     $sql = "SELECT f.id
-              FROM {forum} f
-                   LEFT JOIN {forum_track_prefs} ft ON (ft.forumid = f.id AND ft.userid = ?)
+              FROM {cybrary} f
+                   LEFT JOIN {cybrary_track_prefs} ft ON (ft.cybraryid = f.id AND ft.userid = ?)
              WHERE f.course = ?
                    $trackingsql";
 
-    if ($forums = $DB->get_records_sql($sql, array($userid, $courseid, $userid))) {
-        foreach ($forums as $forum) {
-            $forums[$forum->id] = $forum;
+    if ($cybraries = $DB->get_records_sql($sql, array($userid, $courseid, $userid))) {
+        foreach ($cybraries as $cybrary) {
+            $cybraries[$cybrary->id] = $cybrary;
         }
-        return $forums;
+        return $cybraries;
 
     } else {
         return array();
@@ -6408,23 +6408,23 @@ function forum_tp_get_untracked_forums($userid, $courseid) {
 }
 
 /**
- * Determine if a user can track forums and optionally a particular forum.
- * Checks the site settings, the user settings and the forum settings (if
+ * Determine if a user can track cybraries and optionally a particular cybrary.
+ * Checks the site settings, the user settings and the cybrary settings (if
  * requested).
  *
  * @global object
  * @global object
  * @global object
- * @param mixed $forum The forum object to test, or the int id (optional).
+ * @param mixed $cybrary The cybrary object to test, or the int id (optional).
  * @param mixed $userid The user object to check for (optional).
  * @return boolean
  */
-function forum_tp_can_track_forums($forum=false, $user=false) {
+function cybrary_tp_can_track_cybraries($cybrary=false, $user=false) {
     global $USER, $CFG, $DB;
 
     // if possible, avoid expensive
     // queries
-    if (empty($CFG->forum_trackreadposts)) {
+    if (empty($CFG->cybrary_trackreadposts)) {
         return false;
     }
 
@@ -6436,45 +6436,45 @@ function forum_tp_can_track_forums($forum=false, $user=false) {
         return false;
     }
 
-    if ($forum === false) {
-        if ($CFG->forum_allowforcedreadtracking) {
-            // Since we can force tracking, assume yes without a specific forum.
+    if ($cybrary === false) {
+        if ($CFG->cybrary_allowforcedreadtracking) {
+            // Since we can force tracking, assume yes without a specific cybrary.
             return true;
         } else {
-            return (bool)$user->trackforums;
+            return (bool)$user->trackcybraries;
         }
     }
 
     // Work toward always passing an object...
-    if (is_numeric($forum)) {
-        debugging('Better use proper forum object.', DEBUG_DEVELOPER);
-        $forum = $DB->get_record('forum', array('id' => $forum), '', 'id,trackingtype');
+    if (is_numeric($cybrary)) {
+        debugging('Better use proper cybrary object.', DEBUG_DEVELOPER);
+        $cybrary = $DB->get_record('cybrary', array('id' => $cybrary), '', 'id,trackingtype');
     }
 
-    $forumallows = ($forum->trackingtype == FORUM_TRACKING_OPTIONAL);
-    $forumforced = ($forum->trackingtype == FORUM_TRACKING_FORCED);
+    $cybraryallows = ($cybrary->trackingtype == CYBRARY_TRACKING_OPTIONAL);
+    $cybraryforced = ($cybrary->trackingtype == CYBRARY_TRACKING_FORCED);
 
-    if ($CFG->forum_allowforcedreadtracking) {
-        // If we allow forcing, then forced forums takes procidence over user setting.
-        return ($forumforced || ($forumallows  && (!empty($user->trackforums) && (bool)$user->trackforums)));
+    if ($CFG->cybrary_allowforcedreadtracking) {
+        // If we allow forcing, then forced cybraries takes procidence over user setting.
+        return ($cybraryforced || ($cybraryallows  && (!empty($user->trackcybraries) && (bool)$user->trackcybraries)));
     } else {
         // If we don't allow forcing, user setting trumps.
-        return ($forumforced || $forumallows)  && !empty($user->trackforums);
+        return ($cybraryforced || $cybraryallows)  && !empty($user->trackcybraries);
     }
 }
 
 /**
- * Tells whether a specific forum is tracked by the user. A user can optionally
+ * Tells whether a specific cybrary is tracked by the user. A user can optionally
  * be specified. If not specified, the current user is assumed.
  *
  * @global object
  * @global object
  * @global object
- * @param mixed $forum If int, the id of the forum being checked; if object, the forum object
+ * @param mixed $cybrary If int, the id of the cybrary being checked; if object, the cybrary object
  * @param int $userid The id of the user being checked (optional).
  * @return boolean
  */
-function forum_tp_is_tracked($forum, $user=false) {
+function cybrary_tp_is_tracked($cybrary, $user=false) {
     global $USER, $CFG, $DB;
 
     if ($user === false) {
@@ -6486,85 +6486,85 @@ function forum_tp_is_tracked($forum, $user=false) {
     }
 
     // Work toward always passing an object...
-    if (is_numeric($forum)) {
-        debugging('Better use proper forum object.', DEBUG_DEVELOPER);
-        $forum = $DB->get_record('forum', array('id' => $forum));
+    if (is_numeric($cybrary)) {
+        debugging('Better use proper cybrary object.', DEBUG_DEVELOPER);
+        $cybrary = $DB->get_record('cybrary', array('id' => $cybrary));
     }
 
-    if (!forum_tp_can_track_forums($forum, $user)) {
+    if (!cybrary_tp_can_track_cybraries($cybrary, $user)) {
         return false;
     }
 
-    $forumallows = ($forum->trackingtype == FORUM_TRACKING_OPTIONAL);
-    $forumforced = ($forum->trackingtype == FORUM_TRACKING_FORCED);
-    $userpref = $DB->get_record('forum_track_prefs', array('userid' => $user->id, 'forumid' => $forum->id));
+    $cybraryallows = ($cybrary->trackingtype == CYBRARY_TRACKING_OPTIONAL);
+    $cybraryforced = ($cybrary->trackingtype == CYBRARY_TRACKING_FORCED);
+    $userpref = $DB->get_record('cybrary_track_prefs', array('userid' => $user->id, 'cybraryid' => $cybrary->id));
 
-    if ($CFG->forum_allowforcedreadtracking) {
-        return $forumforced || ($forumallows && $userpref === false);
+    if ($CFG->cybrary_allowforcedreadtracking) {
+        return $cybraryforced || ($cybraryallows && $userpref === false);
     } else {
-        return  ($forumallows || $forumforced) && $userpref === false;
+        return  ($cybraryallows || $cybraryforced) && $userpref === false;
     }
 }
 
 /**
  * @global object
  * @global object
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $userid
  */
-function forum_tp_start_tracking($forumid, $userid=false) {
+function cybrary_tp_start_tracking($cybraryid, $userid=false) {
     global $USER, $DB;
 
     if ($userid === false) {
         $userid = $USER->id;
     }
 
-    return $DB->delete_records('forum_track_prefs', array('userid' => $userid, 'forumid' => $forumid));
+    return $DB->delete_records('cybrary_track_prefs', array('userid' => $userid, 'cybraryid' => $cybraryid));
 }
 
 /**
  * @global object
  * @global object
- * @param int $forumid
+ * @param int $cybraryid
  * @param int $userid
  */
-function forum_tp_stop_tracking($forumid, $userid=false) {
+function cybrary_tp_stop_tracking($cybraryid, $userid=false) {
     global $USER, $DB;
 
     if ($userid === false) {
         $userid = $USER->id;
     }
 
-    if (!$DB->record_exists('forum_track_prefs', array('userid' => $userid, 'forumid' => $forumid))) {
+    if (!$DB->record_exists('cybrary_track_prefs', array('userid' => $userid, 'cybraryid' => $cybraryid))) {
         $track_prefs = new stdClass();
         $track_prefs->userid = $userid;
-        $track_prefs->forumid = $forumid;
-        $DB->insert_record('forum_track_prefs', $track_prefs);
+        $track_prefs->cybraryid = $cybraryid;
+        $DB->insert_record('cybrary_track_prefs', $track_prefs);
     }
 
-    return forum_tp_delete_read_records($userid, -1, -1, $forumid);
+    return cybrary_tp_delete_read_records($userid, -1, -1, $cybraryid);
 }
 
 
 /**
- * Clean old records from the forum_read table.
+ * Clean old records from the cybrary_read table.
  * @global object
  * @global object
  * @return void
  */
-function forum_tp_clean_read_records() {
+function cybrary_tp_clean_read_records() {
     global $CFG, $DB;
 
-    if (!isset($CFG->forum_oldpostdays)) {
+    if (!isset($CFG->cybrary_oldpostdays)) {
         return;
     }
-// Look for records older than the cutoffdate that are still in the forum_read table.
-    $cutoffdate = time() - ($CFG->forum_oldpostdays*24*60*60);
+// Look for records older than the cutoffdate that are still in the cybrary_read table.
+    $cutoffdate = time() - ($CFG->cybrary_oldpostdays*24*60*60);
 
     //first get the oldest tracking present - we need tis to speedup the next delete query
     $sql = "SELECT MIN(fp.modified) AS first
-              FROM {forum_posts} fp
-                   JOIN {forum_read} fr ON fr.postid=fp.id";
+              FROM {cybrary_posts} fp
+                   JOIN {cybrary_read} fr ON fr.postid=fp.id";
     if (!$first = $DB->get_field_sql($sql)) {
         // nothing to delete;
         return;
@@ -6572,9 +6572,9 @@ function forum_tp_clean_read_records() {
 
     // now delete old tracking info
     $sql = "DELETE
-              FROM {forum_read}
+              FROM {cybrary_read}
              WHERE postid IN (SELECT fp.id
-                                FROM {forum_posts} fp
+                                FROM {cybrary_posts} fp
                                WHERE fp.modified >= ? AND fp.modified < ?)";
     $DB->execute($sql, array($first, $cutoffdate));
 }
@@ -6587,17 +6587,17 @@ function forum_tp_clean_read_records() {
  * @param into $discussionid
  * @return bool|int
  **/
-function forum_discussion_update_last_post($discussionid) {
+function cybrary_discussion_update_last_post($discussionid) {
     global $CFG, $DB;
 
 // Check the given discussion exists
-    if (!$DB->record_exists('forum_discussions', array('id' => $discussionid))) {
+    if (!$DB->record_exists('cybrary_discussions', array('id' => $discussionid))) {
         return false;
     }
 
 // Use SQL to find the last post for this discussion
     $sql = "SELECT id, userid, modified
-              FROM {forum_posts}
+              FROM {cybrary_posts}
              WHERE discussion=?
              ORDER BY modified DESC";
 
@@ -6608,7 +6608,7 @@ function forum_discussion_update_last_post($discussionid) {
         $discussionobject->id           = $discussionid;
         $discussionobject->usermodified = $lastpost->userid;
         $discussionobject->timemodified = $lastpost->modified;
-        $DB->update_record('forum_discussions', $discussionobject);
+        $DB->update_record('cybrary_discussions', $discussionobject);
         return $lastpost->id;
     }
 
@@ -6628,8 +6628,8 @@ function forum_discussion_update_last_post($discussionid) {
  *
  * @return array
  */
-function forum_get_view_actions() {
-    return array('view discussion', 'search', 'forum', 'forums', 'subscribers', 'view forum');
+function cybrary_get_view_actions() {
+    return array('view discussion', 'search', 'cybrary', 'cybraries', 'subscribers', 'view cybrary');
 }
 
 /**
@@ -6642,7 +6642,7 @@ function forum_get_view_actions() {
  *
  * @return array
  */
-function forum_get_post_actions() {
+function cybrary_get_post_actions() {
     return array('add discussion','add post','delete discussion','delete post','move discussion','prune post','update post');
 }
 
@@ -6650,68 +6650,68 @@ function forum_get_post_actions() {
  * Returns a warning object if a user has reached the number of posts equal to
  * the warning/blocking setting, or false if there is no warning to show.
  *
- * @param int|stdClass $forum the forum id or the forum object
+ * @param int|stdClass $cybrary the cybrary id or the cybrary object
  * @param stdClass $cm the course module
  * @return stdClass|bool returns an object with the warning information, else
  *         returns false if no warning is required.
  */
-function forum_check_throttling($forum, $cm = null) {
+function cybrary_check_throttling($cybrary, $cm = null) {
     global $CFG, $DB, $USER;
 
-    if (is_numeric($forum)) {
-        $forum = $DB->get_record('forum', array('id' => $forum), '*', MUST_EXIST);
+    if (is_numeric($cybrary)) {
+        $cybrary = $DB->get_record('cybrary', array('id' => $cybrary), '*', MUST_EXIST);
     }
 
-    if (!is_object($forum)) {
+    if (!is_object($cybrary)) {
         return false; // This is broken.
     }
 
     if (!$cm) {
-        $cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course, false, MUST_EXIST);
+        $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $cybrary->course, false, MUST_EXIST);
     }
 
-    if (empty($forum->blockafter)) {
+    if (empty($cybrary->blockafter)) {
         return false;
     }
 
-    if (empty($forum->blockperiod)) {
+    if (empty($cybrary->blockperiod)) {
         return false;
     }
 
     $modcontext = context_module::instance($cm->id);
-    if (has_capability('mod/forum:postwithoutthrottling', $modcontext)) {
+    if (has_capability('mod/cybrary:postwithoutthrottling', $modcontext)) {
         return false;
     }
 
     // Get the number of posts in the last period we care about.
     $timenow = time();
-    $timeafter = $timenow - $forum->blockperiod;
-    $numposts = $DB->count_records_sql('SELECT COUNT(p.id) FROM {forum_posts} p
-                                        JOIN {forum_discussions} d
-                                        ON p.discussion = d.id WHERE d.forum = ?
-                                        AND p.userid = ? AND p.created > ?', array($forum->id, $USER->id, $timeafter));
+    $timeafter = $timenow - $cybrary->blockperiod;
+    $numposts = $DB->count_records_sql('SELECT COUNT(p.id) FROM {cybrary_posts} p
+                                        JOIN {cybrary_discussions} d
+                                        ON p.discussion = d.id WHERE d.cybrary = ?
+                                        AND p.userid = ? AND p.created > ?', array($cybrary->id, $USER->id, $timeafter));
 
     $a = new stdClass();
-    $a->blockafter = $forum->blockafter;
+    $a->blockafter = $cybrary->blockafter;
     $a->numposts = $numposts;
-    $a->blockperiod = get_string('secondstotime'.$forum->blockperiod);
+    $a->blockperiod = get_string('secondstotime'.$cybrary->blockperiod);
 
-    if ($forum->blockafter <= $numposts) {
+    if ($cybrary->blockafter <= $numposts) {
         $warning = new stdClass();
         $warning->canpost = false;
-        $warning->errorcode = 'forumblockingtoomanyposts';
+        $warning->errorcode = 'cybraryblockingtoomanyposts';
         $warning->module = 'error';
         $warning->additional = $a;
-        $warning->link = $CFG->wwwroot . '/mod/forum/view.php?f=' . $forum->id;
+        $warning->link = $CFG->wwwroot . '/mod/cybrary/view.php?f=' . $cybrary->id;
 
         return $warning;
     }
 
-    if ($forum->warnafter <= $numposts) {
+    if ($cybrary->warnafter <= $numposts) {
         $warning = new stdClass();
         $warning->canpost = true;
-        $warning->errorcode = 'forumblockingalmosttoomanyposts';
-        $warning->module = 'forum';
+        $warning->errorcode = 'cybraryblockingalmosttoomanyposts';
+        $warning->module = 'cybrary';
         $warning->additional = $a;
         $warning->link = null;
 
@@ -6726,9 +6726,9 @@ function forum_check_throttling($forum, $cm = null) {
  *
  * @since Moodle 2.5
  * @param stdClass $thresholdwarning the warning information returned
- *        from the function forum_check_throttling.
+ *        from the function cybrary_check_throttling.
  */
-function forum_check_blocking_threshold($thresholdwarning) {
+function cybrary_check_blocking_threshold($thresholdwarning) {
     if (!empty($thresholdwarning) && !$thresholdwarning->canpost) {
         print_error($thresholdwarning->errorcode,
                     $thresholdwarning->module,
@@ -6746,7 +6746,7 @@ function forum_check_blocking_threshold($thresholdwarning) {
  * @param int $courseid
  * @param string $type optional
  */
-function forum_reset_gradebook($courseid, $type='') {
+function cybrary_reset_gradebook($courseid, $type='') {
     global $CFG, $DB;
 
     $wheresql = '';
@@ -6757,19 +6757,19 @@ function forum_reset_gradebook($courseid, $type='') {
     }
 
     $sql = "SELECT f.*, cm.idnumber as cmidnumber, f.course as courseid
-              FROM {forum} f, {course_modules} cm, {modules} m
-             WHERE m.name='forum' AND m.id=cm.module AND cm.instance=f.id AND f.course=? $wheresql";
+              FROM {cybrary} f, {course_modules} cm, {modules} m
+             WHERE m.name='cybrary' AND m.id=cm.module AND cm.instance=f.id AND f.course=? $wheresql";
 
-    if ($forums = $DB->get_records_sql($sql, $params)) {
-        foreach ($forums as $forum) {
-            forum_grade_item_update($forum, 'reset');
+    if ($cybraries = $DB->get_records_sql($sql, $params)) {
+        foreach ($cybraries as $cybrary) {
+            cybrary_grade_item_update($cybrary, 'reset');
         }
     }
 }
 
 /**
  * This function is used by the reset_course_userdata function in moodlelib.
- * This function will remove all posts from the specified forum
+ * This function will remove all posts from the specified cybrary
  * and clean up any related data.
  *
  * @global object
@@ -6777,31 +6777,31 @@ function forum_reset_gradebook($courseid, $type='') {
  * @param $data the data submitted from the reset course.
  * @return array status array
  */
-function forum_reset_userdata($data) {
+function cybrary_reset_userdata($data) {
     global $CFG, $DB;
     require_once($CFG->dirroot.'/rating/lib.php');
 
-    $componentstr = get_string('modulenameplural', 'forum');
+    $componentstr = get_string('modulenameplural', 'cybrary');
     $status = array();
 
     $params = array($data->courseid);
 
     $removeposts = false;
     $typesql     = "";
-    if (!empty($data->reset_forum_all)) {
+    if (!empty($data->reset_cybrary_all)) {
         $removeposts = true;
-        $typesstr    = get_string('resetforumsall', 'forum');
+        $typesstr    = get_string('resetcybrariesall', 'cybrary');
         $types       = array();
-    } else if (!empty($data->reset_forum_types)){
+    } else if (!empty($data->reset_cybrary_types)){
         $removeposts = true;
         $types       = array();
         $sqltypes    = array();
-        $forum_types_all = forum_get_forum_types_all();
-        foreach ($data->reset_forum_types as $type) {
-            if (!array_key_exists($type, $forum_types_all)) {
+        $cybrary_types_all = cybrary_get_cybrary_types_all();
+        foreach ($data->reset_cybrary_types as $type) {
+            if (!array_key_exists($type, $cybrary_types_all)) {
                 continue;
             }
-            $types[] = $forum_types_all[$type];
+            $types[] = $cybrary_types_all[$type];
             $sqltypes[] = $type;
         }
         if (!empty($sqltypes)) {
@@ -6809,28 +6809,28 @@ function forum_reset_userdata($data) {
             $typesql = " AND f.type " . $typesql;
             $params = array_merge($params, $typeparams);
         }
-        $typesstr = get_string('resetforums', 'forum').': '.implode(', ', $types);
+        $typesstr = get_string('resetcybraries', 'cybrary').': '.implode(', ', $types);
     }
     $alldiscussionssql = "SELECT fd.id
-                            FROM {forum_discussions} fd, {forum} f
-                           WHERE f.course=? AND f.id=fd.forum";
+                            FROM {cybrary_discussions} fd, {cybrary} f
+                           WHERE f.course=? AND f.id=fd.cybrary";
 
-    $allforumssql      = "SELECT f.id
-                            FROM {forum} f
+    $allcybrariessql      = "SELECT f.id
+                            FROM {cybrary} f
                            WHERE f.course=?";
 
     $allpostssql       = "SELECT fp.id
-                            FROM {forum_posts} fp, {forum_discussions} fd, {forum} f
-                           WHERE f.course=? AND f.id=fd.forum AND fd.id=fp.discussion";
+                            FROM {cybrary_posts} fp, {cybrary_discussions} fd, {cybrary} f
+                           WHERE f.course=? AND f.id=fd.cybrary AND fd.id=fp.discussion";
 
-    $forumssql = $forums = $rm = null;
+    $cybrariessql = $cybraries = $rm = null;
 
-    if( $removeposts || !empty($data->reset_forum_ratings) ) {
-        $forumssql      = "$allforumssql $typesql";
-        $forums = $forums = $DB->get_records_sql($forumssql, $params);
+    if( $removeposts || !empty($data->reset_cybrary_ratings) ) {
+        $cybrariessql      = "$allcybrariessql $typesql";
+        $cybraries = $cybraries = $DB->get_records_sql($cybrariessql, $params);
         $rm = new rating_manager();
         $ratingdeloptions = new stdClass;
-        $ratingdeloptions->component = 'mod_forum';
+        $ratingdeloptions->component = 'mod_cybrary';
         $ratingdeloptions->ratingarea = 'post';
     }
 
@@ -6840,14 +6840,14 @@ function forum_reset_userdata($data) {
 
         // now get rid of all attachments
         $fs = get_file_storage();
-        if ($forums) {
-            foreach ($forums as $forumid=>$unused) {
-                if (!$cm = get_coursemodule_from_instance('forum', $forumid)) {
+        if ($cybraries) {
+            foreach ($cybraries as $cybraryid=>$unused) {
+                if (!$cm = get_coursemodule_from_instance('cybrary', $cybraryid)) {
                     continue;
                 }
                 $context = context_module::instance($cm->id);
-                $fs->delete_area_files($context->id, 'mod_forum', 'attachment');
-                $fs->delete_area_files($context->id, 'mod_forum', 'post');
+                $fs->delete_area_files($context->id, 'mod_cybrary', 'attachment');
+                $fs->delete_area_files($context->id, 'mod_cybrary', 'post');
 
                 //remove ratings
                 $ratingdeloptions->contextid = $context->id;
@@ -6856,28 +6856,28 @@ function forum_reset_userdata($data) {
         }
 
         // first delete all read flags
-        $DB->delete_records_select('forum_read', "forumid IN ($forumssql)", $params);
+        $DB->delete_records_select('cybrary_read', "cybraryid IN ($cybrariessql)", $params);
 
         // remove tracking prefs
-        $DB->delete_records_select('forum_track_prefs', "forumid IN ($forumssql)", $params);
+        $DB->delete_records_select('cybrary_track_prefs', "cybraryid IN ($cybrariessql)", $params);
 
         // remove posts from queue
-        $DB->delete_records_select('forum_queue', "discussionid IN ($discussionssql)", $params);
+        $DB->delete_records_select('cybrary_queue', "discussionid IN ($discussionssql)", $params);
 
-        // all posts - initial posts must be kept in single simple discussion forums
-        $DB->delete_records_select('forum_posts', "discussion IN ($discussionssql) AND parent <> 0", $params); // first all children
-        $DB->delete_records_select('forum_posts', "discussion IN ($discussionssql AND f.type <> 'single') AND parent = 0", $params); // now the initial posts for non single simple
+        // all posts - initial posts must be kept in single simple discussion cybraries
+        $DB->delete_records_select('cybrary_posts', "discussion IN ($discussionssql) AND parent <> 0", $params); // first all children
+        $DB->delete_records_select('cybrary_posts', "discussion IN ($discussionssql AND f.type <> 'single') AND parent = 0", $params); // now the initial posts for non single simple
 
-        // finally all discussions except single simple forums
-        $DB->delete_records_select('forum_discussions', "forum IN ($forumssql AND f.type <> 'single')", $params);
+        // finally all discussions except single simple cybraries
+        $DB->delete_records_select('cybrary_discussions', "cybrary IN ($cybrariessql AND f.type <> 'single')", $params);
 
         // remove all grades from gradebook
         if (empty($data->reset_gradebook_grades)) {
             if (empty($types)) {
-                forum_reset_gradebook($data->courseid);
+                cybrary_reset_gradebook($data->courseid);
             } else {
                 foreach ($types as $type) {
-                    forum_reset_gradebook($data->courseid, $type);
+                    cybrary_reset_gradebook($data->courseid, $type);
                 }
             }
         }
@@ -6885,11 +6885,11 @@ function forum_reset_userdata($data) {
         $status[] = array('component'=>$componentstr, 'item'=>$typesstr, 'error'=>false);
     }
 
-    // remove all ratings in this course's forums
-    if (!empty($data->reset_forum_ratings)) {
-        if ($forums) {
-            foreach ($forums as $forumid=>$unused) {
-                if (!$cm = get_coursemodule_from_instance('forum', $forumid)) {
+    // remove all ratings in this course's cybraries
+    if (!empty($data->reset_cybrary_ratings)) {
+        if ($cybraries) {
+            foreach ($cybraries as $cybraryid=>$unused) {
+                if (!$cm = get_coursemodule_from_instance('cybrary', $cybraryid)) {
                     continue;
                 }
                 $context = context_module::instance($cm->id);
@@ -6902,32 +6902,32 @@ function forum_reset_userdata($data) {
 
         // remove all grades from gradebook
         if (empty($data->reset_gradebook_grades)) {
-            forum_reset_gradebook($data->courseid);
+            cybrary_reset_gradebook($data->courseid);
         }
     }
 
     // remove all digest settings unconditionally - even for users still enrolled in course.
-    if (!empty($data->reset_forum_digests)) {
-        $DB->delete_records_select('forum_digests', "forum IN ($allforumssql)", $params);
-        $status[] = array('component' => $componentstr, 'item' => get_string('resetdigests', 'forum'), 'error' => false);
+    if (!empty($data->reset_cybrary_digests)) {
+        $DB->delete_records_select('cybrary_digests', "cybrary IN ($allcybrariessql)", $params);
+        $status[] = array('component' => $componentstr, 'item' => get_string('resetdigests', 'cybrary'), 'error' => false);
     }
 
     // remove all subscriptions unconditionally - even for users still enrolled in course
-    if (!empty($data->reset_forum_subscriptions)) {
-        $DB->delete_records_select('forum_subscriptions', "forum IN ($allforumssql)", $params);
-        $DB->delete_records_select('forum_discussion_subs', "forum IN ($allforumssql)", $params);
-        $status[] = array('component' => $componentstr, 'item' => get_string('resetsubscriptions', 'forum'), 'error' => false);
+    if (!empty($data->reset_cybrary_subscriptions)) {
+        $DB->delete_records_select('cybrary_subscriptions', "cybrary IN ($allcybrariessql)", $params);
+        $DB->delete_records_select('cybrary_discussion_subs', "cybrary IN ($allcybrariessql)", $params);
+        $status[] = array('component' => $componentstr, 'item' => get_string('resetsubscriptions', 'cybrary'), 'error' => false);
     }
 
     // remove all tracking prefs unconditionally - even for users still enrolled in course
-    if (!empty($data->reset_forum_track_prefs)) {
-        $DB->delete_records_select('forum_track_prefs', "forumid IN ($allforumssql)", $params);
-        $status[] = array('component'=>$componentstr, 'item'=>get_string('resettrackprefs','forum'), 'error'=>false);
+    if (!empty($data->reset_cybrary_track_prefs)) {
+        $DB->delete_records_select('cybrary_track_prefs', "cybraryid IN ($allcybrariessql)", $params);
+        $status[] = array('component'=>$componentstr, 'item'=>get_string('resettrackprefs','cybrary'), 'error'=>false);
     }
 
     /// updating dates - shift may be negative too
     if ($data->timeshift) {
-        shift_course_mod_dates('forum', array('assesstimestart', 'assesstimefinish'), $data->timeshift, $data->courseid);
+        shift_course_mod_dates('cybrary', array('assesstimestart', 'assesstimefinish'), $data->timeshift, $data->courseid);
         $status[] = array('component'=>$componentstr, 'item'=>get_string('datechanged'), 'error'=>false);
     }
 
@@ -6939,75 +6939,75 @@ function forum_reset_userdata($data) {
  *
  * @param $mform form passed by reference
  */
-function forum_reset_course_form_definition(&$mform) {
-    $mform->addElement('header', 'forumheader', get_string('modulenameplural', 'forum'));
+function cybrary_reset_course_form_definition(&$mform) {
+    $mform->addElement('header', 'cybraryheader', get_string('modulenameplural', 'cybrary'));
 
-    $mform->addElement('checkbox', 'reset_forum_all', get_string('resetforumsall','forum'));
+    $mform->addElement('checkbox', 'reset_cybrary_all', get_string('resetcybrariesall','cybrary'));
 
-    $mform->addElement('select', 'reset_forum_types', get_string('resetforums', 'forum'), forum_get_forum_types_all(), array('multiple' => 'multiple'));
-    $mform->setAdvanced('reset_forum_types');
-    $mform->disabledIf('reset_forum_types', 'reset_forum_all', 'checked');
+    $mform->addElement('select', 'reset_cybrary_types', get_string('resetcybraries', 'cybrary'), cybrary_get_cybrary_types_all(), array('multiple' => 'multiple'));
+    $mform->setAdvanced('reset_cybrary_types');
+    $mform->disabledIf('reset_cybrary_types', 'reset_cybrary_all', 'checked');
 
-    $mform->addElement('checkbox', 'reset_forum_digests', get_string('resetdigests','forum'));
-    $mform->setAdvanced('reset_forum_digests');
+    $mform->addElement('checkbox', 'reset_cybrary_digests', get_string('resetdigests','cybrary'));
+    $mform->setAdvanced('reset_cybrary_digests');
 
-    $mform->addElement('checkbox', 'reset_forum_subscriptions', get_string('resetsubscriptions','forum'));
-    $mform->setAdvanced('reset_forum_subscriptions');
+    $mform->addElement('checkbox', 'reset_cybrary_subscriptions', get_string('resetsubscriptions','cybrary'));
+    $mform->setAdvanced('reset_cybrary_subscriptions');
 
-    $mform->addElement('checkbox', 'reset_forum_track_prefs', get_string('resettrackprefs','forum'));
-    $mform->setAdvanced('reset_forum_track_prefs');
-    $mform->disabledIf('reset_forum_track_prefs', 'reset_forum_all', 'checked');
+    $mform->addElement('checkbox', 'reset_cybrary_track_prefs', get_string('resettrackprefs','cybrary'));
+    $mform->setAdvanced('reset_cybrary_track_prefs');
+    $mform->disabledIf('reset_cybrary_track_prefs', 'reset_cybrary_all', 'checked');
 
-    $mform->addElement('checkbox', 'reset_forum_ratings', get_string('deleteallratings'));
-    $mform->disabledIf('reset_forum_ratings', 'reset_forum_all', 'checked');
+    $mform->addElement('checkbox', 'reset_cybrary_ratings', get_string('deleteallratings'));
+    $mform->disabledIf('reset_cybrary_ratings', 'reset_cybrary_all', 'checked');
 }
 
 /**
  * Course reset form defaults.
  * @return array
  */
-function forum_reset_course_form_defaults($course) {
-    return array('reset_forum_all'=>1, 'reset_forum_digests' => 0, 'reset_forum_subscriptions'=>0, 'reset_forum_track_prefs'=>0, 'reset_forum_ratings'=>1);
+function cybrary_reset_course_form_defaults($course) {
+    return array('reset_cybrary_all'=>1, 'reset_cybrary_digests' => 0, 'reset_cybrary_subscriptions'=>0, 'reset_cybrary_track_prefs'=>0, 'reset_cybrary_ratings'=>1);
 }
 
 /**
- * Returns array of forum layout modes
+ * Returns array of cybrary layout modes
  *
  * @return array
  */
-function forum_get_layout_modes() {
-    return array (FORUM_MODE_FLATOLDEST => get_string('modeflatoldestfirst', 'forum'),
-                  FORUM_MODE_FLATNEWEST => get_string('modeflatnewestfirst', 'forum'),
-                  FORUM_MODE_THREADED   => get_string('modethreaded', 'forum'),
-                  FORUM_MODE_NESTED     => get_string('modenested', 'forum'));
+function cybrary_get_layout_modes() {
+    return array (CYBRARY_MODE_FLATOLDEST => get_string('modeflatoldestfirst', 'cybrary'),
+                  CYBRARY_MODE_FLATNEWEST => get_string('modeflatnewestfirst', 'cybrary'),
+                  CYBRARY_MODE_THREADED   => get_string('modethreaded', 'cybrary'),
+                  CYBRARY_MODE_NESTED     => get_string('modenested', 'cybrary'));
 }
 
 /**
- * Returns array of forum types chooseable on the forum editing form
+ * Returns array of cybrary types chooseable on the cybrary editing form
  *
  * @return array
  */
-function forum_get_forum_types() {
-    return array ('general'  => get_string('generalforum', 'forum'),
-                  'eachuser' => get_string('eachuserforum', 'forum'),
-                  'single'   => get_string('singleforum', 'forum'),
-                  'qanda'    => get_string('qandaforum', 'forum'),
-                  'blog'     => get_string('blogforum', 'forum'));
+function cybrary_get_cybrary_types() {
+    return array ('general'  => get_string('generalcybrary', 'cybrary'),
+                  'eachuser' => get_string('eachusercybrary', 'cybrary'),
+                  'single'   => get_string('singlecybrary', 'cybrary'),
+                  'qanda'    => get_string('qandacybrary', 'cybrary'),
+                  'blog'     => get_string('blogcybrary', 'cybrary'));
 }
 
 /**
- * Returns array of all forum layout modes
+ * Returns array of all cybrary layout modes
  *
  * @return array
  */
-function forum_get_forum_types_all() {
-    return array ('news'     => get_string('namenews','forum'),
-                  'social'   => get_string('namesocial','forum'),
-                  'general'  => get_string('generalforum', 'forum'),
-                  'eachuser' => get_string('eachuserforum', 'forum'),
-                  'single'   => get_string('singleforum', 'forum'),
-                  'qanda'    => get_string('qandaforum', 'forum'),
-                  'blog'     => get_string('blogforum', 'forum'));
+function cybrary_get_cybrary_types_all() {
+    return array ('news'     => get_string('namenews','cybrary'),
+                  'social'   => get_string('namesocial','cybrary'),
+                  'general'  => get_string('generalcybrary', 'cybrary'),
+                  'eachuser' => get_string('eachusercybrary', 'cybrary'),
+                  'single'   => get_string('singlecybrary', 'cybrary'),
+                  'qanda'    => get_string('qandacybrary', 'cybrary'),
+                  'blog'     => get_string('blogcybrary', 'cybrary'));
 }
 
 /**
@@ -7015,7 +7015,7 @@ function forum_get_forum_types_all() {
  *
  * @return array
  */
-function forum_get_extra_capabilities() {
+function cybrary_get_extra_capabilities() {
     return array('moodle/site:accessallgroups', 'moodle/site:viewfullnames', 'moodle/site:trustcontent', 'moodle/rating:view', 'moodle/rating:viewany', 'moodle/rating:viewall', 'moodle/rating:rate');
 }
 
@@ -7023,12 +7023,12 @@ function forum_get_extra_capabilities() {
  * Adds module specific settings to the settings block
  *
  * @param settings_navigation $settings The settings navigation object
- * @param navigation_node $forumnode The node to add module settings to
+ * @param navigation_node $cybrarynode The node to add module settings to
  */
-function forum_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $forumnode) {
+function cybrary_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $cybrarynode) {
     global $USER, $PAGE, $CFG, $DB, $OUTPUT;
 
-    $forumobject = $DB->get_record("forum", array("id" => $PAGE->cm->instance));
+    $cybraryobject = $DB->get_record("cybrary", array("id" => $PAGE->cm->instance));
     if (empty($PAGE->cm->context)) {
         $PAGE->cm->context = context_module::instance($PAGE->cm->instance);
     }
@@ -7042,33 +7042,33 @@ function forum_extend_settings_navigation(settings_navigation $settingsnav, navi
     $enrolled = is_enrolled($PAGE->cm->context, $USER, '', false);
     $activeenrolled = is_enrolled($PAGE->cm->context, $USER, '', true);
 
-    $canmanage  = has_capability('mod/forum:managesubscriptions', $PAGE->cm->context);
-    $subscriptionmode = \mod_forum\subscriptions::get_subscription_mode($forumobject);
-    $cansubscribe = $activeenrolled && !\mod_forum\subscriptions::is_forcesubscribed($forumobject) &&
-            (!\mod_forum\subscriptions::subscription_disabled($forumobject) || $canmanage);
+    $canmanage  = has_capability('mod/cybrary:managesubscriptions', $PAGE->cm->context);
+    $subscriptionmode = \mod_cybrary\subscriptions::get_subscription_mode($cybraryobject);
+    $cansubscribe = $activeenrolled && !\mod_cybrary\subscriptions::is_forcesubscribed($cybraryobject) &&
+            (!\mod_cybrary\subscriptions::subscription_disabled($cybraryobject) || $canmanage);
 
     if ($canmanage) {
-        $mode = $forumnode->add(get_string('subscriptionmode', 'forum'), null, navigation_node::TYPE_CONTAINER);
+        $mode = $cybrarynode->add(get_string('subscriptionmode', 'cybrary'), null, navigation_node::TYPE_CONTAINER);
 
-        $allowchoice = $mode->add(get_string('subscriptionoptional', 'forum'), new moodle_url('/mod/forum/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_CHOOSESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $forceforever = $mode->add(get_string("subscriptionforced", "forum"), new moodle_url('/mod/forum/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_FORCESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $forceinitially = $mode->add(get_string("subscriptionauto", "forum"), new moodle_url('/mod/forum/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_INITIALSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $disallowchoice = $mode->add(get_string('subscriptiondisabled', 'forum'), new moodle_url('/mod/forum/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_DISALLOWSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $allowchoice = $mode->add(get_string('subscriptionoptional', 'cybrary'), new moodle_url('/mod/cybrary/subscribe.php', array('id'=>$cybraryobject->id, 'mode'=>CYBRARY_CHOOSESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $forceforever = $mode->add(get_string("subscriptionforced", "cybrary"), new moodle_url('/mod/cybrary/subscribe.php', array('id'=>$cybraryobject->id, 'mode'=>CYBRARY_FORCESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $forceinitially = $mode->add(get_string("subscriptionauto", "cybrary"), new moodle_url('/mod/cybrary/subscribe.php', array('id'=>$cybraryobject->id, 'mode'=>CYBRARY_INITIALSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $disallowchoice = $mode->add(get_string('subscriptiondisabled', 'cybrary'), new moodle_url('/mod/cybrary/subscribe.php', array('id'=>$cybraryobject->id, 'mode'=>CYBRARY_DISALLOWSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
 
         switch ($subscriptionmode) {
-            case FORUM_CHOOSESUBSCRIBE : // 0
+            case CYBRARY_CHOOSESUBSCRIBE : // 0
                 $allowchoice->action = null;
                 $allowchoice->add_class('activesetting');
                 break;
-            case FORUM_FORCESUBSCRIBE : // 1
+            case CYBRARY_FORCESUBSCRIBE : // 1
                 $forceforever->action = null;
                 $forceforever->add_class('activesetting');
                 break;
-            case FORUM_INITIALSUBSCRIBE : // 2
+            case CYBRARY_INITIALSUBSCRIBE : // 2
                 $forceinitially->action = null;
                 $forceinitially->add_class('activesetting');
                 break;
-            case FORUM_DISALLOWSUBSCRIBE : // 3
+            case CYBRARY_DISALLOWSUBSCRIBE : // 3
                 $disallowchoice->action = null;
                 $disallowchoice->add_class('activesetting');
                 break;
@@ -7077,64 +7077,64 @@ function forum_extend_settings_navigation(settings_navigation $settingsnav, navi
     } else if ($activeenrolled) {
 
         switch ($subscriptionmode) {
-            case FORUM_CHOOSESUBSCRIBE : // 0
-                $notenode = $forumnode->add(get_string('subscriptionoptional', 'forum'));
+            case CYBRARY_CHOOSESUBSCRIBE : // 0
+                $notenode = $cybrarynode->add(get_string('subscriptionoptional', 'cybrary'));
                 break;
-            case FORUM_FORCESUBSCRIBE : // 1
-                $notenode = $forumnode->add(get_string('subscriptionforced', 'forum'));
+            case CYBRARY_FORCESUBSCRIBE : // 1
+                $notenode = $cybrarynode->add(get_string('subscriptionforced', 'cybrary'));
                 break;
-            case FORUM_INITIALSUBSCRIBE : // 2
-                $notenode = $forumnode->add(get_string('subscriptionauto', 'forum'));
+            case CYBRARY_INITIALSUBSCRIBE : // 2
+                $notenode = $cybrarynode->add(get_string('subscriptionauto', 'cybrary'));
                 break;
-            case FORUM_DISALLOWSUBSCRIBE : // 3
-                $notenode = $forumnode->add(get_string('subscriptiondisabled', 'forum'));
+            case CYBRARY_DISALLOWSUBSCRIBE : // 3
+                $notenode = $cybrarynode->add(get_string('subscriptiondisabled', 'cybrary'));
                 break;
         }
     }
 
     if ($cansubscribe) {
-        if (\mod_forum\subscriptions::is_subscribed($USER->id, $forumobject, null, $PAGE->cm)) {
-            $linktext = get_string('unsubscribe', 'forum');
+        if (\mod_cybrary\subscriptions::is_subscribed($USER->id, $cybraryobject, null, $PAGE->cm)) {
+            $linktext = get_string('unsubscribe', 'cybrary');
         } else {
-            $linktext = get_string('subscribe', 'forum');
+            $linktext = get_string('subscribe', 'cybrary');
         }
-        $url = new moodle_url('/mod/forum/subscribe.php', array('id'=>$forumobject->id, 'sesskey'=>sesskey()));
-        $forumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
+        $url = new moodle_url('/mod/cybrary/subscribe.php', array('id'=>$cybraryobject->id, 'sesskey'=>sesskey()));
+        $cybrarynode->add($linktext, $url, navigation_node::TYPE_SETTING);
 
         if (isset($discussionid)) {
-            if (\mod_forum\subscriptions::is_subscribed($USER->id, $forumobject, $discussionid, $PAGE->cm)) {
-                $linktext = get_string('unsubscribediscussion', 'forum');
+            if (\mod_cybrary\subscriptions::is_subscribed($USER->id, $cybraryobject, $discussionid, $PAGE->cm)) {
+                $linktext = get_string('unsubscribediscussion', 'cybrary');
             } else {
-                $linktext = get_string('subscribediscussion', 'forum');
+                $linktext = get_string('subscribediscussion', 'cybrary');
             }
-            $url = new moodle_url('/mod/forum/subscribe.php', array(
-                    'id' => $forumobject->id,
+            $url = new moodle_url('/mod/cybrary/subscribe.php', array(
+                    'id' => $cybraryobject->id,
                     'sesskey' => sesskey(),
                     'd' => $discussionid,
                     'returnurl' => $PAGE->url->out(),
                 ));
-            $forumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
+            $cybrarynode->add($linktext, $url, navigation_node::TYPE_SETTING);
         }
     }
 
-    if (has_capability('mod/forum:viewsubscribers', $PAGE->cm->context)){
-        $url = new moodle_url('/mod/forum/subscribers.php', array('id'=>$forumobject->id));
-        $forumnode->add(get_string('showsubscribers', 'forum'), $url, navigation_node::TYPE_SETTING);
+    if (has_capability('mod/cybrary:viewsubscribers', $PAGE->cm->context)){
+        $url = new moodle_url('/mod/cybrary/subscribers.php', array('id'=>$cybraryobject->id));
+        $cybrarynode->add(get_string('showsubscribers', 'cybrary'), $url, navigation_node::TYPE_SETTING);
     }
 
-    if ($enrolled && forum_tp_can_track_forums($forumobject)) { // keep tracking info for users with suspended enrolments
-        if ($forumobject->trackingtype == FORUM_TRACKING_OPTIONAL
-                || ((!$CFG->forum_allowforcedreadtracking) && $forumobject->trackingtype == FORUM_TRACKING_FORCED)) {
-            if (forum_tp_is_tracked($forumobject)) {
-                $linktext = get_string('notrackforum', 'forum');
+    if ($enrolled && cybrary_tp_can_track_cybraries($cybraryobject)) { // keep tracking info for users with suspended enrolments
+        if ($cybraryobject->trackingtype == CYBRARY_TRACKING_OPTIONAL
+                || ((!$CFG->cybrary_allowforcedreadtracking) && $cybraryobject->trackingtype == CYBRARY_TRACKING_FORCED)) {
+            if (cybrary_tp_is_tracked($cybraryobject)) {
+                $linktext = get_string('notrackcybrary', 'cybrary');
             } else {
-                $linktext = get_string('trackforum', 'forum');
+                $linktext = get_string('trackcybrary', 'cybrary');
             }
-            $url = new moodle_url('/mod/forum/settracking.php', array(
-                    'id' => $forumobject->id,
+            $url = new moodle_url('/mod/cybrary/settracking.php', array(
+                    'id' => $cybraryobject->id,
                     'sesskey' => sesskey(),
                 ));
-            $forumnode->add($linktext, $url, navigation_node::TYPE_SETTING);
+            $cybrarynode->add($linktext, $url, navigation_node::TYPE_SETTING);
         }
     }
 
@@ -7145,22 +7145,22 @@ function forum_extend_settings_navigation(settings_navigation $settingsnav, navi
     }
 
     $hascourseaccess = ($PAGE->course->id == SITEID) || can_access_course($PAGE->course, $userid);
-    $enablerssfeeds = !empty($CFG->enablerssfeeds) && !empty($CFG->forum_enablerssfeeds);
+    $enablerssfeeds = !empty($CFG->enablerssfeeds) && !empty($CFG->cybrary_enablerssfeeds);
 
-    if ($enablerssfeeds && $forumobject->rsstype && $forumobject->rssarticles && $hascourseaccess) {
+    if ($enablerssfeeds && $cybraryobject->rsstype && $cybraryobject->rssarticles && $hascourseaccess) {
 
         if (!function_exists('rss_get_url')) {
             require_once("$CFG->libdir/rsslib.php");
         }
 
-        if ($forumobject->rsstype == 1) {
-            $string = get_string('rsssubscriberssdiscussions','forum');
+        if ($cybraryobject->rsstype == 1) {
+            $string = get_string('rsssubscriberssdiscussions','cybrary');
         } else {
-            $string = get_string('rsssubscriberssposts','forum');
+            $string = get_string('rsssubscriberssposts','cybrary');
         }
 
-        $url = new moodle_url(rss_get_url($PAGE->cm->context->id, $userid, "mod_forum", $forumobject->id));
-        $forumnode->add($string, $url, settings_navigation::TYPE_SETTING, null, null, new pix_icon('i/rss', ''));
+        $url = new moodle_url(rss_get_url($PAGE->cm->context->id, $userid, "mod_cybrary", $cybraryobject->id));
+        $cybrarynode->add($string, $url, settings_navigation::TYPE_SETTING, null, null, new pix_icon('i/rss', ''));
     }
 }
 
@@ -7169,16 +7169,16 @@ function forum_extend_settings_navigation(settings_navigation $settingsnav, navi
  * similar), to the course-module object.
  * @param cm_info $cm Course-module object
  */
-function forum_cm_info_view(cm_info $cm) {
+function cybrary_cm_info_view(cm_info $cm) {
     global $CFG;
 
-    if (forum_tp_can_track_forums()) {
-        if ($unread = forum_tp_count_forum_unread_posts($cm, $cm->get_course())) {
+    if (cybrary_tp_can_track_cybraries()) {
+        if ($unread = cybrary_tp_count_cybrary_unread_posts($cm, $cm->get_course())) {
             $out = '<span class="unread"> <a href="' . $cm->url . '">';
             if ($unread == 1) {
-                $out .= get_string('unreadpostsone', 'forum');
+                $out .= get_string('unreadpostsone', 'cybrary');
             } else {
-                $out .= get_string('unreadpostsnumber', 'forum', $unread);
+                $out .= get_string('unreadpostsnumber', 'cybrary', $unread);
             }
             $out .= '</a></span>';
             $cm->set_after_link($out);
@@ -7192,17 +7192,17 @@ function forum_cm_info_view(cm_info $cm) {
  * @param stdClass $parentcontext Block's parent context
  * @param stdClass $currentcontext Current context of block
  */
-function forum_page_type_list($pagetype, $parentcontext, $currentcontext) {
-    $forum_pagetype = array(
-        'mod-forum-*'=>get_string('page-mod-forum-x', 'forum'),
-        'mod-forum-view'=>get_string('page-mod-forum-view', 'forum'),
-        'mod-forum-discuss'=>get_string('page-mod-forum-discuss', 'forum')
+function cybrary_page_type_list($pagetype, $parentcontext, $currentcontext) {
+    $cybrary_pagetype = array(
+        'mod-cybrary-*'=>get_string('page-mod-cybrary-x', 'cybrary'),
+        'mod-cybrary-view'=>get_string('page-mod-cybrary-view', 'cybrary'),
+        'mod-cybrary-discuss'=>get_string('page-mod-cybrary-discuss', 'cybrary')
     );
-    return $forum_pagetype;
+    return $cybrary_pagetype;
 }
 
 /**
- * Gets all of the courses where the provided user has posted in a forum.
+ * Gets all of the courses where the provided user has posted in a cybrary.
  *
  * @global moodle_database $DB The database connection
  * @param stdClass $user The user who's posts we are looking for
@@ -7212,20 +7212,20 @@ function forum_page_type_list($pagetype, $parentcontext, $currentcontext) {
  * @param int $limitnum The number of records to return
  * @return array An array of courses
  */
-function forum_get_courses_user_posted_in($user, $discussionsonly = false, $includecontexts = true, $limitfrom = null, $limitnum = null) {
+function cybrary_get_courses_user_posted_in($user, $discussionsonly = false, $includecontexts = true, $limitfrom = null, $limitnum = null) {
     global $DB;
 
-    // If we are only after discussions we need only look at the forum_discussions
+    // If we are only after discussions we need only look at the cybrary_discussions
     // table and join to the userid there. If we are looking for posts then we need
-    // to join to the forum_posts table.
+    // to join to the cybrary_posts table.
     if (!$discussionsonly) {
         $subquery = "(SELECT DISTINCT fd.course
-                         FROM {forum_discussions} fd
-                         JOIN {forum_posts} fp ON fp.discussion = fd.id
+                         FROM {cybrary_discussions} fd
+                         JOIN {cybrary_posts} fp ON fp.discussion = fd.id
                         WHERE fp.userid = :userid )";
     } else {
         $subquery= "(SELECT DISTINCT fd.course
-                         FROM {forum_discussions} fd
+                         FROM {cybrary_discussions} fd
                         WHERE fd.userid = :userid )";
     }
 
@@ -7242,7 +7242,7 @@ function forum_get_courses_user_posted_in($user, $discussionsonly = false, $incl
     }
 
     // Now we need to get all of the courses to search.
-    // All courses where the user has posted within a forum will be returned.
+    // All courses where the user has posted within a cybrary will be returned.
     $sql = "SELECT c.* $ctxselect
             FROM {course} c
             $ctxjoin
@@ -7255,19 +7255,19 @@ function forum_get_courses_user_posted_in($user, $discussionsonly = false, $incl
 }
 
 /**
- * Gets all of the forums a user has posted in for one or more courses.
+ * Gets all of the cybraries a user has posted in for one or more courses.
  *
  * @global moodle_database $DB
  * @param stdClass $user
  * @param array $courseids An array of courseids to search or if not provided
  *                       all courses the user has posted within
- * @param bool $discussionsonly If true then only forums where the user has started
+ * @param bool $discussionsonly If true then only cybraries where the user has started
  *                       a discussion will be returned.
  * @param int $limitfrom The offset of records to return
  * @param int $limitnum The number of records to return
- * @return array An array of forums the user has posted within in the provided courses
+ * @return array An array of cybraries the user has posted within in the provided courses
  */
-function forum_get_forums_user_posted_in($user, array $courseids = null, $discussionsonly = false, $limitfrom = null, $limitnum = null) {
+function cybrary_get_cybraries_user_posted_in($user, array $courseids = null, $discussionsonly = false, $limitfrom = null, $limitnum = null) {
     global $DB;
 
     if (!is_null($courseids)) {
@@ -7278,31 +7278,31 @@ function forum_get_forums_user_posted_in($user, array $courseids = null, $discus
         $params = array();
     }
     $params['userid'] = $user->id;
-    $params['forum'] = 'forum';
+    $params['cybrary'] = 'cybrary';
 
     if ($discussionsonly) {
-        $join = 'JOIN {forum_discussions} ff ON ff.forum = f.id';
+        $join = 'JOIN {cybrary_discussions} ff ON ff.cybrary = f.id';
     } else {
-        $join = 'JOIN {forum_discussions} fd ON fd.forum = f.id
-                 JOIN {forum_posts} ff ON ff.discussion = fd.id';
+        $join = 'JOIN {cybrary_discussions} fd ON fd.cybrary = f.id
+                 JOIN {cybrary_posts} ff ON ff.discussion = fd.id';
     }
 
     $sql = "SELECT f.*, cm.id AS cmid
-              FROM {forum} f
+              FROM {cybrary} f
               JOIN {course_modules} cm ON cm.instance = f.id
               JOIN {modules} m ON m.id = cm.module
               JOIN (
                   SELECT f.id
-                    FROM {forum} f
+                    FROM {cybrary} f
                     {$join}
                    WHERE ff.userid = :userid
                 GROUP BY f.id
                    ) j ON j.id = f.id
-             WHERE m.name = :forum
+             WHERE m.name = :cybrary
                  {$coursewhere}";
 
-    $courseforums = $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
-    return $courseforums;
+    $coursecybraries = $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+    return $coursecybraries;
 }
 
 /**
@@ -7311,7 +7311,7 @@ function forum_get_forums_user_posted_in($user, array $courseids = null, $discus
  * This method can be used to return all of the posts made by the requested user
  * within the given courses.
  * For each course the access of the current user and requested user is checked
- * and then for each post access to the post and forum is checked as well.
+ * and then for each post access to the post and cybrary is checked as well.
  *
  * This function is safe to use with usercapabilities.
  *
@@ -7329,17 +7329,17 @@ function forum_get_forums_user_posted_in($user, array $courseids = null, $discus
  *                             that the current user can see.
  *               ->courses: An array of courses the current user can see that the
  *                          requested user has posted in.
- *               ->forums: An array of forums relating to the posts returned in the
+ *               ->cybraries: An array of cybraries relating to the posts returned in the
  *                         property below.
  *               ->posts: An array containing the posts to show for this request.
  */
-function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false, $discussionsonly = false, $limitfrom = 0, $limitnum = 50) {
+function cybrary_get_posts_by_user($user, array $courses, $musthaveaccess = false, $discussionsonly = false, $limitfrom = 0, $limitnum = 50) {
     global $DB, $USER, $CFG;
 
     $return = new stdClass;
     $return->totalcount = 0;    // The total number of posts that the current user is able to view
     $return->courses = array(); // The courses the current user can access
-    $return->forums = array();  // The forums that the current user can access that contain posts
+    $return->cybraries = array();  // The cybraries that the current user can access that contain posts
     $return->posts = array();   // The posts to display
 
     // First up a small sanity check. If there are no courses to check we can
@@ -7377,7 +7377,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
             if (!is_viewing($coursecontext, $user) && !is_enrolled($coursecontext, $user)) {
                 // Need to have full access to a course to see the rest of own info
                 if ($musthaveaccess) {
-                    print_error('errorenrolmentrequired', 'forum');
+                    print_error('errorenrolmentrequired', 'cybrary');
                 }
                 continue;
             }
@@ -7386,7 +7386,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
             // if they don't we immediately have a problem.
             if (!can_access_course($course)) {
                 if ($musthaveaccess) {
-                    print_error('errorenrolmentrequired', 'forum');
+                    print_error('errorenrolmentrequired', 'cybrary');
                 }
                 continue;
             }
@@ -7395,7 +7395,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
             // if they don't we immediately have a problem.
             if (!can_access_course($course, $user) && !is_enrolled($coursecontext, $user)) {
                 if ($musthaveaccess) {
-                    print_error('notenrolled', 'forum');
+                    print_error('notenrolled', 'cybrary');
                 }
                 continue;
             }
@@ -7404,7 +7404,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
             // we can meet in at least one course level group.
             // Note that we check if either the current user or the requested user have
             // the capability to access all groups. This is because with that capability
-            // a user in group A could post in the group B forum. Grrrr.
+            // a user in group A could post in the group B cybrary. Grrrr.
             if (groups_get_course_groupmode($course) == SEPARATEGROUPS && $course->groupmodeforce
               && !has_capability('moodle/site:accessallgroups', $coursecontext) && !has_capability('moodle/site:accessallgroups', $coursecontext, $user->id)) {
                 // If its the guest user to bad... the guest user cannot access groups
@@ -7433,7 +7433,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
         }
         // Woo hoo we got this far which means the current user can search this
         // this course for the requested user. Although this is only the course accessibility
-        // handling that is complete, the forum accessibility tests are yet to come.
+        // handling that is complete, the cybrary accessibility tests are yet to come.
         $return->courses[$course->id] = $course;
     }
     // No longer beed $courses array - lose it not it may be big
@@ -7451,123 +7451,123 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
         }
     }
 
-    // Next step: Collect all of the forums that we will want to search.
+    // Next step: Collect all of the cybraries that we will want to search.
     // It is important to note that this step isn't actually about searching, it is
-    // about determining which forums we can search by testing accessibility.
-    $forums = forum_get_forums_user_posted_in($user, array_keys($return->courses), $discussionsonly);
+    // about determining which cybraries we can search by testing accessibility.
+    $cybraries = cybrary_get_cybraries_user_posted_in($user, array_keys($return->courses), $discussionsonly);
 
     // Will be used to build the where conditions for the search
-    $forumsearchwhere = array();
+    $cybrariesearchwhere = array();
     // Will be used to store the where condition params for the search
-    $forumsearchparams = array();
-    // Will record forums where the user can freely access everything
-    $forumsearchfullaccess = array();
+    $cybrariesearchparams = array();
+    // Will record cybraries where the user can freely access everything
+    $cybrariesearchfullaccess = array();
     // DB caching friendly
     $now = round(time(), -2);
-    // For each course to search we want to find the forums the user has posted in
-    // and providing the current user can access the forum create a search condition
-    // for the forum to get the requested users posts.
+    // For each course to search we want to find the cybraries the user has posted in
+    // and providing the current user can access the cybrary create a search condition
+    // for the cybrary to get the requested users posts.
     foreach ($return->courses as $course) {
-        // Now we need to get the forums
+        // Now we need to get the cybraries
         $modinfo = get_fast_modinfo($course);
-        if (empty($modinfo->instances['forum'])) {
-            // hmmm, no forums? well at least its easy... skip!
+        if (empty($modinfo->instances['cybrary'])) {
+            // hmmm, no cybraries? well at least its easy... skip!
             continue;
         }
         // Iterate
-        foreach ($modinfo->get_instances_of('forum') as $forumid => $cm) {
-            if (!$cm->uservisible or !isset($forums[$forumid])) {
+        foreach ($modinfo->get_instances_of('cybrary') as $cybraryid => $cm) {
+            if (!$cm->uservisible or !isset($cybraries[$cybraryid])) {
                 continue;
             }
-            // Get the forum in question
-            $forum = $forums[$forumid];
+            // Get the cybrary in question
+            $cybrary = $cybraries[$cybraryid];
 
-            // This is needed for functionality later on in the forum code. It is converted to an object
+            // This is needed for functionality later on in the cybrary code. It is converted to an object
             // because the cm_info is readonly from 2.6. This is a dirty hack because some other parts of the
-            // code were expecting an writeable object. See {@link forum_print_post()}.
-            $forum->cm = new stdClass();
+            // code were expecting an writeable object. See {@link cybrary_print_post()}.
+            $cybrary->cm = new stdClass();
             foreach ($cm as $key => $value) {
-                $forum->cm->$key = $value;
+                $cybrary->cm->$key = $value;
             }
 
-            // Check that either the current user can view the forum, or that the
+            // Check that either the current user can view the cybrary, or that the
             // current user has capabilities over the requested user and the requested
             // user can view the discussion
-            if (!has_capability('mod/forum:viewdiscussion', $cm->context) && !($hascapsonuser && has_capability('mod/forum:viewdiscussion', $cm->context, $user->id))) {
+            if (!has_capability('mod/cybrary:viewdiscussion', $cm->context) && !($hascapsonuser && has_capability('mod/cybrary:viewdiscussion', $cm->context, $user->id))) {
                 continue;
             }
 
-            // This will contain forum specific where clauses
-            $forumsearchselect = array();
+            // This will contain cybrary specific where clauses
+            $cybrariesearchselect = array();
             if (!$iscurrentuser && !$hascapsonuser) {
                 // Make sure we check group access
                 if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $cm->context)) {
                     $groups = $modinfo->get_groups($cm->groupingid);
                     $groups[] = -1;
-                    list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($groups, SQL_PARAMS_NAMED, 'grps'.$forumid.'_');
-                    $forumsearchparams = array_merge($forumsearchparams, $groupid_params);
-                    $forumsearchselect[] = "d.groupid $groupid_sql";
+                    list($groupid_sql, $groupid_params) = $DB->get_in_or_equal($groups, SQL_PARAMS_NAMED, 'grps'.$cybraryid.'_');
+                    $cybrariesearchparams = array_merge($cybrariesearchparams, $groupid_params);
+                    $cybrariesearchselect[] = "d.groupid $groupid_sql";
                 }
 
                 // hidden timed discussions
-                if (!empty($CFG->forum_enabletimedposts) && !has_capability('mod/forum:viewhiddentimedposts', $cm->context)) {
-                    $forumsearchselect[] = "(d.userid = :userid{$forumid} OR (d.timestart < :timestart{$forumid} AND (d.timeend = 0 OR d.timeend > :timeend{$forumid})))";
-                    $forumsearchparams['userid'.$forumid] = $user->id;
-                    $forumsearchparams['timestart'.$forumid] = $now;
-                    $forumsearchparams['timeend'.$forumid] = $now;
+                if (!empty($CFG->cybrary_enabletimedposts) && !has_capability('mod/cybrary:viewhiddentimedposts', $cm->context)) {
+                    $cybrariesearchselect[] = "(d.userid = :userid{$cybraryid} OR (d.timestart < :timestart{$cybraryid} AND (d.timeend = 0 OR d.timeend > :timeend{$cybraryid})))";
+                    $cybrariesearchparams['userid'.$cybraryid] = $user->id;
+                    $cybrariesearchparams['timestart'.$cybraryid] = $now;
+                    $cybrariesearchparams['timeend'.$cybraryid] = $now;
                 }
 
                 // qanda access
-                if ($forum->type == 'qanda' && !has_capability('mod/forum:viewqandawithoutposting', $cm->context)) {
-                    // We need to check whether the user has posted in the qanda forum.
-                    $discussionspostedin = forum_discussions_user_has_posted_in($forum->id, $user->id);
+                if ($cybrary->type == 'qanda' && !has_capability('mod/cybrary:viewqandawithoutposting', $cm->context)) {
+                    // We need to check whether the user has posted in the qanda cybrary.
+                    $discussionspostedin = cybrary_discussions_user_has_posted_in($cybrary->id, $user->id);
                     if (!empty($discussionspostedin)) {
-                        $forumonlydiscussions = array();  // Holds discussion ids for the discussions the user is allowed to see in this forum.
+                        $cybraryonlydiscussions = array();  // Holds discussion ids for the discussions the user is allowed to see in this cybrary.
                         foreach ($discussionspostedin as $d) {
-                            $forumonlydiscussions[] = $d->id;
+                            $cybraryonlydiscussions[] = $d->id;
                         }
-                        list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($forumonlydiscussions, SQL_PARAMS_NAMED, 'qanda'.$forumid.'_');
-                        $forumsearchparams = array_merge($forumsearchparams, $discussionid_params);
-                        $forumsearchselect[] = "(d.id $discussionid_sql OR p.parent = 0)";
+                        list($discussionid_sql, $discussionid_params) = $DB->get_in_or_equal($cybraryonlydiscussions, SQL_PARAMS_NAMED, 'qanda'.$cybraryid.'_');
+                        $cybrariesearchparams = array_merge($cybrariesearchparams, $discussionid_params);
+                        $cybrariesearchselect[] = "(d.id $discussionid_sql OR p.parent = 0)";
                     } else {
-                        $forumsearchselect[] = "p.parent = 0";
+                        $cybrariesearchselect[] = "p.parent = 0";
                     }
 
                 }
 
-                if (count($forumsearchselect) > 0) {
-                    $forumsearchwhere[] = "(d.forum = :forum{$forumid} AND ".implode(" AND ", $forumsearchselect).")";
-                    $forumsearchparams['forum'.$forumid] = $forumid;
+                if (count($cybrariesearchselect) > 0) {
+                    $cybrariesearchwhere[] = "(d.cybrary = :cybrary{$cybraryid} AND ".implode(" AND ", $cybrariesearchselect).")";
+                    $cybrariesearchparams['cybrary'.$cybraryid] = $cybraryid;
                 } else {
-                    $forumsearchfullaccess[] = $forumid;
+                    $cybrariesearchfullaccess[] = $cybraryid;
                 }
             } else {
                 // The current user/parent can see all of their own posts
-                $forumsearchfullaccess[] = $forumid;
+                $cybrariesearchfullaccess[] = $cybraryid;
             }
         }
     }
 
-    // If we dont have any search conditions, and we don't have any forums where
+    // If we dont have any search conditions, and we don't have any cybraries where
     // the user has full access then we just return the default.
-    if (empty($forumsearchwhere) && empty($forumsearchfullaccess)) {
+    if (empty($cybrariesearchwhere) && empty($cybrariesearchfullaccess)) {
         return $return;
     }
 
-    // Prepare a where condition for the full access forums.
-    if (count($forumsearchfullaccess) > 0) {
-        list($fullidsql, $fullidparams) = $DB->get_in_or_equal($forumsearchfullaccess, SQL_PARAMS_NAMED, 'fula');
-        $forumsearchparams = array_merge($forumsearchparams, $fullidparams);
-        $forumsearchwhere[] = "(d.forum $fullidsql)";
+    // Prepare a where condition for the full access cybraries.
+    if (count($cybrariesearchfullaccess) > 0) {
+        list($fullidsql, $fullidparams) = $DB->get_in_or_equal($cybrariesearchfullaccess, SQL_PARAMS_NAMED, 'fula');
+        $cybrariesearchparams = array_merge($cybrariesearchparams, $fullidparams);
+        $cybrariesearchwhere[] = "(d.cybrary $fullidsql)";
     }
 
     // Prepare SQL to both count and search.
-    // We alias user.id to useridx because we forum_posts already has a userid field and not aliasing this would break
+    // We alias user.id to useridx because we cybrary_posts already has a userid field and not aliasing this would break
     // oracle and mssql.
     $userfields = user_picture::fields('u', null, 'useridx');
     $countsql = 'SELECT COUNT(*) ';
-    $selectsql = 'SELECT p.*, d.forum, d.name AS discussionname, '.$userfields.' ';
-    $wheresql = implode(" OR ", $forumsearchwhere);
+    $selectsql = 'SELECT p.*, d.cybrary, d.name AS discussionname, '.$userfields.' ';
+    $wheresql = implode(" OR ", $cybrariesearchwhere);
 
     if ($discussionsonly) {
         if ($wheresql == '') {
@@ -7577,26 +7577,26 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
         }
     }
 
-    $sql = "FROM {forum_posts} p
-            JOIN {forum_discussions} d ON d.id = p.discussion
+    $sql = "FROM {cybrary_posts} p
+            JOIN {cybrary_discussions} d ON d.id = p.discussion
             JOIN {user} u ON u.id = p.userid
            WHERE ($wheresql)
              AND p.userid = :userid ";
     $orderby = "ORDER BY p.modified DESC";
-    $forumsearchparams['userid'] = $user->id;
+    $cybrariesearchparams['userid'] = $user->id;
 
     // Set the total number posts made by the requested user that the current user can see
-    $return->totalcount = $DB->count_records_sql($countsql.$sql, $forumsearchparams);
+    $return->totalcount = $DB->count_records_sql($countsql.$sql, $cybrariesearchparams);
     // Set the collection of posts that has been requested
-    $return->posts = $DB->get_records_sql($selectsql.$sql.$orderby, $forumsearchparams, $limitfrom, $limitnum);
+    $return->posts = $DB->get_records_sql($selectsql.$sql.$orderby, $cybrariesearchparams, $limitfrom, $limitnum);
 
-    // We need to build an array of forums for which posts will be displayed.
+    // We need to build an array of cybraries for which posts will be displayed.
     // We do this here to save the caller needing to retrieve them themselves before
-    // printing these forums posts. Given we have the forums already there is
+    // printing these cybraries posts. Given we have the cybraries already there is
     // practically no overhead here.
     foreach ($return->posts as $post) {
-        if (!array_key_exists($post->forum, $return->forums)) {
-            $return->forums[$post->forum] = $forums[$post->forum];
+        if (!array_key_exists($post->cybrary, $return->cybraries)) {
+            $return->cybraries[$post->cybrary] = $cybraries[$post->cybrary];
         }
     }
 
@@ -7604,79 +7604,79 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
 }
 
 /**
- * Set the per-forum maildigest option for the specified user.
+ * Set the per-cybrary maildigest option for the specified user.
  *
- * @param stdClass $forum The forum to set the option for.
+ * @param stdClass $cybrary The cybrary to set the option for.
  * @param int $maildigest The maildigest option.
  * @param stdClass $user The user object. This defaults to the global $USER object.
  * @throws invalid_digest_setting thrown if an invalid maildigest option is provided.
  */
-function forum_set_user_maildigest($forum, $maildigest, $user = null) {
+function cybrary_set_user_maildigest($cybrary, $maildigest, $user = null) {
     global $DB, $USER;
 
-    if (is_number($forum)) {
-        $forum = $DB->get_record('forum', array('id' => $forum));
+    if (is_number($cybrary)) {
+        $cybrary = $DB->get_record('cybrary', array('id' => $cybrary));
     }
 
     if ($user === null) {
         $user = $USER;
     }
 
-    $course  = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-    $cm      = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+    $course  = $DB->get_record('course', array('id' => $cybrary->course), '*', MUST_EXIST);
+    $cm      = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id, false, MUST_EXIST);
     $context = context_module::instance($cm->id);
 
-    // User must be allowed to see this forum.
-    require_capability('mod/forum:viewdiscussion', $context, $user->id);
+    // User must be allowed to see this cybrary.
+    require_capability('mod/cybrary:viewdiscussion', $context, $user->id);
 
     // Validate the maildigest setting.
-    $digestoptions = forum_get_user_digest_options($user);
+    $digestoptions = cybrary_get_user_digest_options($user);
 
     if (!isset($digestoptions[$maildigest])) {
-        throw new moodle_exception('invaliddigestsetting', 'mod_forum');
+        throw new moodle_exception('invaliddigestsetting', 'mod_cybrary');
     }
 
-    // Attempt to retrieve any existing forum digest record.
-    $subscription = $DB->get_record('forum_digests', array(
+    // Attempt to retrieve any existing cybrary digest record.
+    $subscription = $DB->get_record('cybrary_digests', array(
         'userid' => $user->id,
-        'forum' => $forum->id,
+        'cybrary' => $cybrary->id,
     ));
 
     // Create or Update the existing maildigest setting.
     if ($subscription) {
         if ($maildigest == -1) {
-            $DB->delete_records('forum_digests', array('forum' => $forum->id, 'userid' => $user->id));
+            $DB->delete_records('cybrary_digests', array('cybrary' => $cybrary->id, 'userid' => $user->id));
         } else if ($maildigest !== $subscription->maildigest) {
             // Only update the maildigest setting if it's changed.
 
             $subscription->maildigest = $maildigest;
-            $DB->update_record('forum_digests', $subscription);
+            $DB->update_record('cybrary_digests', $subscription);
         }
     } else {
         if ($maildigest != -1) {
             // Only insert the maildigest setting if it's non-default.
 
             $subscription = new stdClass();
-            $subscription->forum = $forum->id;
+            $subscription->cybrary = $cybrary->id;
             $subscription->userid = $user->id;
             $subscription->maildigest = $maildigest;
-            $subscription->id = $DB->insert_record('forum_digests', $subscription);
+            $subscription->id = $DB->insert_record('cybrary_digests', $subscription);
         }
     }
 }
 
 /**
  * Determine the maildigest setting for the specified user against the
- * specified forum.
+ * specified cybrary.
  *
- * @param Array $digests An array of forums and user digest settings.
+ * @param Array $digests An array of cybraries and user digest settings.
  * @param stdClass $user The user object containing the id and maildigest default.
- * @param int $forumid The ID of the forum to check.
- * @return int The calculated maildigest setting for this user and forum.
+ * @param int $cybraryid The ID of the cybrary to check.
+ * @return int The calculated maildigest setting for this user and cybrary.
  */
-function forum_get_user_maildigest_bulk($digests, $user, $forumid) {
-    if (isset($digests[$forumid]) && isset($digests[$forumid][$user->id])) {
-        $maildigest = $digests[$forumid][$user->id];
+function cybrary_get_user_maildigest_bulk($digests, $user, $cybraryid) {
+    if (isset($digests[$cybraryid]) && isset($digests[$cybraryid][$user->id])) {
+        $maildigest = $digests[$cybraryid][$user->id];
         if ($maildigest === -1) {
             $maildigest = $user->maildigest;
         }
@@ -7692,7 +7692,7 @@ function forum_get_user_maildigest_bulk($digests, $user, $forumid) {
  * @param stdClass $user The user object. This defaults to the global $USER object.
  * @return array The mapping of values to digest options.
  */
-function forum_get_user_digest_options($user = null) {
+function cybrary_get_user_digest_options($user = null) {
     global $USER;
 
     // Revert to the global user object.
@@ -7701,13 +7701,13 @@ function forum_get_user_digest_options($user = null) {
     }
 
     $digestoptions = array();
-    $digestoptions['0']  = get_string('emaildigestoffshort', 'mod_forum');
-    $digestoptions['1']  = get_string('emaildigestcompleteshort', 'mod_forum');
-    $digestoptions['2']  = get_string('emaildigestsubjectsshort', 'mod_forum');
+    $digestoptions['0']  = get_string('emaildigestoffshort', 'mod_cybrary');
+    $digestoptions['1']  = get_string('emaildigestcompleteshort', 'mod_cybrary');
+    $digestoptions['2']  = get_string('emaildigestsubjectsshort', 'mod_cybrary');
 
     // We need to add the default digest option at the end - it relies on
     // the contents of the existing values.
-    $digestoptions['-1'] = get_string('emaildigestdefault', 'mod_forum',
+    $digestoptions['-1'] = get_string('emaildigestdefault', 'mod_cybrary',
             $digestoptions[$user->maildigest]);
 
     // Resort the options to be in a sensible order.
@@ -7722,20 +7722,20 @@ function forum_get_user_digest_options($user = null) {
  * If a context of type context_module is specified, it is immediately
  * returned and not checked.
  *
- * @param int $forumid The ID of the forum
+ * @param int $cybraryid The ID of the cybrary
  * @param context_module $context The current context.
  * @return context_module The context determined
  */
-function forum_get_context($forumid, $context = null) {
+function cybrary_get_context($cybraryid, $context = null) {
     global $PAGE;
 
     if (!$context || !($context instanceof context_module)) {
-        // Find out forum context. First try to take current page context to save on DB query.
-        if ($PAGE->cm && $PAGE->cm->modname === 'forum' && $PAGE->cm->instance == $forumid
+        // Find out cybrary context. First try to take current page context to save on DB query.
+        if ($PAGE->cm && $PAGE->cm->modname === 'cybrary' && $PAGE->cm->instance == $cybraryid
                 && $PAGE->context->contextlevel == CONTEXT_MODULE && $PAGE->context->instanceid == $PAGE->cm->id) {
             $context = $PAGE->context;
         } else {
-            $cm = get_coursemodule_from_instance('forum', $forumid);
+            $cm = get_coursemodule_from_instance('cybrary', $cybraryid);
             $context = \context_module::instance($cm->id);
         }
     }
@@ -7746,13 +7746,13 @@ function forum_get_context($forumid, $context = null) {
 /**
  * Mark the activity completed (if required) and trigger the course_module_viewed event.
  *
- * @param  stdClass $forum   forum object
+ * @param  stdClass $cybrary   cybrary object
  * @param  stdClass $course  course object
  * @param  stdClass $cm      course module object
  * @param  stdClass $context context object
  * @since Moodle 2.9
  */
-function forum_view($forum, $course, $cm, $context) {
+function cybrary_view($cybrary, $course, $cm, $context) {
 
     // Completion.
     $completion = new completion_info($course);
@@ -7762,13 +7762,13 @@ function forum_view($forum, $course, $cm, $context) {
 
     $params = array(
         'context' => $context,
-        'objectid' => $forum->id
+        'objectid' => $cybrary->id
     );
 
-    $event = \mod_forum\event\course_module_viewed::create($params);
+    $event = \mod_cybrary\event\course_module_viewed::create($params);
     $event->add_record_snapshot('course_modules', $cm);
     $event->add_record_snapshot('course', $course);
-    $event->add_record_snapshot('forum', $forum);
+    $event->add_record_snapshot('cybrary', $cybrary);
     $event->trigger();
 }
 
@@ -7776,19 +7776,19 @@ function forum_view($forum, $course, $cm, $context) {
  * Trigger the discussion viewed event
  *
  * @param  stdClass $modcontext module context object
- * @param  stdClass $forum      forum object
+ * @param  stdClass $cybrary      cybrary object
  * @param  stdClass $discussion discussion object
  * @since Moodle 2.9
  */
-function forum_discussion_view($modcontext, $forum, $discussion) {
+function cybrary_discussion_view($modcontext, $cybrary, $discussion) {
     $params = array(
         'context' => $modcontext,
         'objectid' => $discussion->id,
     );
 
-    $event = \mod_forum\event\discussion_viewed::create($params);
-    $event->add_record_snapshot('forum_discussions', $discussion);
-    $event->add_record_snapshot('forum', $forum);
+    $event = \mod_cybrary\event\discussion_viewed::create($params);
+    $event->add_record_snapshot('cybrary_discussions', $discussion);
+    $event->add_record_snapshot('cybrary', $cybrary);
     $event->trigger();
 }
 
@@ -7802,26 +7802,26 @@ function forum_discussion_view($modcontext, $forum, $discussion) {
  *
  * @return bool
  */
-function mod_forum_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
+function mod_cybrary_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
     if (isguestuser($user)) {
         // The guest user cannot post, so it is not possible to view any posts.
         // May as well just bail aggressively here.
         return false;
     }
-    $postsurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id));
+    $postsurl = new moodle_url('/mod/cybrary/user.php', array('id' => $user->id));
     if (!empty($course)) {
         $postsurl->param('course', $course->id);
     }
-    $string = get_string('forumposts', 'mod_forum');
-    $node = new core_user\output\myprofile\node('miscellaneous', 'forumposts', $string, null, $postsurl);
+    $string = get_string('cybraryposts', 'mod_cybrary');
+    $node = new core_user\output\myprofile\node('miscellaneous', 'cybraryposts', $string, null, $postsurl);
     $tree->add_node($node);
 
-    $discussionssurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id, 'mode' => 'discussions'));
+    $discussionssurl = new moodle_url('/mod/cybrary/user.php', array('id' => $user->id, 'mode' => 'discussions'));
     if (!empty($course)) {
         $discussionssurl->param('course', $course->id);
     }
-    $string = get_string('myprofileotherdis', 'mod_forum');
-    $node = new core_user\output\myprofile\node('miscellaneous', 'forumdiscussions', $string, null,
+    $string = get_string('myprofileotherdis', 'mod_cybrary');
+    $node = new core_user\output\myprofile\node('miscellaneous', 'cybrarydiscussions', $string, null,
         $discussionssurl);
     $tree->add_node($node);
 

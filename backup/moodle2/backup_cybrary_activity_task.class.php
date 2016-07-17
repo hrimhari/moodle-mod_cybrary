@@ -16,9 +16,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines backup_forum_activity_task class
+ * Defines backup_cybrary_activity_task class
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @category  backup
  * @copyright 2010 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,13 +26,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/forum/backup/moodle2/backup_forum_stepslib.php');
-require_once($CFG->dirroot . '/mod/forum/backup/moodle2/backup_forum_settingslib.php');
+require_once($CFG->dirroot . '/mod/cybrary/backup/moodle2/backup_cybrary_stepslib.php');
+require_once($CFG->dirroot . '/mod/cybrary/backup/moodle2/backup_cybrary_settingslib.php');
 
 /**
- * Provides the steps to perform one complete backup of the Forum instance
+ * Provides the steps to perform one complete backup of the Cybrary instance
  */
-class backup_forum_activity_task extends backup_activity_task {
+class backup_cybrary_activity_task extends backup_activity_task {
 
     /**
      * No specific settings for this activity
@@ -41,10 +41,10 @@ class backup_forum_activity_task extends backup_activity_task {
     }
 
     /**
-     * Defines a backup step to store the instance data in the forum.xml file
+     * Defines a backup step to store the instance data in the cybrary.xml file
      */
     protected function define_my_steps() {
-        $this->add_step(new backup_forum_activity_structure_step('forum structure', 'forum.xml'));
+        $this->add_step(new backup_cybrary_activity_structure_step('cybrary structure', 'cybrary.xml'));
     }
 
     /**
@@ -58,29 +58,29 @@ class backup_forum_activity_task extends backup_activity_task {
 
         $base = preg_quote($CFG->wwwroot,"/");
 
-        // Link to the list of forums
-        $search="/(".$base."\/mod\/forum\/index.php\?id\=)([0-9]+)/";
-        $content= preg_replace($search, '$@FORUMINDEX*$2@$', $content);
+        // Link to the list of cybraries
+        $search="/(".$base."\/mod\/cybrary\/index.php\?id\=)([0-9]+)/";
+        $content= preg_replace($search, '$@CYBRARYINDEX*$2@$', $content);
 
-        // Link to forum view by moduleid
-        $search="/(".$base."\/mod\/forum\/view.php\?id\=)([0-9]+)/";
-        $content= preg_replace($search, '$@FORUMVIEWBYID*$2@$', $content);
+        // Link to cybrary view by moduleid
+        $search="/(".$base."\/mod\/cybrary\/view.php\?id\=)([0-9]+)/";
+        $content= preg_replace($search, '$@CYBRARYVIEWBYID*$2@$', $content);
 
-        // Link to forum view by forumid
-        $search="/(".$base."\/mod\/forum\/view.php\?f\=)([0-9]+)/";
-        $content= preg_replace($search, '$@FORUMVIEWBYF*$2@$', $content);
+        // Link to cybrary view by cybraryid
+        $search="/(".$base."\/mod\/cybrary\/view.php\?f\=)([0-9]+)/";
+        $content= preg_replace($search, '$@CYBRARYVIEWBYF*$2@$', $content);
 
-        // Link to forum discussion with parent syntax
-        $search = "/(".$base."\/mod\/forum\/discuss.php\?d\=)([0-9]+)(?:\&amp;|\&)parent\=([0-9]+)/";
-        $content= preg_replace($search, '$@FORUMDISCUSSIONVIEWPARENT*$2*$3@$', $content);
+        // Link to cybrary discussion with parent syntax
+        $search = "/(".$base."\/mod\/cybrary\/discuss.php\?d\=)([0-9]+)(?:\&amp;|\&)parent\=([0-9]+)/";
+        $content= preg_replace($search, '$@CYBRARYDISCUSSIONVIEWPARENT*$2*$3@$', $content);
 
-        // Link to forum discussion with relative syntax
-        $search="/(".$base."\/mod\/forum\/discuss.php\?d\=)([0-9]+)\#([0-9]+)/";
-        $content= preg_replace($search, '$@FORUMDISCUSSIONVIEWINSIDE*$2*$3@$', $content);
+        // Link to cybrary discussion with relative syntax
+        $search="/(".$base."\/mod\/cybrary\/discuss.php\?d\=)([0-9]+)\#([0-9]+)/";
+        $content= preg_replace($search, '$@CYBRARYDISCUSSIONVIEWINSIDE*$2*$3@$', $content);
 
-        // Link to forum discussion by discussionid
-        $search="/(".$base."\/mod\/forum\/discuss.php\?d\=)([0-9]+)/";
-        $content= preg_replace($search, '$@FORUMDISCUSSIONVIEW*$2@$', $content);
+        // Link to cybrary discussion by discussionid
+        $search="/(".$base."\/mod\/cybrary\/discuss.php\?d\=)([0-9]+)/";
+        $content= preg_replace($search, '$@CYBRARYDISCUSSIONVIEW*$2@$', $content);
 
         return $content;
     }

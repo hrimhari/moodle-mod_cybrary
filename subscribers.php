@@ -16,9 +16,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file is used to display and organise forum subscribers
+ * This file is used to display and organise cybrary subscribers
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,11 +26,11 @@
 require_once("../../config.php");
 require_once("lib.php");
 
-$id    = required_param('id',PARAM_INT);           // forum
+$id    = required_param('id',PARAM_INT);           // cybrary
 $group = optional_param('group',0,PARAM_INT);      // change of group
 $edit  = optional_param('edit',-1,PARAM_BOOL);     // Turn editing on and off
 
-$url = new moodle_url('/mod/forum/subscribers.php', array('id'=>$id));
+$url = new moodle_url('/mod/cybrary/subscribers.php', array('id'=>$id));
 if ($group !== 0) {
     $url->param('group', $group);
 }
@@ -39,33 +39,33 @@ if ($edit !== 0) {
 }
 $PAGE->set_url($url);
 
-$forum = $DB->get_record('forum', array('id'=>$id), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$forum->course), '*', MUST_EXIST);
-if (! $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) {
+$cybrary = $DB->get_record('cybrary', array('id'=>$id), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$cybrary->course), '*', MUST_EXIST);
+if (! $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id)) {
     $cm->id = 0;
 }
 
 require_login($course, false, $cm);
 
 $context = context_module::instance($cm->id);
-if (!has_capability('mod/forum:viewsubscribers', $context)) {
-    print_error('nopermissiontosubscribe', 'forum');
+if (!has_capability('mod/cybrary:viewsubscribers', $context)) {
+    print_error('nopermissiontosubscribe', 'cybrary');
 }
 
 unset($SESSION->fromdiscussion);
 
 $params = array(
     'context' => $context,
-    'other' => array('forumid' => $forum->id),
+    'other' => array('cybraryid' => $cybrary->id),
 );
-$event = \mod_forum\event\subscribers_viewed::create($params);
+$event = \mod_cybrary\event\subscribers_viewed::create($params);
 $event->trigger();
 
-$forumoutput = $PAGE->get_renderer('mod_forum');
+$cybraryoutput = $PAGE->get_renderer('mod_cybrary');
 $currentgroup = groups_get_activity_group($cm);
-$options = array('forumid'=>$forum->id, 'currentgroup'=>$currentgroup, 'context'=>$context);
-$existingselector = new mod_forum_existing_subscriber_selector('existingsubscribers', $options);
-$subscriberselector = new mod_forum_potential_subscriber_selector('potentialsubscribers', $options);
+$options = array('cybraryid'=>$cybrary->id, 'currentgroup'=>$currentgroup, 'context'=>$context);
+$existingselector = new mod_cybrary_existing_subscriber_selector('existingsubscribers', $options);
+$subscriberselector = new mod_cybrary_potential_subscriber_selector('potentialsubscribers', $options);
 $subscriberselector->set_existing_subscribers($existingselector->find_users(''));
 
 if (data_submitted()) {
@@ -79,15 +79,15 @@ if (data_submitted()) {
     if ($subscribe) {
         $users = $subscriberselector->get_selected_users();
         foreach ($users as $user) {
-            if (!\mod_forum\subscriptions::subscribe_user($user->id, $forum)) {
-                print_error('cannotaddsubscriber', 'forum', '', $user->id);
+            if (!\mod_cybrary\subscriptions::subscribe_user($user->id, $cybrary)) {
+                print_error('cannotaddsubscriber', 'cybrary', '', $user->id);
             }
         }
     } else if ($unsubscribe) {
         $users = $existingselector->get_selected_users();
         foreach ($users as $user) {
-            if (!\mod_forum\subscriptions::unsubscribe_user($user->id, $forum)) {
-                print_error('cannotremovesubscriber', 'forum', '', $user->id);
+            if (!\mod_cybrary\subscriptions::unsubscribe_user($user->id, $cybrary)) {
+                print_error('cannotremovesubscriber', 'cybrary', '', $user->id);
             }
         }
     }
@@ -96,28 +96,28 @@ if (data_submitted()) {
     $subscriberselector->set_existing_subscribers($existingselector->find_users(''));
 }
 
-$strsubscribers = get_string("subscribers", "forum");
+$strsubscribers = get_string("subscribers", "cybrary");
 $PAGE->navbar->add($strsubscribers);
 $PAGE->set_title($strsubscribers);
 $PAGE->set_heading($COURSE->fullname);
-if (has_capability('mod/forum:managesubscriptions', $context) && \mod_forum\subscriptions::is_forcesubscribed($forum) === false) {
+if (has_capability('mod/cybrary:managesubscriptions', $context) && \mod_cybrary\subscriptions::is_forcesubscribed($cybrary) === false) {
     if ($edit != -1) {
         $USER->subscriptionsediting = $edit;
     }
-    $PAGE->set_button(forum_update_subscriptions_button($course->id, $id));
+    $PAGE->set_button(cybrary_update_subscriptions_button($course->id, $id));
 } else {
     unset($USER->subscriptionsediting);
 }
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('forum', 'forum').' '.$strsubscribers);
+echo $OUTPUT->heading(get_string('cybrary', 'cybrary').' '.$strsubscribers);
 if (empty($USER->subscriptionsediting)) {
-    $subscribers = \mod_forum\subscriptions::fetch_subscribed_users($forum, $currentgroup, $context);
-    if (\mod_forum\subscriptions::is_forcesubscribed($forum)) {
-        $subscribers = mod_forum_filter_hidden_users($cm, $context, $subscribers);
+    $subscribers = \mod_cybrary\subscriptions::fetch_subscribed_users($cybrary, $currentgroup, $context);
+    if (\mod_cybrary\subscriptions::is_forcesubscribed($cybrary)) {
+        $subscribers = mod_cybrary_filter_hidden_users($cm, $context, $subscribers);
     }
-    echo $forumoutput->subscriber_overview($subscribers, $forum, $course);
+    echo $cybraryoutput->subscriber_overview($subscribers, $cybrary, $course);
 } else {
-    echo $forumoutput->subscriber_selection_form($existingselector, $subscriberselector);
+    echo $cybraryoutput->subscriber_selection_form($existingselector, $subscriberselector);
 }
 echo $OUTPUT->footer();
 
@@ -133,7 +133,7 @@ echo $OUTPUT->footer();
  * @param array $users the list of users to filter.
  * @return array the filtered list of users.
  */
-function mod_forum_filter_hidden_users(stdClass $cm, context_module $context, array $users) {
+function mod_cybrary_filter_hidden_users(stdClass $cm, context_module $context, array $users) {
     if ($cm->visible) {
         return $users;
     } else {

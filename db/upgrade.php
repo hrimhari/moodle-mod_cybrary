@@ -17,7 +17,7 @@
 
 /**
  * This file keeps track of upgrades to
- * the forum module
+ * the cybrary module
  *
  * Sometimes, changes between versions involve
  * alterations to database structures and other
@@ -36,12 +36,12 @@
  * Please do not forget to use upgrade_set_timeout()
  * before any action that may take longer time to finish.
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-function xmldb_forum_upgrade($oldversion) {
+function xmldb_cybrary_upgrade($oldversion) {
     global $CFG, $DB, $OUTPUT;
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
@@ -57,8 +57,8 @@ function xmldb_forum_upgrade($oldversion) {
 
     if ($oldversion < 2013020500) {
 
-        // Define field displaywordcount to be added to forum.
-        $table = new xmldb_table('forum');
+        // Define field displaywordcount to be added to cybrary.
+        $table = new xmldb_table('cybrary');
         $field = new xmldb_field('displaywordcount', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'completionposts');
 
         // Conditionally launch add field displaywordcount.
@@ -66,47 +66,47 @@ function xmldb_forum_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2013020500, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2013020500, 'cybrary');
     }
 
-    // Forcefully assign mod/forum:allowforcesubscribe to frontpage role, as we missed that when
+    // Forcefully assign mod/cybrary:allowforcesubscribe to frontpage role, as we missed that when
     // capability was introduced.
     if ($oldversion < 2013021200) {
-        // If capability mod/forum:allowforcesubscribe is defined then set it for frontpage role.
-        if (get_capability_info('mod/forum:allowforcesubscribe')) {
-            assign_legacy_capabilities('mod/forum:allowforcesubscribe', array('frontpage' => CAP_ALLOW));
+        // If capability mod/cybrary:allowforcesubscribe is defined then set it for frontpage role.
+        if (get_capability_info('mod/cybrary:allowforcesubscribe')) {
+            assign_legacy_capabilities('mod/cybrary:allowforcesubscribe', array('frontpage' => CAP_ALLOW));
         }
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2013021200, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2013021200, 'cybrary');
     }
 
 
     // Moodle v2.5.0 release upgrade line.
     // Put any upgrade step following this.
     if ($oldversion < 2013071000) {
-        // Define table forum_digests to be created.
-        $table = new xmldb_table('forum_digests');
+        // Define table cybrary_digests to be created.
+        $table = new xmldb_table('cybrary_digests');
 
-        // Adding fields to table forum_digests.
+        // Adding fields to table cybrary_digests.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('forum', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('cybrary', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('maildigest', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '-1');
 
-        // Adding keys to table forum_digests.
+        // Adding keys to table cybrary_digests.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('userid', XMLDB_KEY_FOREIGN, array('userid'), 'user', array('id'));
-        $table->add_key('forum', XMLDB_KEY_FOREIGN, array('forum'), 'forum', array('id'));
-        $table->add_key('forumdigest', XMLDB_KEY_UNIQUE, array('forum', 'userid', 'maildigest'));
+        $table->add_key('cybrary', XMLDB_KEY_FOREIGN, array('cybrary'), 'cybrary', array('id'));
+        $table->add_key('cybrarydigest', XMLDB_KEY_UNIQUE, array('cybrary', 'userid', 'maildigest'));
 
-        // Conditionally launch create table for forum_digests.
+        // Conditionally launch create table for cybrary_digests.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2013071000, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2013071000, 'cybrary');
     }
 
     // Moodle v2.6.0 release upgrade line.
@@ -114,8 +114,8 @@ function xmldb_forum_upgrade($oldversion) {
 
     if ($oldversion < 2014040400) {
 
-        // Define index userid-postid (not unique) to be dropped form forum_read.
-        $table = new xmldb_table('forum_read');
+        // Define index userid-postid (not unique) to be dropped form cybrary_read.
+        $table = new xmldb_table('cybrary_read');
         $index = new xmldb_index('userid-postid', XMLDB_INDEX_NOTUNIQUE, array('userid', 'postid'));
 
         // Conditionally launch drop index userid-postid.
@@ -124,7 +124,7 @@ function xmldb_forum_upgrade($oldversion) {
         }
 
 
-        // Define index postid-userid (not unique) to be added to forum_read.
+        // Define index postid-userid (not unique) to be added to cybrary_read.
         $index = new xmldb_index('postid-userid', XMLDB_INDEX_NOTUNIQUE, array('postid', 'userid'));
 
         // Conditionally launch add index postid-userid.
@@ -132,8 +132,8 @@ function xmldb_forum_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2014040400, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2014040400, 'cybrary');
     }
 
     // Moodle v2.7.0 release upgrade line.
@@ -150,17 +150,17 @@ function xmldb_forum_upgrade($oldversion) {
 
         // Run the replacements.
         foreach ($replacements as $old => $new) {
-            $DB->set_field('forum', 'maxattachments', $new, array('maxattachments' => $old));
+            $DB->set_field('cybrary', 'maxattachments', $new, array('maxattachments' => $old));
         }
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2014051201, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2014051201, 'cybrary');
     }
 
     if ($oldversion < 2014081500) {
 
-        // Define index course (not unique) to be added to forum_discussions.
-        $table = new xmldb_table('forum_discussions');
+        // Define index course (not unique) to be added to cybrary_discussions.
+        $table = new xmldb_table('cybrary_discussions');
         $index = new xmldb_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
 
         // Conditionally launch add index course.
@@ -168,36 +168,36 @@ function xmldb_forum_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2014081500, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2014081500, 'cybrary');
     }
 
     if ($oldversion < 2014081900) {
 
-        // Define table forum_discussion_subs to be created.
-        $table = new xmldb_table('forum_discussion_subs');
+        // Define table cybrary_discussion_subs to be created.
+        $table = new xmldb_table('cybrary_discussion_subs');
 
-        // Adding fields to table forum_discussion_subs.
+        // Adding fields to table cybrary_discussion_subs.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('forum', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('cybrary', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('discussion', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('preference', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
 
-        // Adding keys to table forum_discussion_subs.
+        // Adding keys to table cybrary_discussion_subs.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_key('forum', XMLDB_KEY_FOREIGN, array('forum'), 'forum', array('id'));
+        $table->add_key('cybrary', XMLDB_KEY_FOREIGN, array('cybrary'), 'cybrary', array('id'));
         $table->add_key('userid', XMLDB_KEY_FOREIGN, array('userid'), 'user', array('id'));
-        $table->add_key('discussion', XMLDB_KEY_FOREIGN, array('discussion'), 'forum_discussions', array('id'));
+        $table->add_key('discussion', XMLDB_KEY_FOREIGN, array('discussion'), 'cybrary_discussions', array('id'));
         $table->add_key('user_discussions', XMLDB_KEY_UNIQUE, array('userid', 'discussion'));
 
-        // Conditionally launch create table for forum_discussion_subs.
+        // Conditionally launch create table for cybrary_discussion_subs.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2014081900, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2014081900, 'cybrary');
     }
 
     if ($oldversion < 2014103000) {
@@ -205,13 +205,13 @@ function xmldb_forum_upgrade($oldversion) {
         // Later we will remove all those which don't match this ID.
         $sql = "
             SELECT MIN(id) as lowid, userid, postid
-            FROM {forum_read}
+            FROM {cybrary_read}
             GROUP BY userid, postid
             HAVING COUNT(id) > 1";
 
         if ($duplicatedrows = $DB->get_recordset_sql($sql)) {
             foreach ($duplicatedrows as $row) {
-                $DB->delete_records_select('forum_read', 'userid = ? AND postid = ? AND id <> ?', array(
+                $DB->delete_records_select('cybrary_read', 'userid = ? AND postid = ? AND id <> ?', array(
                     $row->userid,
                     $row->postid,
                     $row->lowid,
@@ -220,21 +220,21 @@ function xmldb_forum_upgrade($oldversion) {
         }
         $duplicatedrows->close();
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2014103000, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2014103000, 'cybrary');
     }
 
     if ($oldversion < 2014110300) {
 
-        // Changing precision of field preference on table forum_discussion_subs to (10).
-        $table = new xmldb_table('forum_discussion_subs');
+        // Changing precision of field preference on table cybrary_discussion_subs to (10).
+        $table = new xmldb_table('cybrary_discussion_subs');
         $field = new xmldb_field('preference', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1', 'discussion');
 
         // Launch change of precision for field preference.
         $dbman->change_field_precision($table, $field);
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2014110300, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2014110300, 'cybrary');
     }
 
     // Moodle v2.8.0 release upgrade line.
@@ -244,10 +244,10 @@ function xmldb_forum_upgrade($oldversion) {
     // Put any upgrade step following this.
     if ($oldversion < 2015102900) {
         // Groupid = 0 is never valid.
-        $DB->set_field('forum_discussions', 'groupid', -1, array('groupid' => 0));
+        $DB->set_field('cybrary_discussions', 'groupid', -1, array('groupid' => 0));
 
-        // Forum savepoint reached.
-        upgrade_mod_savepoint(true, 2015102900, 'forum');
+        // Cybrary savepoint reached.
+        upgrade_mod_savepoint(true, 2015102900, 'cybrary');
     }
 
     // Moodle v3.0.0 release upgrade line.

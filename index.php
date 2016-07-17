@@ -16,20 +16,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
-require_once($CFG->dirroot . '/mod/forum/lib.php');
+require_once($CFG->dirroot . '/mod/cybrary/lib.php');
 require_once($CFG->libdir . '/rsslib.php');
 
 $id = optional_param('id', 0, PARAM_INT);                   // Course id
-$subscribe = optional_param('subscribe', null, PARAM_INT);  // Subscribe/Unsubscribe all forums
+$subscribe = optional_param('subscribe', null, PARAM_INT);  // Subscribe/Unsubscribe all cybraries
 
-$url = new moodle_url('/mod/forum/index.php', array('id'=>$id));
+$url = new moodle_url('/mod/cybrary/index.php', array('id'=>$id));
 if ($subscribe !== null) {
     require_sesskey();
     $url->param('subscribe', $subscribe);
@@ -54,32 +54,32 @@ unset($SESSION->fromdiscussion);
 $params = array(
     'context' => context_course::instance($course->id)
 );
-$event = \mod_forum\event\course_module_instance_list_viewed::create($params);
+$event = \mod_cybrary\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);
 $event->trigger();
 
-$strforums       = get_string('forums', 'forum');
-$strforum        = get_string('forum', 'forum');
+$strcybraries       = get_string('cybraries', 'cybrary');
+$strcybrary        = get_string('cybrary', 'cybrary');
 $strdescription  = get_string('description');
-$strdiscussions  = get_string('discussions', 'forum');
-$strsubscribed   = get_string('subscribed', 'forum');
-$strunreadposts  = get_string('unreadposts', 'forum');
-$strtracking     = get_string('tracking', 'forum');
-$strmarkallread  = get_string('markallread', 'forum');
-$strtrackforum   = get_string('trackforum', 'forum');
-$strnotrackforum = get_string('notrackforum', 'forum');
-$strsubscribe    = get_string('subscribe', 'forum');
-$strunsubscribe  = get_string('unsubscribe', 'forum');
+$strdiscussions  = get_string('discussions', 'cybrary');
+$strsubscribed   = get_string('subscribed', 'cybrary');
+$strunreadposts  = get_string('unreadposts', 'cybrary');
+$strtracking     = get_string('tracking', 'cybrary');
+$strmarkallread  = get_string('markallread', 'cybrary');
+$strtrackcybrary   = get_string('trackcybrary', 'cybrary');
+$strnotrackcybrary = get_string('notrackcybrary', 'cybrary');
+$strsubscribe    = get_string('subscribe', 'cybrary');
+$strunsubscribe  = get_string('unsubscribe', 'cybrary');
 $stryes          = get_string('yes');
 $strno           = get_string('no');
 $strrss          = get_string('rss');
 $stremaildigest  = get_string('emaildigest');
 
-$searchform = forum_search_form($course);
+$searchform = cybrary_search_form($course);
 
-// Retrieve the list of forum digest options for later.
-$digestoptions = forum_get_user_digest_options();
-$digestoptions_selector = new single_select(new moodle_url('/mod/forum/maildigest.php',
+// Retrieve the list of cybrary digest options for later.
+$digestoptions = cybrary_get_user_digest_options();
+$digestoptions_selector = new single_select(new moodle_url('/mod/cybrary/maildigest.php',
     array(
         'backtoindex' => 1,
     )),
@@ -89,14 +89,14 @@ $digestoptions_selector = new single_select(new moodle_url('/mod/forum/maildiges
     '');
 $digestoptions_selector->method = 'post';
 
-// Start of the table for General Forums
+// Start of the table for General Cybraries
 
 $generaltable = new html_table();
-$generaltable->head  = array ($strforum, $strdescription, $strdiscussions);
+$generaltable->head  = array ($strcybrary, $strdescription, $strdiscussions);
 $generaltable->align = array ('left', 'left', 'center');
 
-if ($usetracking = forum_tp_can_track_forums()) {
-    $untracked = forum_tp_get_untracked_forums($USER->id, $course->id);
+if ($usetracking = cybrary_tp_can_track_cybraries()) {
+    $untracked = cybrary_tp_get_untracked_cybraries($USER->id, $course->id);
 
     $generaltable->head[] = $strunreadposts;
     $generaltable->align[] = 'center';
@@ -106,20 +106,20 @@ if ($usetracking = forum_tp_can_track_forums()) {
 }
 
 // Fill the subscription cache for this course and user combination.
-\mod_forum\subscriptions::fill_subscription_cache_for_course($course->id, $USER->id);
+\mod_cybrary\subscriptions::fill_subscription_cache_for_course($course->id, $USER->id);
 
 $can_subscribe = is_enrolled($coursecontext);
 if ($can_subscribe) {
     $generaltable->head[] = $strsubscribed;
     $generaltable->align[] = 'center';
 
-    $generaltable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_forum');
+    $generaltable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_cybrary');
     $generaltable->align[] = 'center';
 }
 
 if ($show_rss = (($can_subscribe || $course->id == SITEID) &&
-                 isset($CFG->enablerssfeeds) && isset($CFG->forum_enablerssfeeds) &&
-                 $CFG->enablerssfeeds && $CFG->forum_enablerssfeeds)) {
+                 isset($CFG->enablerssfeeds) && isset($CFG->cybrary_enablerssfeeds) &&
+                 $CFG->enablerssfeeds && $CFG->cybrary_enablerssfeeds)) {
     $generaltable->head[] = $strrss;
     $generaltable->align[] = 'center';
 }
@@ -128,46 +128,46 @@ $usesections = course_format_uses_sections($course->format);
 
 $table = new html_table();
 
-// Parse and organise all the forums.  Most forums are course modules but
-// some special ones are not.  These get placed in the general forums
-// category with the forums in section 0.
+// Parse and organise all the cybraries.  Most cybraries are course modules but
+// some special ones are not.  These get placed in the general cybraries
+// category with the cybraries in section 0.
 
-$forums = $DB->get_records_sql("
+$cybraries = $DB->get_records_sql("
     SELECT f.*,
            d.maildigest
-      FROM {forum} f
- LEFT JOIN {forum_digests} d ON d.forum = f.id AND d.userid = ?
+      FROM {cybrary} f
+ LEFT JOIN {cybrary_digests} d ON d.cybrary = f.id AND d.userid = ?
      WHERE f.course = ?
     ", array($USER->id, $course->id));
 
-$generalforums  = array();
-$learningforums = array();
+$generalcybraries  = array();
+$learningcybraries = array();
 $modinfo = get_fast_modinfo($course);
 
-foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
-    if (!$cm->uservisible or !isset($forums[$forumid])) {
+foreach ($modinfo->get_instances_of('cybrary') as $cybraryid=>$cm) {
+    if (!$cm->uservisible or !isset($cybraries[$cybraryid])) {
         continue;
     }
 
-    $forum = $forums[$forumid];
+    $cybrary = $cybraries[$cybraryid];
 
     if (!$context = context_module::instance($cm->id, IGNORE_MISSING)) {
         continue;   // Shouldn't happen
     }
 
-    if (!has_capability('mod/forum:viewdiscussion', $context)) {
+    if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
         continue;
     }
 
     // fill two type array - order in modinfo is the same as in course
-    if ($forum->type == 'news' or $forum->type == 'social') {
-        $generalforums[$forum->id] = $forum;
+    if ($cybrary->type == 'news' or $cybrary->type == 'social') {
+        $generalcybraries[$cybrary->id] = $cybrary;
 
     } else if ($course->id == SITEID or empty($cm->sectionnum)) {
-        $generalforums[$forum->id] = $forum;
+        $generalcybraries[$cybrary->id] = $cybrary;
 
     } else {
-        $learningforums[$forum->id] = $forum;
+        $learningcybraries[$cybrary->id] = $cybrary;
     }
 }
 
@@ -175,123 +175,123 @@ foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
 if (!is_null($subscribe)) {
     if (isguestuser() or !$can_subscribe) {
         // there should not be any links leading to this place, just redirect
-        redirect(new moodle_url('/mod/forum/index.php', array('id' => $id)), get_string('subscribeenrolledonly', 'forum'));
+        redirect(new moodle_url('/mod/cybrary/index.php', array('id' => $id)), get_string('subscribeenrolledonly', 'cybrary'));
     }
     // Can proceed now, the user is not guest and is enrolled
-    foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
-        $forum = $forums[$forumid];
+    foreach ($modinfo->get_instances_of('cybrary') as $cybraryid=>$cm) {
+        $cybrary = $cybraries[$cybraryid];
         $modcontext = context_module::instance($cm->id);
         $cansub = false;
 
-        if (has_capability('mod/forum:viewdiscussion', $modcontext)) {
+        if (has_capability('mod/cybrary:viewdiscussion', $modcontext)) {
             $cansub = true;
         }
         if ($cansub && $cm->visible == 0 &&
-            !has_capability('mod/forum:managesubscriptions', $modcontext))
+            !has_capability('mod/cybrary:managesubscriptions', $modcontext))
         {
             $cansub = false;
         }
-        if (!\mod_forum\subscriptions::is_forcesubscribed($forum)) {
-            $subscribed = \mod_forum\subscriptions::is_subscribed($USER->id, $forum, null, $cm);
+        if (!\mod_cybrary\subscriptions::is_forcesubscribed($cybrary)) {
+            $subscribed = \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary, null, $cm);
             $canmanageactivities = has_capability('moodle/course:manageactivities', $coursecontext, $USER->id);
-            if (($canmanageactivities || \mod_forum\subscriptions::is_subscribable($forum)) && $subscribe && !$subscribed && $cansub) {
-                \mod_forum\subscriptions::subscribe_user($USER->id, $forum, $modcontext, true);
+            if (($canmanageactivities || \mod_cybrary\subscriptions::is_subscribable($cybrary)) && $subscribe && !$subscribed && $cansub) {
+                \mod_cybrary\subscriptions::subscribe_user($USER->id, $cybrary, $modcontext, true);
             } else if (!$subscribe && $subscribed) {
-                \mod_forum\subscriptions::unsubscribe_user($USER->id, $forum, $modcontext, true);
+                \mod_cybrary\subscriptions::unsubscribe_user($USER->id, $cybrary, $modcontext, true);
             }
         }
     }
-    $returnto = forum_go_back_to(new moodle_url('/mod/forum/index.php', array('id' => $course->id)));
+    $returnto = cybrary_go_back_to(new moodle_url('/mod/cybrary/index.php', array('id' => $course->id)));
     $shortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
     if ($subscribe) {
-        redirect($returnto, get_string('nowallsubscribed', 'forum', $shortname), 1);
+        redirect($returnto, get_string('nowallsubscribed', 'cybrary', $shortname), 1);
     } else {
-        redirect($returnto, get_string('nowallunsubscribed', 'forum', $shortname), 1);
+        redirect($returnto, get_string('nowallunsubscribed', 'cybrary', $shortname), 1);
     }
 }
 
-/// First, let's process the general forums and build up a display
+/// First, let's process the general cybraries and build up a display
 
-if ($generalforums) {
-    foreach ($generalforums as $forum) {
-        $cm      = $modinfo->instances['forum'][$forum->id];
+if ($generalcybraries) {
+    foreach ($generalcybraries as $cybrary) {
+        $cm      = $modinfo->instances['cybrary'][$cybrary->id];
         $context = context_module::instance($cm->id);
 
-        $count = forum_count_discussions($forum, $cm, $course);
+        $count = cybrary_count_discussions($cybrary, $cm, $course);
 
         if ($usetracking) {
-            if ($forum->trackingtype == FORUM_TRACKING_OFF) {
+            if ($cybrary->trackingtype == CYBRARY_TRACKING_OFF) {
                 $unreadlink  = '-';
                 $trackedlink = '-';
 
             } else {
-                if (isset($untracked[$forum->id])) {
+                if (isset($untracked[$cybrary->id])) {
                         $unreadlink  = '-';
-                } else if ($unread = forum_tp_count_forum_unread_posts($cm, $course)) {
-                        $unreadlink = '<span class="unread"><a href="view.php?f='.$forum->id.'">'.$unread.'</a>';
+                } else if ($unread = cybrary_tp_count_cybrary_unread_posts($cm, $course)) {
+                        $unreadlink = '<span class="unread"><a href="view.php?f='.$cybrary->id.'">'.$unread.'</a>';
                     $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                   $forum->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                   $cybrary->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
                 } else {
                     $unreadlink = '<span class="read">0</span>';
                 }
 
-                if (($forum->trackingtype == FORUM_TRACKING_FORCED) && ($CFG->forum_allowforcedreadtracking)) {
+                if (($cybrary->trackingtype == CYBRARY_TRACKING_FORCED) && ($CFG->cybrary_allowforcedreadtracking)) {
                     $trackedlink = $stryes;
-                } else if ($forum->trackingtype === FORUM_TRACKING_OFF || ($USER->trackforums == 0)) {
+                } else if ($cybrary->trackingtype === CYBRARY_TRACKING_OFF || ($USER->trackcybraries == 0)) {
                     $trackedlink = '-';
                 } else {
-                    $aurl = new moodle_url('/mod/forum/settracking.php', array(
-                            'id' => $forum->id,
+                    $aurl = new moodle_url('/mod/cybrary/settracking.php', array(
+                            'id' => $cybrary->id,
                             'sesskey' => sesskey(),
                         ));
-                    if (!isset($untracked[$forum->id])) {
-                        $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title'=>$strnotrackforum));
+                    if (!isset($untracked[$cybrary->id])) {
+                        $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title'=>$strnotrackcybrary));
                     } else {
-                        $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title'=>$strtrackforum));
+                        $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title'=>$strtrackcybrary));
                     }
                 }
             }
         }
 
-        $forum->intro = shorten_text(format_module_intro('forum', $forum, $cm->id), $CFG->forum_shortpost);
-        $forumname = format_string($forum->name, true);
+        $cybrary->intro = shorten_text(format_module_intro('cybrary', $cybrary, $cm->id), $CFG->cybrary_shortpost);
+        $cybraryname = format_string($cybrary->name, true);
 
         if ($cm->visible) {
             $style = '';
         } else {
             $style = 'class="dimmed"';
         }
-        $forumlink = "<a href=\"view.php?f=$forum->id\" $style>".format_string($forum->name,true)."</a>";
-        $discussionlink = "<a href=\"view.php?f=$forum->id\" $style>".$count."</a>";
+        $cybrarylink = "<a href=\"view.php?f=$cybrary->id\" $style>".format_string($cybrary->name,true)."</a>";
+        $discussionlink = "<a href=\"view.php?f=$cybrary->id\" $style>".$count."</a>";
 
-        $row = array ($forumlink, $forum->intro, $discussionlink);
+        $row = array ($cybrarylink, $cybrary->intro, $discussionlink);
         if ($usetracking) {
             $row[] = $unreadlink;
             $row[] = $trackedlink;    // Tracking.
         }
 
         if ($can_subscribe) {
-            $row[] = forum_get_subscribe_link($forum, $context, array('subscribed' => $stryes,
+            $row[] = cybrary_get_subscribe_link($cybrary, $context, array('subscribed' => $stryes,
                     'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
                     'cantsubscribe' => '-'), false, false, true);
 
-            $digestoptions_selector->url->param('id', $forum->id);
-            if ($forum->maildigest === null) {
+            $digestoptions_selector->url->param('id', $cybrary->id);
+            if ($cybrary->maildigest === null) {
                 $digestoptions_selector->selected = -1;
             } else {
-                $digestoptions_selector->selected = $forum->maildigest;
+                $digestoptions_selector->selected = $cybrary->maildigest;
             }
             $row[] = $OUTPUT->render($digestoptions_selector);
         }
 
-        //If this forum has RSS activated, calculate it
+        //If this cybrary has RSS activated, calculate it
         if ($show_rss) {
-            if ($forum->rsstype and $forum->rssarticles) {
+            if ($cybrary->rsstype and $cybrary->rssarticles) {
                 //Calculate the tooltip text
-                if ($forum->rsstype == 1) {
-                    $tooltiptext = get_string('rsssubscriberssdiscussions', 'forum');
+                if ($cybrary->rsstype == 1) {
+                    $tooltiptext = get_string('rsssubscriberssdiscussions', 'cybrary');
                 } else {
-                    $tooltiptext = get_string('rsssubscriberssposts', 'forum');
+                    $tooltiptext = get_string('rsssubscriberssposts', 'cybrary');
                 }
 
                 if (!isloggedin() && $course->id == SITEID) {
@@ -300,7 +300,7 @@ if ($generalforums) {
                     $userid = $USER->id;
                 }
                 //Get html code for RSS link
-                $row[] = rss_get_link($context->id, $userid, 'mod_forum', $forum->id, $tooltiptext);
+                $row[] = rss_get_link($context->id, $userid, 'mod_cybrary', $cybrary->id, $tooltiptext);
             } else {
                 $row[] = '&nbsp;';
             }
@@ -311,9 +311,9 @@ if ($generalforums) {
 }
 
 
-// Start of the table for Learning Forums
+// Start of the table for Learning Cybraries
 $learningtable = new html_table();
-$learningtable->head  = array ($strforum, $strdescription, $strdiscussions);
+$learningtable->head  = array ($strcybrary, $strdescription, $strdiscussions);
 $learningtable->align = array ('left', 'left', 'center');
 
 if ($usetracking) {
@@ -328,20 +328,20 @@ if ($can_subscribe) {
     $learningtable->head[] = $strsubscribed;
     $learningtable->align[] = 'center';
 
-    $learningtable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_forum');
+    $learningtable->head[] = $stremaildigest . ' ' . $OUTPUT->help_icon('emaildigesttype', 'mod_cybrary');
     $learningtable->align[] = 'center';
 }
 
 if ($show_rss = (($can_subscribe || $course->id == SITEID) &&
-                 isset($CFG->enablerssfeeds) && isset($CFG->forum_enablerssfeeds) &&
-                 $CFG->enablerssfeeds && $CFG->forum_enablerssfeeds)) {
+                 isset($CFG->enablerssfeeds) && isset($CFG->cybrary_enablerssfeeds) &&
+                 $CFG->enablerssfeeds && $CFG->cybrary_enablerssfeeds)) {
     $learningtable->head[] = $strrss;
     $learningtable->align[] = 'center';
 }
 
-/// Now let's process the learning forums
+/// Now let's process the learning cybraries
 
-if ($course->id != SITEID) {    // Only real courses have learning forums
+if ($course->id != SITEID) {    // Only real courses have learning cybraries
     // 'format_.'$course->format only applicable when not SITEID (format_site is not a format)
     $strsectionname  = get_string('sectionname', 'format_'.$course->format);
     // Add extra field for section number, at the front
@@ -349,46 +349,46 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
     array_unshift($learningtable->align, 'center');
 
 
-    if ($learningforums) {
+    if ($learningcybraries) {
         $currentsection = '';
-            foreach ($learningforums as $forum) {
-            $cm      = $modinfo->instances['forum'][$forum->id];
+            foreach ($learningcybraries as $cybrary) {
+            $cm      = $modinfo->instances['cybrary'][$cybrary->id];
             $context = context_module::instance($cm->id);
 
-            $count = forum_count_discussions($forum, $cm, $course);
+            $count = cybrary_count_discussions($cybrary, $cm, $course);
 
             if ($usetracking) {
-                if ($forum->trackingtype == FORUM_TRACKING_OFF) {
+                if ($cybrary->trackingtype == CYBRARY_TRACKING_OFF) {
                     $unreadlink  = '-';
                     $trackedlink = '-';
 
                 } else {
-                    if (isset($untracked[$forum->id])) {
+                    if (isset($untracked[$cybrary->id])) {
                         $unreadlink  = '-';
-                    } else if ($unread = forum_tp_count_forum_unread_posts($cm, $course)) {
-                        $unreadlink = '<span class="unread"><a href="view.php?f='.$forum->id.'">'.$unread.'</a>';
+                    } else if ($unread = cybrary_tp_count_cybrary_unread_posts($cm, $course)) {
+                        $unreadlink = '<span class="unread"><a href="view.php?f='.$cybrary->id.'">'.$unread.'</a>';
                         $unreadlink .= '<a title="'.$strmarkallread.'" href="markposts.php?f='.
-                                       $forum->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
+                                       $cybrary->id.'&amp;mark=read"><img src="'.$OUTPUT->pix_url('t/markasread') . '" alt="'.$strmarkallread.'" class="iconsmall" /></a></span>';
                     } else {
                         $unreadlink = '<span class="read">0</span>';
                     }
 
-                    if (($forum->trackingtype == FORUM_TRACKING_FORCED) && ($CFG->forum_allowforcedreadtracking)) {
+                    if (($cybrary->trackingtype == CYBRARY_TRACKING_FORCED) && ($CFG->cybrary_allowforcedreadtracking)) {
                         $trackedlink = $stryes;
-                    } else if ($forum->trackingtype === FORUM_TRACKING_OFF || ($USER->trackforums == 0)) {
+                    } else if ($cybrary->trackingtype === CYBRARY_TRACKING_OFF || ($USER->trackcybraries == 0)) {
                         $trackedlink = '-';
                     } else {
-                        $aurl = new moodle_url('/mod/forum/settracking.php', array('id'=>$forum->id));
-                        if (!isset($untracked[$forum->id])) {
-                            $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title'=>$strnotrackforum));
+                        $aurl = new moodle_url('/mod/cybrary/settracking.php', array('id'=>$cybrary->id));
+                        if (!isset($untracked[$cybrary->id])) {
+                            $trackedlink = $OUTPUT->single_button($aurl, $stryes, 'post', array('title'=>$strnotrackcybrary));
                         } else {
-                            $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title'=>$strtrackforum));
+                            $trackedlink = $OUTPUT->single_button($aurl, $strno, 'post', array('title'=>$strtrackcybrary));
                         }
                     }
                 }
             }
 
-            $forum->intro = shorten_text(format_module_intro('forum', $forum, $cm->id), $CFG->forum_shortpost);
+            $cybrary->intro = shorten_text(format_module_intro('cybrary', $cybrary, $cm->id), $CFG->cybrary_shortpost);
 
             if ($cm->sectionnum != $currentsection) {
                 $printsection = get_section_name($course, $cm->sectionnum);
@@ -400,47 +400,47 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
                 $printsection = '';
             }
 
-            $forumname = format_string($forum->name,true);
+            $cybraryname = format_string($cybrary->name,true);
 
             if ($cm->visible) {
                 $style = '';
             } else {
                 $style = 'class="dimmed"';
             }
-            $forumlink = "<a href=\"view.php?f=$forum->id\" $style>".format_string($forum->name,true)."</a>";
-            $discussionlink = "<a href=\"view.php?f=$forum->id\" $style>".$count."</a>";
+            $cybrarylink = "<a href=\"view.php?f=$cybrary->id\" $style>".format_string($cybrary->name,true)."</a>";
+            $discussionlink = "<a href=\"view.php?f=$cybrary->id\" $style>".$count."</a>";
 
-            $row = array ($printsection, $forumlink, $forum->intro, $discussionlink);
+            $row = array ($printsection, $cybrarylink, $cybrary->intro, $discussionlink);
             if ($usetracking) {
                 $row[] = $unreadlink;
                 $row[] = $trackedlink;    // Tracking.
             }
 
             if ($can_subscribe) {
-                $row[] = forum_get_subscribe_link($forum, $context, array('subscribed' => $stryes,
+                $row[] = cybrary_get_subscribe_link($cybrary, $context, array('subscribed' => $stryes,
                     'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
                     'cantsubscribe' => '-'), false, false, true);
 
-                $digestoptions_selector->url->param('id', $forum->id);
-                if ($forum->maildigest === null) {
+                $digestoptions_selector->url->param('id', $cybrary->id);
+                if ($cybrary->maildigest === null) {
                     $digestoptions_selector->selected = -1;
                 } else {
-                    $digestoptions_selector->selected = $forum->maildigest;
+                    $digestoptions_selector->selected = $cybrary->maildigest;
                 }
                 $row[] = $OUTPUT->render($digestoptions_selector);
             }
 
-            //If this forum has RSS activated, calculate it
+            //If this cybrary has RSS activated, calculate it
             if ($show_rss) {
-                if ($forum->rsstype and $forum->rssarticles) {
+                if ($cybrary->rsstype and $cybrary->rssarticles) {
                     //Calculate the tolltip text
-                    if ($forum->rsstype == 1) {
-                        $tooltiptext = get_string('rsssubscriberssdiscussions', 'forum');
+                    if ($cybrary->rsstype == 1) {
+                        $tooltiptext = get_string('rsssubscriberssdiscussions', 'cybrary');
                     } else {
-                        $tooltiptext = get_string('rsssubscriberssposts', 'forum');
+                        $tooltiptext = get_string('rsssubscriberssposts', 'cybrary');
                     }
                     //Get html code for RSS link
-                    $row[] = rss_get_link($context->id, $USER->id, 'mod_forum', $forum->id, $tooltiptext);
+                    $row[] = rss_get_link($context->id, $USER->id, 'mod_cybrary', $cybrary->id, $tooltiptext);
                 } else {
                     $row[] = '&nbsp;';
                 }
@@ -453,8 +453,8 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
 
 
 /// Output the page
-$PAGE->navbar->add($strforums);
-$PAGE->set_title("$course->shortname: $strforums");
+$PAGE->navbar->add($strcybraries);
+$PAGE->set_title("$course->shortname: $strcybraries");
 $PAGE->set_heading($course->fullname);
 $PAGE->set_button($searchform);
 echo $OUTPUT->header();
@@ -463,24 +463,24 @@ echo $OUTPUT->header();
 if (!isguestuser() && isloggedin() && $can_subscribe) {
     echo $OUTPUT->box_start('subscription');
     echo html_writer::tag('div',
-        html_writer::link(new moodle_url('/mod/forum/index.php', array('id'=>$course->id, 'subscribe'=>1, 'sesskey'=>sesskey())),
-            get_string('allsubscribe', 'forum')),
+        html_writer::link(new moodle_url('/mod/cybrary/index.php', array('id'=>$course->id, 'subscribe'=>1, 'sesskey'=>sesskey())),
+            get_string('allsubscribe', 'cybrary')),
         array('class'=>'helplink'));
     echo html_writer::tag('div',
-        html_writer::link(new moodle_url('/mod/forum/index.php', array('id'=>$course->id, 'subscribe'=>0, 'sesskey'=>sesskey())),
-            get_string('allunsubscribe', 'forum')),
+        html_writer::link(new moodle_url('/mod/cybrary/index.php', array('id'=>$course->id, 'subscribe'=>0, 'sesskey'=>sesskey())),
+            get_string('allunsubscribe', 'cybrary')),
         array('class'=>'helplink'));
     echo $OUTPUT->box_end();
     echo $OUTPUT->box('&nbsp;', 'clearer');
 }
 
-if ($generalforums) {
-    echo $OUTPUT->heading(get_string('generalforums', 'forum'), 2);
+if ($generalcybraries) {
+    echo $OUTPUT->heading(get_string('generalcybraries', 'cybrary'), 2);
     echo html_writer::table($generaltable);
 }
 
-if ($learningforums) {
-    echo $OUTPUT->heading(get_string('learningforums', 'forum'), 2);
+if ($learningcybraries) {
+    echo $OUTPUT->heading(get_string('learningcybraries', 'cybrary'), 2);
     echo html_writer::table($learningtable);
 }
 

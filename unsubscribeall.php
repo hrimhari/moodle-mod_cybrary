@@ -16,7 +16,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright  2008 Petr Skoda (http://skodak.org)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,9 +26,9 @@ require_once("lib.php");
 
 $confirm = optional_param('confirm', false, PARAM_BOOL);
 
-$PAGE->set_url('/mod/forum/unsubscribeall.php');
+$PAGE->set_url('/mod/cybrary/unsubscribeall.php');
 
-// Do not autologin guest. Only proper users can have forum subscriptions.
+// Do not autologin guest. Only proper users can have cybrary subscriptions.
 require_login(null, false);
 $PAGE->set_context(context_user::instance($USER->id));
 
@@ -38,8 +38,8 @@ if (isguestuser()) {
     redirect($return);
 }
 
-$strunsubscribeall = get_string('unsubscribeall', 'forum');
-$PAGE->navbar->add(get_string('modulename', 'forum'));
+$strunsubscribeall = get_string('unsubscribeall', 'cybrary');
+$PAGE->navbar->add(get_string('modulename', 'cybrary'));
 $PAGE->navbar->add($strunsubscribeall);
 $PAGE->set_title($strunsubscribeall);
 $PAGE->set_heading($COURSE->fullname);
@@ -47,38 +47,38 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading($strunsubscribeall);
 
 if (data_submitted() and $confirm and confirm_sesskey()) {
-    $forums = \mod_forum\subscriptions::get_unsubscribable_forums();
+    $cybraries = \mod_cybrary\subscriptions::get_unsubscribable_cybraries();
 
-    foreach($forums as $forum) {
-        \mod_forum\subscriptions::unsubscribe_user($USER->id, $forum, context_module::instance($forum->cm), true);
+    foreach($cybraries as $cybrary) {
+        \mod_cybrary\subscriptions::unsubscribe_user($USER->id, $cybrary, context_module::instance($cybrary->cm), true);
     }
-    $DB->delete_records('forum_discussion_subs', array('userid' => $USER->id));
+    $DB->delete_records('cybrary_discussion_subs', array('userid' => $USER->id));
     $DB->set_field('user', 'autosubscribe', 0, array('id'=>$USER->id));
 
-    echo $OUTPUT->box(get_string('unsubscribealldone', 'forum'));
+    echo $OUTPUT->box(get_string('unsubscribealldone', 'cybrary'));
     echo $OUTPUT->continue_button($return);
     echo $OUTPUT->footer();
     die;
 
 } else {
     $count = new stdClass();
-    $count->forums = count(\mod_forum\subscriptions::get_unsubscribable_forums());
-    $count->discussions = $DB->count_records('forum_discussion_subs', array('userid' => $USER->id));
+    $count->cybraries = count(\mod_cybrary\subscriptions::get_unsubscribable_cybraries());
+    $count->discussions = $DB->count_records('cybrary_discussion_subs', array('userid' => $USER->id));
 
-    if ($count->forums || $count->discussions) {
-        if ($count->forums && $count->discussions) {
-            $msg = get_string('unsubscribeallconfirm', 'forum', $count);
-        } else if ($count->forums) {
-            $msg = get_string('unsubscribeallconfirmforums', 'forum', $count);
+    if ($count->cybraries || $count->discussions) {
+        if ($count->cybraries && $count->discussions) {
+            $msg = get_string('unsubscribeallconfirm', 'cybrary', $count);
+        } else if ($count->cybraries) {
+            $msg = get_string('unsubscribeallconfirmcybraries', 'cybrary', $count);
         } else if ($count->discussions) {
-            $msg = get_string('unsubscribeallconfirmdiscussions', 'forum', $count);
+            $msg = get_string('unsubscribeallconfirmdiscussions', 'cybrary', $count);
         }
         echo $OUTPUT->confirm($msg, new moodle_url('unsubscribeall.php', array('confirm'=>1)), $return);
         echo $OUTPUT->footer();
         die;
 
     } else {
-        echo $OUTPUT->box(get_string('unsubscribeallempty', 'forum'));
+        echo $OUTPUT->box(get_string('unsubscribeallempty', 'cybrary'));
         echo $OUTPUT->continue_button($return);
         echo $OUTPUT->footer();
         die;

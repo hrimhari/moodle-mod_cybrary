@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The module forums tests
+ * The module cybraries tests
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2016 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,12 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Tests for the forum output/email class.
+ * Tests for the cybrary output/email class.
  *
  * @copyright  2016 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_forum_output_email_testcase extends advanced_testcase {
+class mod_cybrary_output_email_testcase extends advanced_testcase {
     /**
      * Data provider for the postdate function tests.
      */
@@ -38,9 +38,9 @@ class mod_forum_output_email_testcase extends advanced_testcase {
         return array(
             'Timed discussions disabled, timestart unset' => array(
                 'globalconfig'      => array(
-                    'forum_enabletimedposts' => 0,
+                    'cybrary_enabletimedposts' => 0,
                 ),
-                'forumconfig'       => array(
+                'cybraryconfig'       => array(
                 ),
                 'postconfig'        => array(
                     'modified'  => 1000,
@@ -51,9 +51,9 @@ class mod_forum_output_email_testcase extends advanced_testcase {
             ),
             'Timed discussions disabled, timestart set and newer' => array(
                 'globalconfig'      => array(
-                    'forum_enabletimedposts' => 0,
+                    'cybrary_enabletimedposts' => 0,
                 ),
-                'forumconfig'       => array(
+                'cybraryconfig'       => array(
                 ),
                 'postconfig'        => array(
                     'modified'  => 1000,
@@ -65,9 +65,9 @@ class mod_forum_output_email_testcase extends advanced_testcase {
             ),
             'Timed discussions disabled, timestart set but older' => array(
                 'globalconfig'      => array(
-                    'forum_enabletimedposts' => 0,
+                    'cybrary_enabletimedposts' => 0,
                 ),
-                'forumconfig'       => array(
+                'cybraryconfig'       => array(
                 ),
                 'postconfig'        => array(
                     'modified'  => 1000,
@@ -79,9 +79,9 @@ class mod_forum_output_email_testcase extends advanced_testcase {
             ),
             'Timed discussions enabled, timestart unset' => array(
                 'globalconfig'      => array(
-                    'forum_enabletimedposts' => 1,
+                    'cybrary_enabletimedposts' => 1,
                 ),
-                'forumconfig'       => array(
+                'cybraryconfig'       => array(
                 ),
                 'postconfig'        => array(
                     'modified'  => 1000,
@@ -92,9 +92,9 @@ class mod_forum_output_email_testcase extends advanced_testcase {
             ),
             'Timed discussions enabled, timestart set and newer' => array(
                 'globalconfig'      => array(
-                    'forum_enabletimedposts' => 1,
+                    'cybrary_enabletimedposts' => 1,
                 ),
-                'forumconfig'       => array(
+                'cybraryconfig'       => array(
                 ),
                 'postconfig'        => array(
                     'modified'  => 1000,
@@ -106,9 +106,9 @@ class mod_forum_output_email_testcase extends advanced_testcase {
             ),
             'Timed discussions enabled, timestart set but older' => array(
                 'globalconfig'      => array(
-                    'forum_enabletimedposts' => 1,
+                    'cybrary_enabletimedposts' => 1,
                 ),
-                'forumconfig'       => array(
+                'cybraryconfig'       => array(
                 ),
                 'postconfig'        => array(
                     'modified'  => 1000,
@@ -122,17 +122,17 @@ class mod_forum_output_email_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for the forum email renderable postdate.
+     * Test for the cybrary email renderable postdate.
      *
      * @dataProvider postdate_provider
      *
      * @param array  $globalconfig      The configuration to set on $CFG
-     * @param array  $forumconfig       The configuration for this forum
+     * @param array  $cybraryconfig       The configuration for this cybrary
      * @param array  $postconfig        The configuration for this post
      * @param array  $discussionconfig  The configuration for this discussion
      * @param string $expectation       The expected date
      */
-    public function test_postdate($globalconfig, $forumconfig, $postconfig, $discussionconfig, $expectation) {
+    public function test_postdate($globalconfig, $cybraryconfig, $postconfig, $discussionconfig, $expectation) {
         global $CFG, $DB;
         $this->resetAfterTest(true);
 
@@ -144,40 +144,40 @@ class mod_forum_output_email_testcase extends advanced_testcase {
         // Create the fixture.
         $user = $this->getDataGenerator()->create_user();
         $course = $this->getDataGenerator()->create_course();
-        $forum = $this->getDataGenerator()->create_module('forum', (object) array('course' => $course->id));
-        $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+        $cybrary = $this->getDataGenerator()->create_module('cybrary', (object) array('course' => $course->id));
+        $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id, false, MUST_EXIST);
 
         $this->getDataGenerator()->enrol_user($user->id, $course->id);
 
         // Create a new discussion.
-        $discussion = $this->getDataGenerator()->get_plugin_generator('mod_forum')->create_discussion(
+        $discussion = $this->getDataGenerator()->get_plugin_generator('mod_cybrary')->create_discussion(
             (object) array_merge($discussionconfig, array(
                 'course'    => $course->id,
-                'forum'     => $forum->id,
+                'cybrary'     => $cybrary->id,
                 'userid'    => $user->id,
             )));
 
         // Apply the discussion configuration.
         // Some settings are ignored by the generator and must be set manually.
-        $discussion = $DB->get_record('forum_discussions', array('id' => $discussion->id));
+        $discussion = $DB->get_record('cybrary_discussions', array('id' => $discussion->id));
         foreach ($discussionconfig as $key => $value) {
             $discussion->$key = $value;
         }
-        $DB->update_record('forum_discussions', $discussion);
+        $DB->update_record('cybrary_discussions', $discussion);
 
         // Apply the post configuration.
         // Some settings are ignored by the generator and must be set manually.
-        $post = $DB->get_record('forum_posts', array('discussion' => $discussion->id));
+        $post = $DB->get_record('cybrary_posts', array('discussion' => $discussion->id));
         foreach ($postconfig as $key => $value) {
             $post->$key = $value;
         }
-        $DB->update_record('forum_posts', $post);
+        $DB->update_record('cybrary_posts', $post);
 
         // Create the renderable.
-        $renderable = new mod_forum\output\forum_post_email(
+        $renderable = new mod_cybrary\output\cybrary_post_email(
                 $course,
                 $cm,
-                $forum,
+                $cybrary,
                 $discussion,
                 $post,
                 $user,

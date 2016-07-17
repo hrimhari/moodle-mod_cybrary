@@ -17,7 +17,7 @@
 /**
  * URL external API
  *
- * @package    mod_url
+ * @package    mod_cybrary
  * @category   external
  * @copyright  2015 Juan Leyva <juan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -31,13 +31,13 @@ require_once("$CFG->libdir/externallib.php");
 /**
  * URL external functions
  *
- * @package    mod_url
+ * @package    mod_cybrary
  * @category   external
  * @copyright  2015 Juan Leyva <juan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      Moodle 3.0
  */
-class mod_url_external extends external_api {
+class mod_cybrary_external extends external_api {
 
     /**
      * Returns description of method parameters

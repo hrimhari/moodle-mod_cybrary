@@ -1,8 +1,8 @@
-@mod @mod_forum
-Feature: Single simple forum discussion type
+@mod @mod_cybrary
+Feature: Single simple cybrary discussion type
   In order to restrict the discussion topic to one
   As a teacher
-  I need to create a forum with a single simple discussion
+  I need to create a cybrary with a single simple discussion
 
   Background:
     Given the following "users" exist:
@@ -18,19 +18,19 @@ Feature: Single simple forum discussion type
       | student1 | C1 | student |
     And the following "activities" exist:
       | activity   | name                         | intro                               | type    | course | idnumber     |
-      | forum      | Single discussion forum name | Single discussion forum description | single  | C1     | forum        |
+      | cybrary      | Single discussion cybrary name | Single discussion cybrary description | single  | C1     | cybrary        |
 
   Scenario: Teacher can start the single simple discussion
     Given I log in as "teacher1"
     And I follow "Course 1"
-    When I follow "Single discussion forum name"
-    Then I should see "Single discussion forum description" in the "div.firstpost.starter" "css_element"
+    When I follow "Single discussion cybrary name"
+    Then I should see "Single discussion cybrary description" in the "div.firstpost.starter" "css_element"
     And I should not see "Add a new discussion topic"
 
   Scenario: Student can not add more discussions
     And I log in as "student1"
     And I follow "Course 1"
-    When I reply "Single discussion forum name" post from "Single discussion forum name" forum with:
+    When I reply "Single discussion cybrary name" post from "Single discussion cybrary name" cybrary with:
       | Subject | Reply to single discussion subject |
       | Message | Reply to single discussion message |
     Then I should not see "Add a new discussion topic"

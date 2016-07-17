@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Definition of Forum scheduled tasks.
+ * Definition of Cybrary scheduled tasks.
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @category  task
  * @copyright 2014 Dan Poltawski <dan@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = array(
     array(
-        'classname' => 'mod_forum\task\cron_task',
+        'classname' => 'mod_cybrary\task\cron_task',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',

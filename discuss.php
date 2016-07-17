@@ -19,7 +19,7 @@
  * Displays a post, and all the posts below it.
  * If no post is given, displays all posts in a discussion
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,79 +29,79 @@ require_once('../../config.php');
 $d      = required_param('d', PARAM_INT);                // Discussion ID
 $parent = optional_param('parent', 0, PARAM_INT);        // If set, then display this post and all children.
 $mode   = optional_param('mode', 0, PARAM_INT);          // If set, changes the layout of the thread
-$move   = optional_param('move', 0, PARAM_INT);          // If set, moves this discussion to another forum
+$move   = optional_param('move', 0, PARAM_INT);          // If set, moves this discussion to another cybrary
 $mark   = optional_param('mark', '', PARAM_ALPHA);       // Used for tracking read posts if user initiated.
 $postid = optional_param('postid', 0, PARAM_INT);        // Used for tracking read posts if user initiated.
 
-$url = new moodle_url('/mod/forum/discuss.php', array('d'=>$d));
+$url = new moodle_url('/mod/cybrary/discuss.php', array('d'=>$d));
 if ($parent !== 0) {
     $url->param('parent', $parent);
 }
 $PAGE->set_url($url);
 
-$discussion = $DB->get_record('forum_discussions', array('id' => $d), '*', MUST_EXIST);
+$discussion = $DB->get_record('cybrary_discussions', array('id' => $d), '*', MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $discussion->course), '*', MUST_EXIST);
-$forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+$cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary), '*', MUST_EXIST);
+$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id, false, MUST_EXIST);
 
 require_course_login($course, true, $cm);
 
 // move this down fix for MDL-6926
-require_once($CFG->dirroot.'/mod/forum/lib.php');
+require_once($CFG->dirroot.'/mod/cybrary/lib.php');
 
 $modcontext = context_module::instance($cm->id);
-require_capability('mod/forum:viewdiscussion', $modcontext, NULL, true, 'noviewdiscussionspermission', 'forum');
+require_capability('mod/cybrary:viewdiscussion', $modcontext, NULL, true, 'noviewdiscussionspermission', 'cybrary');
 
-if (!empty($CFG->enablerssfeeds) && !empty($CFG->forum_enablerssfeeds) && $forum->rsstype && $forum->rssarticles) {
+if (!empty($CFG->enablerssfeeds) && !empty($CFG->cybrary_enablerssfeeds) && $cybrary->rsstype && $cybrary->rssarticles) {
     require_once("$CFG->libdir/rsslib.php");
 
-    $rsstitle = format_string($course->shortname, true, array('context' => context_course::instance($course->id))) . ': ' . format_string($forum->name);
-    rss_add_http_header($modcontext, 'mod_forum', $forum, $rsstitle);
+    $rsstitle = format_string($course->shortname, true, array('context' => context_course::instance($course->id))) . ': ' . format_string($cybrary->name);
+    rss_add_http_header($modcontext, 'mod_cybrary', $cybrary, $rsstitle);
 }
 
 // Move discussion if requested.
 if ($move > 0 and confirm_sesskey()) {
-    $return = $CFG->wwwroot.'/mod/forum/discuss.php?d='.$discussion->id;
+    $return = $CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$discussion->id;
 
-    if (!$forumto = $DB->get_record('forum', array('id' => $move))) {
-        print_error('cannotmovetonotexist', 'forum', $return);
+    if (!$cybraryto = $DB->get_record('cybrary', array('id' => $move))) {
+        print_error('cannotmovetonotexist', 'cybrary', $return);
     }
 
-    require_capability('mod/forum:movediscussions', $modcontext);
+    require_capability('mod/cybrary:movediscussions', $modcontext);
 
-    if ($forum->type == 'single') {
-        print_error('cannotmovefromsingleforum', 'forum', $return);
+    if ($cybrary->type == 'single') {
+        print_error('cannotmovefromsinglecybrary', 'cybrary', $return);
     }
 
-    if (!$forumto = $DB->get_record('forum', array('id' => $move))) {
-        print_error('cannotmovetonotexist', 'forum', $return);
+    if (!$cybraryto = $DB->get_record('cybrary', array('id' => $move))) {
+        print_error('cannotmovetonotexist', 'cybrary', $return);
     }
 
-    if ($forumto->type == 'single') {
-        print_error('cannotmovetosingleforum', 'forum', $return);
+    if ($cybraryto->type == 'single') {
+        print_error('cannotmovetosinglecybrary', 'cybrary', $return);
     }
 
-    // Get target forum cm and check it is visible to current user.
+    // Get target cybrary cm and check it is visible to current user.
     $modinfo = get_fast_modinfo($course);
-    $forums = $modinfo->get_instances_of('forum');
-    if (!array_key_exists($forumto->id, $forums)) {
-        print_error('cannotmovetonotfound', 'forum', $return);
+    $cybraries = $modinfo->get_instances_of('cybrary');
+    if (!array_key_exists($cybraryto->id, $cybraries)) {
+        print_error('cannotmovetonotfound', 'cybrary', $return);
     }
-    $cmto = $forums[$forumto->id];
+    $cmto = $cybraries[$cybraryto->id];
     if (!$cmto->uservisible) {
-        print_error('cannotmovenotvisible', 'forum', $return);
+        print_error('cannotmovenotvisible', 'cybrary', $return);
     }
 
     $destinationctx = context_module::instance($cmto->id);
-    require_capability('mod/forum:startdiscussion', $destinationctx);
+    require_capability('mod/cybrary:startdiscussion', $destinationctx);
 
-    if (!forum_move_attachments($discussion, $forum->id, $forumto->id)) {
+    if (!cybrary_move_attachments($discussion, $cybrary->id, $cybraryto->id)) {
         echo $OUTPUT->notification("Errors occurred while moving attachment directories - check your file permissions");
     }
-    // For each subscribed user in this forum and discussion, copy over per-discussion subscriptions if required.
+    // For each subscribed user in this cybrary and discussion, copy over per-discussion subscriptions if required.
     $discussiongroup = $discussion->groupid == -1 ? 0 : $discussion->groupid;
-    $potentialsubscribers = \mod_forum\subscriptions::fetch_subscribed_users(
-        $forum,
+    $potentialsubscribers = \mod_cybrary\subscriptions::fetch_subscribed_users(
+        $cybrary,
         $discussiongroup,
         $modcontext,
         'u.id',
@@ -109,44 +109,44 @@ if ($move > 0 and confirm_sesskey()) {
     );
 
     // Pre-seed the subscribed_discussion caches.
-    // Firstly for the forum being moved to.
-    \mod_forum\subscriptions::fill_subscription_cache($forumto->id);
+    // Firstly for the cybrary being moved to.
+    \mod_cybrary\subscriptions::fill_subscription_cache($cybraryto->id);
     // And also for the discussion being moved.
-    \mod_forum\subscriptions::fill_subscription_cache($forum->id);
+    \mod_cybrary\subscriptions::fill_subscription_cache($cybrary->id);
     $subscriptionchanges = array();
     $subscriptiontime = time();
     foreach ($potentialsubscribers as $subuser) {
         $userid = $subuser->id;
-        $targetsubscription = \mod_forum\subscriptions::is_subscribed($userid, $forumto, null, $cmto);
-        $discussionsubscribed = \mod_forum\subscriptions::is_subscribed($userid, $forum, $discussion->id);
-        $forumsubscribed = \mod_forum\subscriptions::is_subscribed($userid, $forum);
+        $targetsubscription = \mod_cybrary\subscriptions::is_subscribed($userid, $cybraryto, null, $cmto);
+        $discussionsubscribed = \mod_cybrary\subscriptions::is_subscribed($userid, $cybrary, $discussion->id);
+        $cybrariesubscribed = \mod_cybrary\subscriptions::is_subscribed($userid, $cybrary);
 
-        if ($forumsubscribed && !$discussionsubscribed && $targetsubscription) {
+        if ($cybrariesubscribed && !$discussionsubscribed && $targetsubscription) {
             // The user has opted out of this discussion and the move would cause them to receive notifications again.
             // Ensure they are unsubscribed from the discussion still.
-            $subscriptionchanges[$userid] = \mod_forum\subscriptions::FORUM_DISCUSSION_UNSUBSCRIBED;
-        } else if (!$forumsubscribed && $discussionsubscribed && !$targetsubscription) {
+            $subscriptionchanges[$userid] = \mod_cybrary\subscriptions::CYBRARY_DISCUSSION_UNSUBSCRIBED;
+        } else if (!$cybrariesubscribed && $discussionsubscribed && !$targetsubscription) {
             // The user has opted into this discussion and would otherwise not receive the subscription after the move.
             // Ensure they are subscribed to the discussion still.
             $subscriptionchanges[$userid] = $subscriptiontime;
         }
     }
 
-    $DB->set_field('forum_discussions', 'forum', $forumto->id, array('id' => $discussion->id));
-    $DB->set_field('forum_read', 'forumid', $forumto->id, array('discussionid' => $discussion->id));
+    $DB->set_field('cybrary_discussions', 'cybrary', $cybraryto->id, array('id' => $discussion->id));
+    $DB->set_field('cybrary_read', 'cybraryid', $cybraryto->id, array('discussionid' => $discussion->id));
 
     // Delete the existing per-discussion subscriptions and replace them with the newly calculated ones.
-    $DB->delete_records('forum_discussion_subs', array('discussion' => $discussion->id));
+    $DB->delete_records('cybrary_discussion_subs', array('discussion' => $discussion->id));
     $newdiscussion = clone $discussion;
-    $newdiscussion->forum = $forumto->id;
+    $newdiscussion->cybrary = $cybraryto->id;
     foreach ($subscriptionchanges as $userid => $preference) {
-        if ($preference != \mod_forum\subscriptions::FORUM_DISCUSSION_UNSUBSCRIBED) {
+        if ($preference != \mod_cybrary\subscriptions::CYBRARY_DISCUSSION_UNSUBSCRIBED) {
             // Users must have viewdiscussion to a discussion.
-            if (has_capability('mod/forum:viewdiscussion', $destinationctx, $userid)) {
-                \mod_forum\subscriptions::subscribe_user_to_discussion($userid, $newdiscussion, $destinationctx);
+            if (has_capability('mod/cybrary:viewdiscussion', $destinationctx, $userid)) {
+                \mod_cybrary\subscriptions::subscribe_user_to_discussion($userid, $newdiscussion, $destinationctx);
             }
         } else {
-            \mod_forum\subscriptions::unsubscribe_user_from_discussion($userid, $newdiscussion, $destinationctx);
+            \mod_cybrary\subscriptions::unsubscribe_user_from_discussion($userid, $newdiscussion, $destinationctx);
         }
     }
 
@@ -154,72 +154,72 @@ if ($move > 0 and confirm_sesskey()) {
         'context' => $destinationctx,
         'objectid' => $discussion->id,
         'other' => array(
-            'fromforumid' => $forum->id,
-            'toforumid' => $forumto->id,
+            'fromcybraryid' => $cybrary->id,
+            'tocybraryid' => $cybraryto->id,
         )
     );
-    $event = \mod_forum\event\discussion_moved::create($params);
-    $event->add_record_snapshot('forum_discussions', $discussion);
-    $event->add_record_snapshot('forum', $forum);
-    $event->add_record_snapshot('forum', $forumto);
+    $event = \mod_cybrary\event\discussion_moved::create($params);
+    $event->add_record_snapshot('cybrary_discussions', $discussion);
+    $event->add_record_snapshot('cybrary', $cybrary);
+    $event->add_record_snapshot('cybrary', $cybraryto);
     $event->trigger();
 
-    // Delete the RSS files for the 2 forums to force regeneration of the feeds
-    require_once($CFG->dirroot.'/mod/forum/rsslib.php');
-    forum_rss_delete_file($forum);
-    forum_rss_delete_file($forumto);
+    // Delete the RSS files for the 2 cybraries to force regeneration of the feeds
+    require_once($CFG->dirroot.'/mod/cybrary/rsslib.php');
+    cybrary_rss_delete_file($cybrary);
+    cybrary_rss_delete_file($cybraryto);
 
     redirect($return.'&move=-1&sesskey='.sesskey());
 }
 
 // Trigger discussion viewed event.
-forum_discussion_view($modcontext, $forum, $discussion);
+cybrary_discussion_view($modcontext, $cybrary, $discussion);
 
 unset($SESSION->fromdiscussion);
 
 if ($mode) {
-    set_user_preference('forum_displaymode', $mode);
+    set_user_preference('cybrary_displaymode', $mode);
 }
 
-$displaymode = get_user_preferences('forum_displaymode', $CFG->forum_displaymode);
+$displaymode = get_user_preferences('cybrary_displaymode', $CFG->cybrary_displaymode);
 
 if ($parent) {
     // If flat AND parent, then force nested display this time
-    if ($displaymode == FORUM_MODE_FLATOLDEST or $displaymode == FORUM_MODE_FLATNEWEST) {
-        $displaymode = FORUM_MODE_NESTED;
+    if ($displaymode == CYBRARY_MODE_FLATOLDEST or $displaymode == CYBRARY_MODE_FLATNEWEST) {
+        $displaymode = CYBRARY_MODE_NESTED;
     }
 } else {
     $parent = $discussion->firstpost;
 }
 
-if (! $post = forum_get_post_full($parent)) {
-    print_error("notexists", 'forum', "$CFG->wwwroot/mod/forum/view.php?f=$forum->id");
+if (! $post = cybrary_get_post_full($parent)) {
+    print_error("notexists", 'cybrary', "$CFG->wwwroot/mod/cybrary/view.php?f=$cybrary->id");
 }
 
-if (!forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
-    print_error('noviewdiscussionspermission', 'forum', "$CFG->wwwroot/mod/forum/view.php?id=$forum->id");
+if (!cybrary_user_can_see_post($cybrary, $discussion, $post, null, $cm)) {
+    print_error('noviewdiscussionspermission', 'cybrary', "$CFG->wwwroot/mod/cybrary/view.php?id=$cybrary->id");
 }
 
 if ($mark == 'read' or $mark == 'unread') {
-    if ($CFG->forum_usermarksread && forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
+    if ($CFG->cybrary_usermarksread && cybrary_tp_can_track_cybraries($cybrary) && cybrary_tp_is_tracked($cybrary)) {
         if ($mark == 'read') {
-            forum_tp_add_read_record($USER->id, $postid);
+            cybrary_tp_add_read_record($USER->id, $postid);
         } else {
             // unread
-            forum_tp_delete_read_records($USER->id, $postid);
+            cybrary_tp_delete_read_records($USER->id, $postid);
         }
     }
 }
 
-$searchform = forum_search_form($course);
+$searchform = cybrary_search_form($course);
 
-$forumnode = $PAGE->navigation->find($cm->id, navigation_node::TYPE_ACTIVITY);
-if (empty($forumnode)) {
-    $forumnode = $PAGE->navbar;
+$cybrarynode = $PAGE->navigation->find($cm->id, navigation_node::TYPE_ACTIVITY);
+if (empty($cybrarynode)) {
+    $cybrarynode = $PAGE->navbar;
 } else {
-    $forumnode->make_active();
+    $cybrarynode->make_active();
 }
-$node = $forumnode->add(format_string($discussion->name), new moodle_url('/mod/forum/discuss.php', array('d'=>$discussion->id)));
+$node = $cybrarynode->add(format_string($discussion->name), new moodle_url('/mod/cybrary/discuss.php', array('d'=>$discussion->id)));
 $node->display = false;
 if ($node && $post->id != $discussion->firstpost) {
     $node->add(format_string($post->subject), $PAGE->url);
@@ -228,33 +228,33 @@ if ($node && $post->id != $discussion->firstpost) {
 $PAGE->set_title("$course->shortname: ".format_string($discussion->name));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_button($searchform);
-$renderer = $PAGE->get_renderer('mod_forum');
+$renderer = $PAGE->get_renderer('mod_cybrary');
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->heading(format_string($forum->name), 2);
+echo $OUTPUT->heading(format_string($cybrary->name), 2);
 echo $OUTPUT->heading(format_string($discussion->name), 3, 'discussionname');
 
 // is_guest should be used here as this also checks whether the user is a guest in the current course.
 // Guests and visitors cannot subscribe - only enrolled users.
-if ((!is_guest($modcontext, $USER) && isloggedin()) && has_capability('mod/forum:viewdiscussion', $modcontext)) {
+if ((!is_guest($modcontext, $USER) && isloggedin()) && has_capability('mod/cybrary:viewdiscussion', $modcontext)) {
     // Discussion subscription.
-    if (\mod_forum\subscriptions::is_subscribable($forum)) {
+    if (\mod_cybrary\subscriptions::is_subscribable($cybrary)) {
         echo html_writer::div(
-            forum_get_discussion_subscription_icon($forum, $post->discussion, null, true),
+            cybrary_get_discussion_subscription_icon($cybrary, $post->discussion, null, true),
             'discussionsubscription'
         );
-        echo forum_get_discussion_subscription_icon_preloaders();
+        echo cybrary_get_discussion_subscription_icon_preloaders();
     }
 }
 
 
-/// Check to see if groups are being used in this forum
+/// Check to see if groups are being used in this cybrary
 /// If so, make sure the current person is allowed to see this discussion
 /// Also, if we know they should be able to reply, then explicitly set $canreply for performance reasons
 
-$canreply = forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext);
-if (!$canreply and $forum->type !== 'news') {
+$canreply = cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $modcontext);
+if (!$canreply and $cybrary->type !== 'news') {
     if (isguestuser() or !isloggedin()) {
         $canreply = true;
     }
@@ -266,18 +266,18 @@ if (!$canreply and $forum->type !== 'news') {
 }
 
 // Output the links to neighbour discussions.
-$neighbours = forum_get_discussion_neighbours($cm, $discussion, $forum);
+$neighbours = cybrary_get_discussion_neighbours($cm, $discussion, $cybrary);
 $neighbourlinks = $renderer->neighbouring_discussion_navigation($neighbours['prev'], $neighbours['next']);
 echo $neighbourlinks;
 
 /// Print the controls across the top
 echo '<div class="discussioncontrols clearfix">';
 
-if (!empty($CFG->enableportfolios) && has_capability('mod/forum:exportdiscussion', $modcontext)) {
+if (!empty($CFG->enableportfolios) && has_capability('mod/cybrary:exportdiscussion', $modcontext)) {
     require_once($CFG->libdir.'/portfoliolib.php');
     $button = new portfolio_add_button();
-    $button->set_callback_options('forum_portfolio_caller', array('discussionid' => $discussion->id), 'mod_forum');
-    $button = $button->to_html(PORTFOLIO_ADD_FULL_FORM, get_string('exportdiscussion', 'mod_forum'));
+    $button->set_callback_options('cybrary_portfolio_caller', array('discussionid' => $discussion->id), 'mod_cybrary');
+    $button = $button->to_html(PORTFOLIO_ADD_FULL_FORM, get_string('exportdiscussion', 'mod_cybrary'));
     $buttonextraclass = '';
     if (empty($button)) {
         // no portfolio plugin available.
@@ -291,42 +291,42 @@ if (!empty($CFG->enableportfolios) && has_capability('mod/forum:exportdiscussion
 
 // groups selector not needed here
 echo '<div class="discussioncontrol displaymode">';
-forum_print_mode_form($discussion->id, $displaymode);
+cybrary_print_mode_form($discussion->id, $displaymode);
 echo "</div>";
 
-if ($forum->type != 'single'
-            && has_capability('mod/forum:movediscussions', $modcontext)) {
+if ($cybrary->type != 'single'
+            && has_capability('mod/cybrary:movediscussions', $modcontext)) {
 
     echo '<div class="discussioncontrol movediscussion">';
-    // Popup menu to move discussions to other forums. The discussion in a
-    // single discussion forum can't be moved.
+    // Popup menu to move discussions to other cybraries. The discussion in a
+    // single discussion cybrary can't be moved.
     $modinfo = get_fast_modinfo($course);
-    if (isset($modinfo->instances['forum'])) {
-        $forummenu = array();
-        // Check forum types and eliminate simple discussions.
-        $forumcheck = $DB->get_records('forum', array('course' => $course->id),'', 'id, type');
-        foreach ($modinfo->instances['forum'] as $forumcm) {
-            if (!$forumcm->uservisible || !has_capability('mod/forum:startdiscussion',
-                context_module::instance($forumcm->id))) {
+    if (isset($modinfo->instances['cybrary'])) {
+        $cybrarymenu = array();
+        // Check cybrary types and eliminate simple discussions.
+        $cybrarycheck = $DB->get_records('cybrary', array('course' => $course->id),'', 'id, type');
+        foreach ($modinfo->instances['cybrary'] as $cybrarycm) {
+            if (!$cybrarycm->uservisible || !has_capability('mod/cybrary:startdiscussion',
+                context_module::instance($cybrarycm->id))) {
                 continue;
             }
-            $section = $forumcm->sectionnum;
+            $section = $cybrarycm->sectionnum;
             $sectionname = get_section_name($course, $section);
-            if (empty($forummenu[$section])) {
-                $forummenu[$section] = array($sectionname => array());
+            if (empty($cybrarymenu[$section])) {
+                $cybrarymenu[$section] = array($sectionname => array());
             }
-            $forumidcompare = $forumcm->instance != $forum->id;
-            $forumtypecheck = $forumcheck[$forumcm->instance]->type !== 'single';
-            if ($forumidcompare and $forumtypecheck) {
-                $url = "/mod/forum/discuss.php?d=$discussion->id&move=$forumcm->instance&sesskey=".sesskey();
-                $forummenu[$section][$sectionname][$url] = format_string($forumcm->name);
+            $cybraryidcompare = $cybrarycm->instance != $cybrary->id;
+            $cybrarytypecheck = $cybrarycheck[$cybrarycm->instance]->type !== 'single';
+            if ($cybraryidcompare and $cybrarytypecheck) {
+                $url = "/mod/cybrary/discuss.php?d=$discussion->id&move=$cybrarycm->instance&sesskey=".sesskey();
+                $cybrarymenu[$section][$sectionname][$url] = format_string($cybrarycm->name);
             }
         }
-        if (!empty($forummenu)) {
+        if (!empty($cybrarymenu)) {
             echo '<div class="movediscussionoption">';
-            $select = new url_select($forummenu, '',
-                    array('/mod/forum/discuss.php?d=' . $discussion->id => get_string("movethisdiscussionto", "forum")),
-                    'forummenu', get_string('move'));
+            $select = new url_select($cybrarymenu, '',
+                    array('/mod/cybrary/discuss.php?d=' . $discussion->id => get_string("movethisdiscussionto", "cybrary")),
+                    'cybrarymenu', get_string('move'));
             echo $OUTPUT->render($select);
             echo "</div>";
         }
@@ -336,28 +336,28 @@ if ($forum->type != 'single'
 echo '<div class="clearfloat">&nbsp;</div>';
 echo "</div>";
 
-if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
+if (!empty($cybrary->blockafter) && !empty($cybrary->blockperiod)) {
     $a = new stdClass();
-    $a->blockafter  = $forum->blockafter;
-    $a->blockperiod = get_string('secondstotime'.$forum->blockperiod);
-    echo $OUTPUT->notification(get_string('thisforumisthrottled','forum',$a));
+    $a->blockafter  = $cybrary->blockafter;
+    $a->blockperiod = get_string('secondstotime'.$cybrary->blockperiod);
+    echo $OUTPUT->notification(get_string('thiscybraryisthrottled','cybrary',$a));
 }
 
-if ($forum->type == 'qanda' && !has_capability('mod/forum:viewqandawithoutposting', $modcontext) &&
-            !forum_user_has_posted($forum->id,$discussion->id,$USER->id)) {
-    echo $OUTPUT->notification(get_string('qandanotify','forum'));
+if ($cybrary->type == 'qanda' && !has_capability('mod/cybrary:viewqandawithoutposting', $modcontext) &&
+            !cybrary_user_has_posted($cybrary->id,$discussion->id,$USER->id)) {
+    echo $OUTPUT->notification(get_string('qandanotify','cybrary'));
 }
 
 if ($move == -1 and confirm_sesskey()) {
-    echo $OUTPUT->notification(get_string('discussionmoved', 'forum', format_string($forum->name,true)), 'notifysuccess');
+    echo $OUTPUT->notification(get_string('discussionmoved', 'cybrary', format_string($cybrary->name,true)), 'notifysuccess');
 }
 
-$canrate = has_capability('mod/forum:rate', $modcontext);
-forum_print_discussion($course, $cm, $forum, $discussion, $post, $displaymode, $canreply, $canrate);
+$canrate = has_capability('mod/cybrary:rate', $modcontext);
+cybrary_print_discussion($course, $cm, $cybrary, $discussion, $post, $displaymode, $canreply, $canrate);
 
 echo $neighbourlinks;
 
 // Add the subscription toggle JS.
-$PAGE->requires->yui_module('moodle-mod_forum-subscriptiontoggle', 'Y.M.mod_forum.subscriptiontoggle.init');
+$PAGE->requires->yui_module('moodle-mod_cybrary-subscriptiontoggle', 'Y.M.mod_cybrary.subscriptiontoggle.init');
 
 echo $OUTPUT->footer();

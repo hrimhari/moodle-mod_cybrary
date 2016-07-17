@@ -15,27 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The mod_forum discussion deleted event.
+ * The mod_cybrary discussion deleted event.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\event;
+namespace mod_cybrary\event;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_forum discussion deleted event class.
+ * The mod_cybrary discussion deleted event class.
  *
  * @property-read array $other {
  *      Extra information about the event.
  *
- *      - int forumid: The id of the forum the discussion is in.
+ *      - int cybraryid: The id of the cybrary the discussion is in.
  * }
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @since      Moodle 2.7
  * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -50,7 +50,7 @@ class discussion_deleted extends \core\event\base {
     protected function init() {
         $this->data['crud'] = 'd';
         $this->data['edulevel'] = self::LEVEL_OTHER;
-        $this->data['objecttable'] = 'forum_discussions';
+        $this->data['objecttable'] = 'cybrary_discussions';
     }
 
     /**
@@ -59,7 +59,7 @@ class discussion_deleted extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has deleted the discussion with id '$this->objectid' in the forum " .
+        return "The user with id '$this->userid' has deleted the discussion with id '$this->objectid' in the cybrary " .
             "with course module id '$this->contextinstanceid'.";
     }
 
@@ -69,7 +69,7 @@ class discussion_deleted extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventdiscussiondeleted', 'mod_forum');
+        return get_string('eventdiscussiondeleted', 'mod_cybrary');
     }
 
     /**
@@ -78,7 +78,7 @@ class discussion_deleted extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/forum/view.php', array('id' => $this->contextinstanceid));
+        return new \moodle_url('/mod/cybrary/view.php', array('id' => $this->contextinstanceid));
     }
 
     /**
@@ -87,8 +87,8 @@ class discussion_deleted extends \core\event\base {
      * @return array|null
      */
     protected function get_legacy_logdata() {
-        return array($this->courseid, 'forum', 'delete discussion', 'view.php?id=' . $this->contextinstanceid,
-            $this->other['forumid'], $this->contextinstanceid);
+        return array($this->courseid, 'cybrary', 'delete discussion', 'view.php?id=' . $this->contextinstanceid,
+            $this->other['cybraryid'], $this->contextinstanceid);
     }
 
     /**
@@ -99,8 +99,8 @@ class discussion_deleted extends \core\event\base {
      */
     protected function validate_data() {
         parent::validate_data();
-        if (!isset($this->other['forumid'])) {
-            throw new \coding_exception('The \'forumid\' value must be set in other.');
+        if (!isset($this->other['cybraryid'])) {
+            throw new \coding_exception('The \'cybraryid\' value must be set in other.');
         }
 
         if ($this->contextlevel != CONTEXT_MODULE) {
@@ -109,12 +109,12 @@ class discussion_deleted extends \core\event\base {
     }
 
     public static function get_objectid_mapping() {
-        return array('db' => 'forum_discussions', 'restore' => 'forum_discussion');
+        return array('db' => 'cybrary_discussions', 'restore' => 'cybrary_discussion');
     }
 
     public static function get_other_mapping() {
         $othermapped = array();
-        $othermapped['forumid'] = array('db' => 'forum', 'restore' => 'forum');
+        $othermapped['cybraryid'] = array('db' => 'cybrary', 'restore' => 'cybrary');
 
         return $othermapped;
     }

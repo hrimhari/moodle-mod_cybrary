@@ -15,24 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A Handler to process replies to forum posts.
+ * A Handler to process replies to cybrary posts.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @subpackage core_message
  * @copyright  2014 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\message\inbound;
+namespace mod_cybrary\message\inbound;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/forum/lib.php');
+require_once($CFG->dirroot . '/mod/cybrary/lib.php');
 require_once($CFG->dirroot . '/repository/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
 /**
- * A Handler to process replies to forum posts.
+ * A Handler to process replies to cybrary posts.
  *
  * @copyright  2014 Andrew Nicols
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -45,7 +45,7 @@ class reply_handler extends \core\message\inbound\handler {
      * @return string
      */
     public function get_description() {
-        return get_string('reply_handler', 'mod_forum');
+        return get_string('reply_handler', 'mod_cybrary');
     }
 
     /**
@@ -55,7 +55,7 @@ class reply_handler extends \core\message\inbound\handler {
      * @return string
      */
     public function get_name() {
-        return get_string('reply_handler_name', 'mod_forum');
+        return get_string('reply_handler_name', 'mod_cybrary');
     }
 
     /**
@@ -70,29 +70,29 @@ class reply_handler extends \core\message\inbound\handler {
         global $DB, $USER;
 
         // Load the post being replied to.
-        $post = $DB->get_record('forum_posts', array('id' => $record->datavalue));
+        $post = $DB->get_record('cybrary_posts', array('id' => $record->datavalue));
         if (!$post) {
             mtrace("--> Unable to find a post matching with id {$record->datavalue}");
             return false;
         }
 
         // Load the discussion that this post is in.
-        $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion));
+        $discussion = $DB->get_record('cybrary_discussions', array('id' => $post->discussion));
         if (!$post) {
             mtrace("--> Unable to find the discussion for post {$record->datavalue}");
             return false;
         }
 
         // Load the other required data.
-        $forum = $DB->get_record('forum', array('id' => $discussion->forum));
-        $course = $DB->get_record('course', array('id' => $forum->course));
-        $cm = get_fast_modinfo($course->id)->instances['forum'][$forum->id];
+        $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary));
+        $course = $DB->get_record('course', array('id' => $cybrary->course));
+        $cm = get_fast_modinfo($course->id)->instances['cybrary'][$cybrary->id];
         $modcontext = \context_module::instance($cm->id);
         $usercontext = \context_user::instance($USER->id);
 
         // Make sure user can post in this discussion.
         $canpost = true;
-        if (!forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext)) {
+        if (!cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $modcontext)) {
             $canpost = false;
         }
 
@@ -113,29 +113,29 @@ class reply_handler extends \core\message\inbound\handler {
 
         if (!$canpost) {
             $data = new \stdClass();
-            $data->forum = $forum;
-            throw new \core\message\inbound\processing_failed_exception('messageinboundnopostforum', 'mod_forum', $data);
+            $data->cybrary = $cybrary;
+            throw new \core\message\inbound\processing_failed_exception('messageinboundnopostcybrary', 'mod_cybrary', $data);
         }
 
         // And check the availability.
         if (!\core_availability\info_module::is_user_visible($cm)) {
             $data = new \stdClass();
-            $data->forum = $forum;
-            throw new \core\message\inbound\processing_failed_exception('messageinboundforumhidden', 'mod_forum', $data);
+            $data->cybrary = $cybrary;
+            throw new \core\message\inbound\processing_failed_exception('messageinboundcybraryhidden', 'mod_cybrary', $data);
         }
 
         // Before we add this we must check that the user will not exceed the blocking threshold.
         // This should result in an appropriate reply.
-        $thresholdwarning = forum_check_throttling($forum, $cm);
+        $thresholdwarning = cybrary_check_throttling($cybrary, $cm);
         if (!empty($thresholdwarning) && !$thresholdwarning->canpost) {
             $data = new \stdClass();
-            $data->forum = $forum;
+            $data->cybrary = $cybrary;
             $data->message = get_string($thresholdwarning->errorcode, $thresholdwarning->module, $thresholdwarning->additional);
-            throw new \core\message\inbound\processing_failed_exception('messageinboundthresholdhit', 'mod_forum', $data);
+            throw new \core\message\inbound\processing_failed_exception('messageinboundthresholdhit', 'mod_cybrary', $data);
         }
 
         $subject = clean_param($messagedata->envelope->subject, PARAM_TEXT);
-        $restring = get_string('re', 'forum');
+        $restring = get_string('re', 'cybrary');
         if (strpos($subject, $discussion->name)) {
             // The discussion name is mentioned in the e-mail subject. This is probably just the standard reply. Use the
             // standard reply subject instead.
@@ -156,7 +156,7 @@ class reply_handler extends \core\message\inbound\handler {
 
         $addpost = new \stdClass();
         $addpost->course       = $course->id;
-        $addpost->forum        = $forum->id;
+        $addpost->cybrary        = $cybrary->id;
         $addpost->discussion   = $discussion->id;
         $addpost->modified     = $messagedata->timestamp;
         $addpost->subject      = $subject;
@@ -173,26 +173,26 @@ class reply_handler extends \core\message\inbound\handler {
         // Add attachments to the post.
         if (!empty($messagedata->attachments['attachment']) && count($messagedata->attachments['attachment'])) {
             $attachmentcount = count($messagedata->attachments['attachment']);
-            if (empty($forum->maxattachments) || $forum->maxbytes == 1 ||
-                    !has_capability('mod/forum:createattachment', $modcontext)) {
+            if (empty($cybrary->maxattachments) || $cybrary->maxbytes == 1 ||
+                    !has_capability('mod/cybrary:createattachment', $modcontext)) {
                 // Attachments are not allowed.
-                mtrace("--> User does not have permission to attach files in this forum. Rejecting e-mail.");
+                mtrace("--> User does not have permission to attach files in this cybrary. Rejecting e-mail.");
 
                 $data = new \stdClass();
-                $data->forum = $forum;
+                $data->cybrary = $cybrary;
                 $data->attachmentcount = $attachmentcount;
-                throw new \core\message\inbound\processing_failed_exception('messageinboundattachmentdisallowed', 'mod_forum', $data);
+                throw new \core\message\inbound\processing_failed_exception('messageinboundattachmentdisallowed', 'mod_cybrary', $data);
             }
 
-            if ($forum->maxattachments < $attachmentcount) {
+            if ($cybrary->maxattachments < $attachmentcount) {
                 // Too many attachments.
-                mtrace("--> User attached {$attachmentcount} files when only {$forum->maxattachments} where allowed. "
+                mtrace("--> User attached {$attachmentcount} files when only {$cybrary->maxattachments} where allowed. "
                      . " Rejecting e-mail.");
 
                 $data = new \stdClass();
-                $data->forum = $forum;
+                $data->cybrary = $cybrary;
                 $data->attachmentcount = $attachmentcount;
-                throw new \core\message\inbound\processing_failed_exception('messageinboundfilecountexceeded', 'mod_forum', $data);
+                throw new \core\message\inbound\processing_failed_exception('messageinboundfilecountexceeded', 'mod_cybrary', $data);
             }
 
             $filesize = 0;
@@ -203,15 +203,15 @@ class reply_handler extends \core\message\inbound\handler {
                 $filesize += $attachment->filesize;
             }
 
-            if ($forum->maxbytes < $filesize) {
+            if ($cybrary->maxbytes < $filesize) {
                 // Too many attachments.
-                mtrace("--> User attached {$filesize} bytes of files when only {$forum->maxbytes} where allowed. "
+                mtrace("--> User attached {$filesize} bytes of files when only {$cybrary->maxbytes} where allowed. "
                      . "Rejecting e-mail.");
                 $data = new \stdClass();
-                $data->forum = $forum;
-                $data->maxbytes = display_size($forum->maxbytes);
+                $data->cybrary = $cybrary;
+                $data->maxbytes = display_size($cybrary->maxbytes);
                 $data->filesize = display_size($filesize);
-                throw new \core\message\inbound\processing_failed_exception('messageinboundfilesizeexceeded', 'mod_forum', $data);
+                throw new \core\message\inbound\processing_failed_exception('messageinboundfilesizeexceeded', 'mod_cybrary', $data);
             }
         }
 
@@ -228,7 +228,7 @@ class reply_handler extends \core\message\inbound\handler {
         }
 
         // Insert the message content now.
-        $addpost->id = forum_add_new_post($addpost, true);
+        $addpost->id = cybrary_add_new_post($addpost, true);
 
         // Log the new post creation.
         $params = array(
@@ -236,21 +236,21 @@ class reply_handler extends \core\message\inbound\handler {
             'objectid' => $addpost->id,
             'other' => array(
                 'discussionid'  => $discussion->id,
-                'forumid'       => $forum->id,
-                'forumtype'     => $forum->type,
+                'cybraryid'       => $cybrary->id,
+                'cybrarytype'     => $cybrary->type,
             )
         );
-        $event = \mod_forum\event\post_created::create($params);
-        $event->add_record_snapshot('forum_posts', $addpost);
-        $event->add_record_snapshot('forum_discussions', $discussion);
+        $event = \mod_cybrary\event\post_created::create($params);
+        $event->add_record_snapshot('cybrary_posts', $addpost);
+        $event->add_record_snapshot('cybrary_discussions', $discussion);
         $event->trigger();
 
         // Update completion state.
         $completion = new \completion_info($course);
-        if ($completion->is_enabled($cm) && ($forum->completionreplies || $forum->completionposts)) {
+        if ($completion->is_enabled($cm) && ($cybrary->completionreplies || $cybrary->completionposts)) {
             $completion->update_state($cm, COMPLETION_COMPLETE);
 
-            mtrace("--> Updating completion status for user {$USER->id} in forum {$forum->id} for post {$addpost->id}.");
+            mtrace("--> Updating completion status for user {$USER->id} in cybrary {$cybrary->id} for post {$addpost->id}.");
         }
 
         mtrace("--> Created a post {$addpost->id} in {$discussion->id}.");
@@ -304,12 +304,12 @@ class reply_handler extends \core\message\inbound\handler {
     public function get_success_message(\stdClass $messagedata, $handlerresult) {
         $a = new \stdClass();
         $a->subject = $handlerresult->subject;
-        $discussionurl = new \moodle_url('/mod/forum/discuss.php', array('d' => $handlerresult->discussion));
+        $discussionurl = new \moodle_url('/mod/cybrary/discuss.php', array('d' => $handlerresult->discussion));
         $a->discussionurl = $discussionurl->out();
 
         $message = new \stdClass();
-        $message->plain = get_string('postbymailsuccess', 'mod_forum', $a);
-        $message->html = get_string('postbymailsuccess_html', 'mod_forum', $a);
+        $message->plain = get_string('postbymailsuccess', 'mod_cybrary', $a);
+        $message->html = get_string('postbymailsuccess_html', 'mod_cybrary', $a);
         return $message;
     }
 }

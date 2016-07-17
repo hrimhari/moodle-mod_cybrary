@@ -15,9 +15,9 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_forum/forum_post_email_textemail
+    @template mod_cybrary/cybrary_post_email_textemail
 
-    Template which defines a forum post for sending in a single-post text email.
+    Template which defines a cybrary post for sending in a single-post text email.
 
     Classes required for JS:
     * none
@@ -27,7 +27,7 @@
 
     Context variables required for this template:
     * coursename
-    * forumname
+    * cybraryname
     * showdiscussionname
     * discussionname
     * discussionlink
@@ -38,14 +38,14 @@
     * attachments
     * canreply
     * replylink
-    * unsubscribeforumlink
+    * unsubscribecybrarylink
     * unsubscribediscussionlink
-    * forumindexlink
+    * cybraryindexlink
 }}
-{{{ coursename }}} -> {{# str }} forums, forum {{/ str }} -> {{{ forumname }}}{{# showdiscussionname }} -> {{{ discussionname }}} {{/ showdiscussionname }}
+{{{ coursename }}} -> {{# str }} cybraries, cybrary {{/ str }} -> {{{ cybraryname }}}{{# showdiscussionname }} -> {{{ discussionname }}} {{/ showdiscussionname }}
 {{ discussionlink }}
 {{{ subject }}}
-{{# str }} bynameondate, forum, {
+{{# str }} bynameondate, cybrary, {
         "name": {{# quote }}{{{ authorfullname }}}{{/ quote }},
         "date": {{# quote}}{{ postdate }}{{/ quote }}
     } {{/ str }}
@@ -55,15 +55,15 @@
 {{{ attachments }}}
 ---------------------------------------------------------------------
 {{# canreply }}
-{{# str }} postmailinfolink, forum, {
+{{# str }} postmailinfolink, cybrary, {
         "coursename": {{# quote }}{{{ coursename }}}{{/ quote }},
         "replylink": {{# quote }}{{ replylink }}{{/ quote }}
     } {{/ str }}
 {{/ canreply }}
-{{# unsubscribeforumlink }}
-{{# str }} unsubscribelink, forum, {{{ unsubscribeforumlink }}} {{/ str }}
-{{/ unsubscribeforumlink }}
+{{# unsubscribecybrarylink }}
+{{# str }} unsubscribelink, cybrary, {{{ unsubscribecybrarylink }}} {{/ str }}
+{{/ unsubscribecybrarylink }}
 {{# unsubscribediscussionlink }}
-{{# str }} unsubscribediscussionlink, forum, {{{ unsubscribediscussionlink }}} {{/ str }}
+{{# str }} unsubscribediscussionlink, cybrary, {{{ unsubscribediscussionlink }}} {{/ str }}
 {{/ unsubscribediscussionlink }}
-{{# str }} digestmailpostlink, forum, {{{ forumindexlink }}} {{/ str }}
+{{# str }} digestmailpostlink, cybrary, {{{ cybraryindexlink }}} {{/ str }}

@@ -15,34 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Forum post renderable.
+ * Cybrary post renderable.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\output\emaildigestfull;
+namespace mod_cybrary\output\emaildigestfull;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Forum post renderable.
+ * Cybrary post renderable.
  *
  * @since      Moodle 3.0
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class renderer_textemail extends \mod_forum\output\email\renderer_textemail {
+class renderer_textemail extends \mod_cybrary\output\email\renderer_textemail {
 
     /**
      * The template name for this renderer.
      *
      * @return string
      */
-    public function forum_post_template() {
-        return 'forum_post_emaildigestfull_textemail';
+    public function cybrary_post_template() {
+        return 'cybrary_post_emaildigestfull_textemail';
     }
 
     /**
@@ -55,7 +55,7 @@ class renderer_textemail extends \mod_forum\output\email\renderer_textemail {
     public function format_message_text($cm, $post) {
         $message = file_rewrite_pluginfile_urls($post->message, 'pluginfile.php',
             \context_module::instance($cm->id)->id,
-            'mod_forum', 'post', $post->id);
+            'mod_cybrary', 'post', $post->id);
         return format_text_email($message, $post->messageformat);
     }
 }

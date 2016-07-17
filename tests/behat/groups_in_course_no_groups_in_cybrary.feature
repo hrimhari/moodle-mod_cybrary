@@ -1,6 +1,6 @@
-@mod @mod_forum
-Feature: Forums in 'No groups' mode allow posting to All participants for all users
-  In order to post to a forum in 'No groups' mode, which is in course which has groups
+@mod @mod_cybrary
+Feature: Cybraries in 'No groups' mode allow posting to All participants for all users
+  In order to post to a cybrary in 'No groups' mode, which is in course which has groups
   As any user
   I need to post
 
@@ -27,36 +27,36 @@ Feature: Forums in 'No groups' mode allow posting to All participants for all us
       | student1 | G1 |
     And the following "activities" exist:
       | activity   | name                   | intro                         | course | idnumber     | groupmode |
-      | forum      | Standard forum name    | Standard forum description    | C1     | nogroups     | 0         |
+      | cybrary      | Standard cybrary name    | Standard cybrary description    | C1     | nogroups     | 0         |
 
   Scenario: Teacher can post
     Given I log in as "teacher1"
     And I follow "Course 1"
-    And I follow "Standard forum name"
+    And I follow "Standard cybrary name"
     And I should not see "Group A"
     And I should not see "Group B"
     When I click on "Add a new discussion topic" "button"
     Then I should not see "Post a copy to all groups"
     And I should not see "Group" in the "form" "css_element"
     And I set the following fields to these values:
-      | Subject | Teacher 1 -> Forum  |
-      | Message | Teacher 1 -> Forum  |
-    And I press "Post to forum"
+      | Subject | Teacher 1 -> Cybrary  |
+      | Message | Teacher 1 -> Cybrary  |
+    And I press "Post to cybrary"
     And I wait to be redirected
-    And I should see "Teacher 1 -> Forum"
+    And I should see "Teacher 1 -> Cybrary"
 
   Scenario: Student can post
     Given I log in as "student1"
     And I follow "Course 1"
-    And I follow "Standard forum name"
+    And I follow "Standard cybrary name"
     And I should not see "Group A"
     And I should not see "Group B"
     When I click on "Add a new discussion topic" "button"
     Then I should not see "Post a copy to all groups"
     And I should not see "Group" in the "form" "css_element"
     And I set the following fields to these values:
-      | Subject | Student 1 -> Forum  |
-      | Message | Student 1 -> Forum  |
-    And I press "Post to forum"
+      | Subject | Student 1 -> Cybrary  |
+      | Message | Student 1 -> Cybrary  |
+    And I press "Post to cybrary"
     And I wait to be redirected
-    And I should see "Student 1 -> Forum"
+    And I should see "Student 1 -> Cybrary"

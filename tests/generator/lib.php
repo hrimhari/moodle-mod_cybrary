@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * mod_forum data generator
+ * mod_cybrary data generator
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @category   test
  * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,29 +27,29 @@ defined('MOODLE_INTERNAL') || die();
 
 
 /**
- * Forum module data generator class
+ * Cybrary module data generator class
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @category   test
  * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_forum_generator extends testing_module_generator {
+class mod_cybrary_generator extends testing_module_generator {
 
     /**
-     * @var int keep track of how many forum discussions have been created.
+     * @var int keep track of how many cybrary discussions have been created.
      */
-    protected $forumdiscussioncount = 0;
+    protected $cybrarydiscussioncount = 0;
 
     /**
-     * @var int keep track of how many forum posts have been created.
+     * @var int keep track of how many cybrary posts have been created.
      */
-    protected $forumpostcount = 0;
+    protected $cybrarypostcount = 0;
 
     /**
-     * @var int keep track of how many forum subscriptions have been created.
+     * @var int keep track of how many cybrary subscriptions have been created.
      */
-    protected $forumsubscriptionscount = 0;
+    protected $cybrariesubscriptionscount = 0;
 
     /**
      * To be called from data reset code only,
@@ -57,16 +57,16 @@ class mod_forum_generator extends testing_module_generator {
      * @return void
      */
     public function reset() {
-        $this->forumdiscussioncount = 0;
-        $this->forumpostcount = 0;
-        $this->forumsubscriptionscount = 0;
+        $this->cybrarydiscussioncount = 0;
+        $this->cybrarypostcount = 0;
+        $this->cybrariesubscriptionscount = 0;
 
         parent::reset();
     }
 
     public function create_instance($record = null, array $options = null) {
         global $CFG;
-        require_once($CFG->dirroot.'/mod/forum/lib.php');
+        require_once($CFG->dirroot.'/mod/cybrary/lib.php');
         $record = (object)(array)$record;
 
         if (!isset($record->type)) {
@@ -79,7 +79,7 @@ class mod_forum_generator extends testing_module_generator {
             $record->scale = 0;
         }
         if (!isset($record->forcesubscribe)) {
-            $record->forcesubscribe = FORUM_CHOOSESUBSCRIBE;
+            $record->forcesubscribe = CYBRARY_CHOOSESUBSCRIBE;
         }
 
         return parent::create_instance($record, (array)$options);
@@ -94,8 +94,8 @@ class mod_forum_generator extends testing_module_generator {
     public function create_subscription($record = null) {
         global $DB;
 
-        // Increment the forum subscription count.
-        $this->forumsubscriptionscount++;
+        // Increment the cybrary subscription count.
+        $this->cybrariesubscriptionscount++;
 
         $record = (array)$record;
 
@@ -103,8 +103,8 @@ class mod_forum_generator extends testing_module_generator {
             throw new coding_exception('course must be present in phpunit_util::create_subscription() $record');
         }
 
-        if (!isset($record['forum'])) {
-            throw new coding_exception('forum must be present in phpunit_util::create_subscription() $record');
+        if (!isset($record['cybrary'])) {
+            throw new coding_exception('cybrary must be present in phpunit_util::create_subscription() $record');
         }
 
         if (!isset($record['userid'])) {
@@ -114,7 +114,7 @@ class mod_forum_generator extends testing_module_generator {
         $record = (object)$record;
 
         // Add the subscription.
-        $record->id = $DB->insert_record('forum_subscriptions', $record);
+        $record->id = $DB->insert_record('cybrary_subscriptions', $record);
 
         return $record;
     }
@@ -128,8 +128,8 @@ class mod_forum_generator extends testing_module_generator {
     public function create_discussion($record = null) {
         global $DB;
 
-        // Increment the forum discussion count.
-        $this->forumdiscussioncount++;
+        // Increment the cybrary discussion count.
+        $this->cybrarydiscussioncount++;
 
         $record = (array) $record;
 
@@ -137,8 +137,8 @@ class mod_forum_generator extends testing_module_generator {
             throw new coding_exception('course must be present in phpunit_util::create_discussion() $record');
         }
 
-        if (!isset($record['forum'])) {
-            throw new coding_exception('forum must be present in phpunit_util::create_discussion() $record');
+        if (!isset($record['cybrary'])) {
+            throw new coding_exception('cybrary must be present in phpunit_util::create_discussion() $record');
         }
 
         if (!isset($record['userid'])) {
@@ -146,15 +146,15 @@ class mod_forum_generator extends testing_module_generator {
         }
 
         if (!isset($record['name'])) {
-            $record['name'] = "Discussion " . $this->forumdiscussioncount;
+            $record['name'] = "Discussion " . $this->cybrarydiscussioncount;
         }
 
         if (!isset($record['subject'])) {
-            $record['subject'] = "Subject for discussion " . $this->forumdiscussioncount;
+            $record['subject'] = "Subject for discussion " . $this->cybrarydiscussioncount;
         }
 
         if (!isset($record['message'])) {
-            $record['message'] = html_writer::tag('p', 'Message for discussion ' . $this->forumdiscussioncount);
+            $record['message'] = html_writer::tag('p', 'Message for discussion ' . $this->cybrarydiscussioncount);
         }
 
         if (!isset($record['messageformat'])) {
@@ -196,10 +196,10 @@ class mod_forum_generator extends testing_module_generator {
         $record = (object) $record;
 
         // Add the discussion.
-        $record->id = forum_add_discussion($record, null, null, $record->userid);
+        $record->id = cybrary_add_discussion($record, null, null, $record->userid);
 
         if (isset($timemodified) || isset($mailed)) {
-            $post = $DB->get_record('forum_posts', array('discussion' => $record->id));
+            $post = $DB->get_record('cybrary_posts', array('discussion' => $record->id));
 
             if (isset($mailed)) {
                 $post->mailed = $mailed;
@@ -210,10 +210,10 @@ class mod_forum_generator extends testing_module_generator {
                 $record->timemodified = $timemodified;
                 $post->modified = $post->created = $timemodified;
 
-                $DB->update_record('forum_discussions', $record);
+                $DB->update_record('cybrary_discussions', $record);
             }
 
-            $DB->update_record('forum_posts', $post);
+            $DB->update_record('cybrary_posts', $post);
         }
 
         return $record;
@@ -228,11 +228,11 @@ class mod_forum_generator extends testing_module_generator {
     public function create_post($record = null) {
         global $DB;
 
-        // Increment the forum post count.
-        $this->forumpostcount++;
+        // Increment the cybrary post count.
+        $this->cybrarypostcount++;
 
         // Variable to store time.
-        $time = time() + $this->forumpostcount;
+        $time = time() + $this->cybrarypostcount;
 
         $record = (array) $record;
 
@@ -249,11 +249,11 @@ class mod_forum_generator extends testing_module_generator {
         }
 
         if (!isset($record['subject'])) {
-            $record['subject'] = 'Forum post subject ' . $this->forumpostcount;
+            $record['subject'] = 'Cybrary post subject ' . $this->cybrarypostcount;
         }
 
         if (!isset($record['message'])) {
-            $record['message'] = html_writer::tag('p', 'Forum message post ' . $this->forumpostcount);
+            $record['message'] = html_writer::tag('p', 'Cybrary message post ' . $this->cybrarypostcount);
         }
 
         if (!isset($record['created'])) {
@@ -291,10 +291,10 @@ class mod_forum_generator extends testing_module_generator {
         $record = (object) $record;
 
         // Add the post.
-        $record->id = $DB->insert_record('forum_posts', $record);
+        $record->id = $DB->insert_record('cybrary_posts', $record);
 
         // Update the last post.
-        forum_discussion_update_last_post($record->discussion);
+        cybrary_discussion_update_last_post($record->discussion);
 
         return $record;
     }
@@ -302,20 +302,20 @@ class mod_forum_generator extends testing_module_generator {
     public function create_content($instance, $record = array()) {
         global $USER, $DB;
         $record = (array)$record + array(
-            'forum' => $instance->id,
+            'cybrary' => $instance->id,
             'userid' => $USER->id,
             'course' => $instance->course
         );
         if (empty($record['discussion']) && empty($record['parent'])) {
             // Create discussion.
             $discussion = $this->create_discussion($record);
-            $post = $DB->get_record('forum_posts', array('id' => $discussion->firstpost));
+            $post = $DB->get_record('cybrary_posts', array('id' => $discussion->firstpost));
         } else {
             // Create post.
             if (empty($record['parent'])) {
-                $record['parent'] = $DB->get_field('forum_discussions', 'firstpost', array('id' => $record['discussion']), MUST_EXIST);
+                $record['parent'] = $DB->get_field('cybrary_discussions', 'firstpost', array('id' => $record['discussion']), MUST_EXIST);
             } else if (empty($record['discussion'])) {
-                $record['discussion'] = $DB->get_field('forum_posts', 'discussion', array('id' => $record['parent']), MUST_EXIST);
+                $record['discussion'] = $DB->get_field('cybrary_posts', 'discussion', array('id' => $record['parent']), MUST_EXIST);
             }
             $post = $this->create_post($record);
         }

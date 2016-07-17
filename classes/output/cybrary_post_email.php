@@ -15,22 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Forum post renderable for e-mail.
+ * Cybrary post renderable for e-mail.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\output;
+namespace mod_cybrary\output;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Forum post renderable for use in e-mail.
+ * Cybrary post renderable for use in e-mail.
  *
  * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class forum_post_email extends forum_post {
+class cybrary_post_email extends cybrary_post {
 }

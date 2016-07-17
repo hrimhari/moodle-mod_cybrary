@@ -1,6 +1,6 @@
-@mod @mod_forum
-Feature: Forum discussions can be split
-  In order to manage forum discussions in my course
+@mod @mod_cybrary
+Feature: Cybrary discussions can be split
+  In order to manage cybrary discussions in my course
   As a Teacher
   I need to be able to split threads to keep them on topic.
 
@@ -19,21 +19,21 @@ Feature: Forum discussions can be split
     And I log in as "teacher1"
     And I follow "Science 101"
     And I turn editing mode on
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name | Study discussions |
-      | Forum type | Standard forum for general use |
-      | Description | Forum to discuss your coursework. |
-    And I add a new discussion to "Study discussions" forum with:
+    And I add a "Cybrary" to section "1" and I fill the form with:
+      | Cybrary name | Study discussions |
+      | Cybrary type | Standard cybrary for general use |
+      | Description | Cybrary to discuss your coursework. |
+    And I add a new discussion to "Study discussions" cybrary with:
       | Subject | Photosynethis discussion |
       | Message | Lets discuss our learning about Photosynethis this week in this thread. |
     And I log out
     And I log in as "student1"
     And I follow "Science 101"
-    And I reply "Photosynethis discussion" post from "Study discussions" forum with:
+    And I reply "Photosynethis discussion" post from "Study discussions" cybrary with:
       | Message | Can anyone tell me which number is the mass number in the periodic table? |
     And I log out
 
-  Scenario: Split a forum discussion
+  Scenario: Split a cybrary discussion
     Given I log in as "teacher1"
     And I follow "Science 101"
     And I follow "Study discussions"

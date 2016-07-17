@@ -16,9 +16,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * External forum API
+ * External cybrary API
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2012 Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,15 +27,15 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once("$CFG->libdir/externallib.php");
 
-class mod_forum_external extends external_api {
+class mod_cybrary_external extends external_api {
 
     /**
-     * Describes the parameters for get_forum.
+     * Describes the parameters for get_cybrary.
      *
      * @return external_external_function_parameters
      * @since Moodle 2.5
      */
-    public static function get_forums_by_courses_parameters() {
+    public static function get_cybraries_by_courses_parameters() {
         return new external_function_parameters (
             array(
                 'courseids' => new external_multiple_structure(new external_value(PARAM_INT, 'course ID',
@@ -45,27 +45,27 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Returns a list of forums in a provided list of courses,
-     * if no list is provided all forums that the user can view
+     * Returns a list of cybraries in a provided list of courses,
+     * if no list is provided all cybraries that the user can view
      * will be returned.
      *
      * @param array $courseids the course ids
-     * @return array the forum details
+     * @return array the cybrary details
      * @since Moodle 2.5
      */
-    public static function get_forums_by_courses($courseids = array()) {
+    public static function get_cybraries_by_courses($courseids = array()) {
         global $CFG;
 
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
-        $params = self::validate_parameters(self::get_forums_by_courses_parameters(), array('courseids' => $courseids));
+        $params = self::validate_parameters(self::get_cybraries_by_courses_parameters(), array('courseids' => $courseids));
 
         if (empty($params['courseids'])) {
             $params['courseids'] = array_keys(enrol_get_my_courses());
         }
 
-        // Array to store the forums to return.
-        $arrforums = array();
+        // Array to store the cybraries to return.
+        $arrcybraries = array();
         $warnings = array();
 
         // Ensure there are courseids to loop through.
@@ -73,51 +73,51 @@ class mod_forum_external extends external_api {
 
             list($courses, $warnings) = external_util::validate_courses($params['courseids']);
 
-            // Get the forums in this course. This function checks users visibility permissions.
-            $forums = get_all_instances_in_courses("forum", $courses);
-            foreach ($forums as $forum) {
+            // Get the cybraries in this course. This function checks users visibility permissions.
+            $cybraries = get_all_instances_in_courses("cybrary", $courses);
+            foreach ($cybraries as $cybrary) {
 
-                $course = $courses[$forum->course];
-                $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id);
+                $course = $courses[$cybrary->course];
+                $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id);
                 $context = context_module::instance($cm->id);
 
-                // Skip forums we are not allowed to see discussions.
-                if (!has_capability('mod/forum:viewdiscussion', $context)) {
+                // Skip cybraries we are not allowed to see discussions.
+                if (!has_capability('mod/cybrary:viewdiscussion', $context)) {
                     continue;
                 }
 
-                $forum->name = external_format_string($forum->name, $context->id);
+                $cybrary->name = external_format_string($cybrary->name, $context->id);
                 // Format the intro before being returning using the format setting.
-                list($forum->intro, $forum->introformat) = external_format_text($forum->intro, $forum->introformat,
-                                                                                $context->id, 'mod_forum', 'intro', 0);
+                list($cybrary->intro, $cybrary->introformat) = external_format_text($cybrary->intro, $cybrary->introformat,
+                                                                                $context->id, 'mod_cybrary', 'intro', 0);
                 // Discussions count. This function does static request cache.
-                $forum->numdiscussions = forum_count_discussions($forum, $cm, $course);
-                $forum->cmid = $forum->coursemodule;
-                $forum->cancreatediscussions = forum_user_can_post_discussion($forum, null, -1, $cm, $context);
+                $cybrary->numdiscussions = cybrary_count_discussions($cybrary, $cm, $course);
+                $cybrary->cmid = $cybrary->coursemodule;
+                $cybrary->cancreatediscussions = cybrary_user_can_post_discussion($cybrary, null, -1, $cm, $context);
 
-                // Add the forum to the array to return.
-                $arrforums[$forum->id] = $forum;
+                // Add the cybrary to the array to return.
+                $arrcybraries[$cybrary->id] = $cybrary;
             }
         }
 
-        return $arrforums;
+        return $arrcybraries;
     }
 
     /**
-     * Describes the get_forum return value.
+     * Describes the get_cybrary return value.
      *
      * @return external_single_structure
      * @since Moodle 2.5
      */
-     public static function get_forums_by_courses_returns() {
+     public static function get_cybraries_by_courses_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'Forum id'),
+                    'id' => new external_value(PARAM_INT, 'Cybrary id'),
                     'course' => new external_value(PARAM_INT, 'Course id'),
-                    'type' => new external_value(PARAM_TEXT, 'The forum type'),
-                    'name' => new external_value(PARAM_RAW, 'Forum name'),
-                    'intro' => new external_value(PARAM_RAW, 'The forum intro'),
+                    'type' => new external_value(PARAM_TEXT, 'The cybrary type'),
+                    'name' => new external_value(PARAM_RAW, 'Cybrary name'),
+                    'intro' => new external_value(PARAM_RAW, 'The cybrary intro'),
                     'introformat' => new external_format_value('intro'),
                     'assessed' => new external_value(PARAM_INT, 'Aggregate type'),
                     'assesstimestart' => new external_value(PARAM_INT, 'Assess start time'),
@@ -137,26 +137,26 @@ class mod_forum_external extends external_api {
                     'completionreplies' => new external_value(PARAM_INT, 'Student must post replies'),
                     'completionposts' => new external_value(PARAM_INT, 'Student must post discussions or replies'),
                     'cmid' => new external_value(PARAM_INT, 'Course module id'),
-                    'numdiscussions' => new external_value(PARAM_INT, 'Number of discussions in the forum', VALUE_OPTIONAL),
+                    'numdiscussions' => new external_value(PARAM_INT, 'Number of discussions in the cybrary', VALUE_OPTIONAL),
                     'cancreatediscussions' => new external_value(PARAM_BOOL, 'If the user can create discussions', VALUE_OPTIONAL),
-                ), 'forum'
+                ), 'cybrary'
             )
         );
     }
 
     /**
-     * Describes the parameters for get_forum_discussions.
+     * Describes the parameters for get_cybrary_discussions.
      *
      * @return external_external_function_parameters
      * @since Moodle 2.5
      * @deprecated Moodle 2.8 MDL-46458 - Please do not call this function any more.
-     * @see get_forum_discussions_paginated
+     * @see get_cybrary_discussions_paginated
      */
-    public static function get_forum_discussions_parameters() {
+    public static function get_cybrary_discussions_parameters() {
         return new external_function_parameters (
             array(
-                'forumids' => new external_multiple_structure(new external_value(PARAM_INT, 'forum ID',
-                        VALUE_REQUIRED, '', NULL_NOT_ALLOWED), 'Array of Forum IDs', VALUE_REQUIRED),
+                'cybraryids' => new external_multiple_structure(new external_value(PARAM_INT, 'cybrary ID',
+                        VALUE_REQUIRED, '', NULL_NOT_ALLOWED), 'Array of Cybrary IDs', VALUE_REQUIRED),
                 'limitfrom' => new external_value(PARAM_INT, 'limit from', VALUE_DEFAULT, 0),
                 'limitnum' => new external_value(PARAM_INT, 'limit number', VALUE_DEFAULT, 0)
             )
@@ -164,48 +164,48 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Returns a list of forum discussions as well as a summary of the discussion
-     * in a provided list of forums.
+     * Returns a list of cybrary discussions as well as a summary of the discussion
+     * in a provided list of cybraries.
      *
-     * @param array $forumids the forum ids
+     * @param array $cybraryids the cybrary ids
      * @param int $limitfrom limit from SQL data
      * @param int $limitnum limit number SQL data
      *
-     * @return array the forum discussion details
+     * @return array the cybrary discussion details
      * @since Moodle 2.5
      * @deprecated Moodle 2.8 MDL-46458 - Please do not call this function any more.
-     * @see get_forum_discussions_paginated
+     * @see get_cybrary_discussions_paginated
      */
-    public static function get_forum_discussions($forumids, $limitfrom = 0, $limitnum = 0) {
+    public static function get_cybrary_discussions($cybraryids, $limitfrom = 0, $limitnum = 0) {
         global $CFG, $DB, $USER;
 
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
         // Validate the parameter.
-        $params = self::validate_parameters(self::get_forum_discussions_parameters(),
+        $params = self::validate_parameters(self::get_cybrary_discussions_parameters(),
             array(
-                'forumids'  => $forumids,
+                'cybraryids'  => $cybraryids,
                 'limitfrom' => $limitfrom,
                 'limitnum'  => $limitnum,
             ));
-        $forumids  = $params['forumids'];
+        $cybraryids  = $params['cybraryids'];
         $limitfrom = $params['limitfrom'];
         $limitnum  = $params['limitnum'];
 
-        // Array to store the forum discussions to return.
+        // Array to store the cybrary discussions to return.
         $arrdiscussions = array();
         // Keep track of the users we have looked up in the DB.
         $arrusers = array();
 
         // Loop through them.
-        foreach ($forumids as $id) {
-            // Get the forum object.
-            $forum = $DB->get_record('forum', array('id' => $id), '*', MUST_EXIST);
-            $course = get_course($forum->course);
+        foreach ($cybraryids as $id) {
+            // Get the cybrary object.
+            $cybrary = $DB->get_record('cybrary', array('id' => $id), '*', MUST_EXIST);
+            $course = get_course($cybrary->course);
 
             $modinfo = get_fast_modinfo($course);
-            $forums  = $modinfo->get_instances_of('forum');
-            $cm = $forums[$forum->id];
+            $cybraries  = $modinfo->get_instances_of('cybrary');
+            $cm = $cybraries[$cybrary->id];
 
             // Get the module context.
             $modcontext = context_module::instance($cm->id);
@@ -213,9 +213,9 @@ class mod_forum_external extends external_api {
             // Validate the context.
             self::validate_context($modcontext);
 
-            require_capability('mod/forum:viewdiscussion', $modcontext);
+            require_capability('mod/cybrary:viewdiscussion', $modcontext);
 
-            // Get the discussions for this forum.
+            // Get the discussions for this cybrary.
             $params = array();
 
             $groupselect = "";
@@ -230,26 +230,26 @@ class mod_forum_external extends external_api {
                 }
             }
             array_unshift($params, $id);
-            $select = "forum = ? $groupselect";
+            $select = "cybrary = ? $groupselect";
 
-            if ($discussions = $DB->get_records_select('forum_discussions', $select, $params, 'timemodified DESC', '*',
+            if ($discussions = $DB->get_records_select('cybrary_discussions', $select, $params, 'timemodified DESC', '*',
                                                             $limitfrom, $limitnum)) {
 
                 // Check if they can view full names.
                 $canviewfullname = has_capability('moodle/site:viewfullnames', $modcontext);
-                // Get the unreads array, this takes a forum id and returns data for all discussions.
+                // Get the unreads array, this takes a cybrary id and returns data for all discussions.
                 $unreads = array();
-                if ($cantrack = forum_tp_can_track_forums($forum)) {
-                    if ($forumtracked = forum_tp_is_tracked($forum)) {
-                        $unreads = forum_get_discussions_unread($cm);
+                if ($cantrack = cybrary_tp_can_track_cybraries($cybrary)) {
+                    if ($cybrarytracked = cybrary_tp_is_tracked($cybrary)) {
+                        $unreads = cybrary_get_discussions_unread($cm);
                     }
                 }
-                // The forum function returns the replies for all the discussions in a given forum.
-                $replies = forum_count_discussion_replies($id);
+                // The cybrary function returns the replies for all the discussions in a given cybrary.
+                $replies = cybrary_count_discussion_replies($id);
 
                 foreach ($discussions as $discussion) {
-                    // This function checks capabilities, timed discussions, groups and qanda forums posting.
-                    if (!forum_user_can_see_discussion($forum, $discussion, $modcontext)) {
+                    // This function checks capabilities, timed discussions, groups and qanda cybraries posting.
+                    if (!cybrary_user_can_see_discussion($cybrary, $discussion, $modcontext)) {
                         continue;
                     }
 
@@ -260,12 +260,12 @@ class mod_forum_external extends external_api {
                                 $usernamefields, MUST_EXIST);
                     }
                     // Get the subject.
-                    $subject = $DB->get_field('forum_posts', 'subject', array('id' => $discussion->firstpost), MUST_EXIST);
+                    $subject = $DB->get_field('cybrary_posts', 'subject', array('id' => $discussion->firstpost), MUST_EXIST);
                     // Create object to return.
                     $return = new stdClass();
                     $return->id = (int) $discussion->id;
                     $return->course = $discussion->course;
-                    $return->forum = $discussion->forum;
+                    $return->cybrary = $discussion->cybrary;
                     $return->name = $discussion->name;
                     $return->userid = $discussion->userid;
                     $return->groupid = $discussion->groupid;
@@ -281,7 +281,7 @@ class mod_forum_external extends external_api {
                     $return->firstuseremail = $arrusers[$discussion->userid]->email;
                     $return->subject = $subject;
                     $return->numunread = '';
-                    if ($cantrack && $forumtracked) {
+                    if ($cantrack && $cybrarytracked) {
                         if (isset($unreads[$discussion->id])) {
                             $return->numunread = (int) $unreads[$discussion->id];
                         }
@@ -295,7 +295,7 @@ class mod_forum_external extends external_api {
                         $return->lastpost = (int) $discussion->firstpost;
                     }
                     // Get the last post as well as the user who made it.
-                    $lastpost = $DB->get_record('forum_posts', array('id' => $return->lastpost), '*', MUST_EXIST);
+                    $lastpost = $DB->get_record('cybrary_posts', array('id' => $return->lastpost), '*', MUST_EXIST);
                     if (empty($arrusers[$lastpost->userid])) {
                         $arrusers[$lastpost->userid] = $DB->get_record('user', array('id' => $lastpost->userid),
                                 $usernamefields, MUST_EXIST);
@@ -315,20 +315,20 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Describes the get_forum_discussions return value.
+     * Describes the get_cybrary_discussions return value.
      *
      * @return external_single_structure
      * @since Moodle 2.5
      * @deprecated Moodle 2.8 MDL-46458 - Please do not call this function any more.
-     * @see get_forum_discussions_paginated
+     * @see get_cybrary_discussions_paginated
      */
-     public static function get_forum_discussions_returns() {
+     public static function get_cybrary_discussions_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'Forum id'),
+                    'id' => new external_value(PARAM_INT, 'Cybrary id'),
                     'course' => new external_value(PARAM_INT, 'Course id'),
-                    'forum' => new external_value(PARAM_INT, 'The forum id'),
+                    'cybrary' => new external_value(PARAM_INT, 'The cybrary id'),
                     'name' => new external_value(PARAM_TEXT, 'Discussion name'),
                     'userid' => new external_value(PARAM_INT, 'User id'),
                     'groupid' => new external_value(PARAM_INT, 'Group id'),
@@ -345,7 +345,7 @@ class mod_forum_external extends external_api {
                     'subject' => new external_value(PARAM_TEXT, 'The discussion subject'),
                     'numreplies' => new external_value(PARAM_TEXT, 'The number of replies in the discussion'),
                     'numunread' => new external_value(PARAM_TEXT, 'The number of unread posts, blank if this value is
-                        not available due to forum settings.'),
+                        not available due to cybrary settings.'),
                     'lastpost' => new external_value(PARAM_INT, 'The id of the last post in the discussion'),
                     'lastuserid' => new external_value(PARAM_INT, 'The id of the user who made the last post'),
                     'lastuserfullname' => new external_value(PARAM_TEXT, 'The last person to posts fullname'),
@@ -358,12 +358,12 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Describes the parameters for get_forum_discussion_posts.
+     * Describes the parameters for get_cybrary_discussion_posts.
      *
      * @return external_external_function_parameters
      * @since Moodle 2.7
      */
-    public static function get_forum_discussion_posts_parameters() {
+    public static function get_cybrary_discussion_posts_parameters() {
         return new external_function_parameters (
             array(
                 'discussionid' => new external_value(PARAM_INT, 'discussion ID', VALUE_REQUIRED),
@@ -375,23 +375,23 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Returns a list of forum posts for a discussion
+     * Returns a list of cybrary posts for a discussion
      *
      * @param int $discussionid the post ids
      * @param string $sortby sort by this element (id, created or modified)
      * @param string $sortdirection sort direction: ASC or DESC
      *
-     * @return array the forum post details
+     * @return array the cybrary post details
      * @since Moodle 2.7
      */
-    public static function get_forum_discussion_posts($discussionid, $sortby = "created", $sortdirection = "DESC") {
+    public static function get_cybrary_discussion_posts($discussionid, $sortby = "created", $sortdirection = "DESC") {
         global $CFG, $DB, $USER, $PAGE;
 
         $posts = array();
         $warnings = array();
 
         // Validate the parameter.
-        $params = self::validate_parameters(self::get_forum_discussion_posts_parameters(),
+        $params = self::validate_parameters(self::get_cybrary_discussion_posts_parameters(),
             array(
                 'discussionid' => $discussionid,
                 'sortby' => $sortby,
@@ -415,43 +415,43 @@ class mod_forum_external extends external_api {
                 'allowed values are: ' . implode(',', $directionallowedvalues));
         }
 
-        $discussion = $DB->get_record('forum_discussions', array('id' => $discussionid), '*', MUST_EXIST);
-        $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-        $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-        $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+        $discussion = $DB->get_record('cybrary_discussions', array('id' => $discussionid), '*', MUST_EXIST);
+        $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary), '*', MUST_EXIST);
+        $course = $DB->get_record('course', array('id' => $cybrary->course), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id, false, MUST_EXIST);
 
         // Validate the module context. It checks everything that affects the module visibility (including groupings, etc..).
         $modcontext = context_module::instance($cm->id);
         self::validate_context($modcontext);
 
-        // This require must be here, see mod/forum/discuss.php.
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        // This require must be here, see mod/cybrary/discuss.php.
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
-        // Check they have the view forum capability.
-        require_capability('mod/forum:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'forum');
+        // Check they have the view cybrary capability.
+        require_capability('mod/cybrary:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'cybrary');
 
-        if (! $post = forum_get_post_full($discussion->firstpost)) {
-            throw new moodle_exception('notexists', 'forum');
+        if (! $post = cybrary_get_post_full($discussion->firstpost)) {
+            throw new moodle_exception('notexists', 'cybrary');
         }
 
         // This function check groups, qanda, timed discussions, etc.
-        if (!forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
-            throw new moodle_exception('noviewdiscussionspermission', 'forum');
+        if (!cybrary_user_can_see_post($cybrary, $discussion, $post, null, $cm)) {
+            throw new moodle_exception('noviewdiscussionspermission', 'cybrary');
         }
 
         $canviewfullname = has_capability('moodle/site:viewfullnames', $modcontext);
 
         // We will add this field in the response.
-        $canreply = forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext);
+        $canreply = cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $modcontext);
 
-        $forumtracked = forum_tp_is_tracked($forum);
+        $cybrarytracked = cybrary_tp_is_tracked($cybrary);
 
         $sort = 'p.' . $sortby . ' ' . $sortdirection;
-        $allposts = forum_get_all_discussion_posts($discussion->id, $sort, $forumtracked);
+        $allposts = cybrary_get_all_discussion_posts($discussion->id, $sort, $cybrarytracked);
 
         foreach ($allposts as $post) {
 
-            if (!forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
+            if (!cybrary_user_can_see_post($cybrary, $discussion, $post, null, $cm)) {
                 $warning = array();
                 $warning['item'] = 'post';
                 $warning['itemid'] = $post->id;
@@ -461,7 +461,7 @@ class mod_forum_external extends external_api {
                 continue;
             }
 
-            // Function forum_get_all_discussion_posts adds postread field.
+            // Function cybrary_get_all_discussion_posts adds postread field.
             // Note that the value returned can be a boolean or an integer. The WS expects a boolean.
             if (empty($post->postread)) {
                 $post->postread = false;
@@ -487,18 +487,18 @@ class mod_forum_external extends external_api {
 
             // Rewrite embedded images URLs.
             list($post->message, $post->messageformat) =
-                external_format_text($post->message, $post->messageformat, $modcontext->id, 'mod_forum', 'post', $post->id);
+                external_format_text($post->message, $post->messageformat, $modcontext->id, 'mod_cybrary', 'post', $post->id);
 
             // List attachments.
             if (!empty($post->attachment)) {
                 $post->attachments = array();
 
                 $fs = get_file_storage();
-                if ($files = $fs->get_area_files($modcontext->id, 'mod_forum', 'attachment', $post->id, "filename", false)) {
+                if ($files = $fs->get_area_files($modcontext->id, 'mod_cybrary', 'attachment', $post->id, "filename", false)) {
                     foreach ($files as $file) {
                         $filename = $file->get_filename();
                         $fileurl = moodle_url::make_webservice_pluginfile_url(
-                                        $modcontext->id, 'mod_forum', 'attachment', $post->id, '/', $filename);
+                                        $modcontext->id, 'mod_cybrary', 'attachment', $post->id, '/', $filename);
 
                         $post->attachments[] = array(
                             'filename' => $filename,
@@ -519,12 +519,12 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Describes the get_forum_discussion_posts return value.
+     * Describes the get_cybrary_discussion_posts return value.
      *
      * @return external_single_structure
      * @since Moodle 2.7
      */
-    public static function get_forum_discussion_posts_returns() {
+    public static function get_cybrary_discussion_posts_returns() {
         return new external_single_structure(
             array(
                 'posts' => new external_multiple_structure(
@@ -567,15 +567,15 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Describes the parameters for get_forum_discussions_paginated.
+     * Describes the parameters for get_cybrary_discussions_paginated.
      *
      * @return external_external_function_parameters
      * @since Moodle 2.8
      */
-    public static function get_forum_discussions_paginated_parameters() {
+    public static function get_cybrary_discussions_paginated_parameters() {
         return new external_function_parameters (
             array(
-                'forumid' => new external_value(PARAM_INT, 'forum instance id', VALUE_REQUIRED),
+                'cybraryid' => new external_value(PARAM_INT, 'cybrary instance id', VALUE_REQUIRED),
                 'sortby' => new external_value(PARAM_ALPHA,
                     'sort by this element: id, timemodified, timestart or timeend', VALUE_DEFAULT, 'timemodified'),
                 'sortdirection' => new external_value(PARAM_ALPHA, 'sort direction: ASC or DESC', VALUE_DEFAULT, 'DESC'),
@@ -586,29 +586,29 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Returns a list of forum discussions optionally sorted and paginated.
+     * Returns a list of cybrary discussions optionally sorted and paginated.
      *
-     * @param int $forumid the forum instance id
+     * @param int $cybraryid the cybrary instance id
      * @param string $sortby sort by this element (id, timemodified, timestart or timeend)
      * @param string $sortdirection sort direction: ASC or DESC
      * @param int $page page number
      * @param int $perpage items per page
      *
-     * @return array the forum discussion details including warnings
+     * @return array the cybrary discussion details including warnings
      * @since Moodle 2.8
      */
-    public static function get_forum_discussions_paginated($forumid, $sortby = 'timemodified', $sortdirection = 'DESC',
+    public static function get_cybrary_discussions_paginated($cybraryid, $sortby = 'timemodified', $sortdirection = 'DESC',
                                                     $page = -1, $perpage = 0) {
         global $CFG, $DB, $USER, $PAGE;
 
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
         $warnings = array();
         $discussions = array();
 
-        $params = self::validate_parameters(self::get_forum_discussions_paginated_parameters(),
+        $params = self::validate_parameters(self::get_cybrary_discussions_paginated_parameters(),
             array(
-                'forumid' => $forumid,
+                'cybraryid' => $cybraryid,
                 'sortby' => $sortby,
                 'sortdirection' => $sortdirection,
                 'page' => $page,
@@ -617,7 +617,7 @@ class mod_forum_external extends external_api {
         );
 
         // Compact/extract functions are not recommended.
-        $forumid        = $params['forumid'];
+        $cybraryid        = $params['cybraryid'];
         $sortby         = $params['sortby'];
         $sortdirection  = $params['sortdirection'];
         $page           = $params['page'];
@@ -636,42 +636,42 @@ class mod_forum_external extends external_api {
                 'allowed values are: ' . implode(',', $directionallowedvalues));
         }
 
-        $forum = $DB->get_record('forum', array('id' => $forumid), '*', MUST_EXIST);
-        $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-        $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+        $cybrary = $DB->get_record('cybrary', array('id' => $cybraryid), '*', MUST_EXIST);
+        $course = $DB->get_record('course', array('id' => $cybrary->course), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id, false, MUST_EXIST);
 
         // Validate the module context. It checks everything that affects the module visibility (including groupings, etc..).
         $modcontext = context_module::instance($cm->id);
         self::validate_context($modcontext);
 
-        // Check they have the view forum capability.
-        require_capability('mod/forum:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'forum');
+        // Check they have the view cybrary capability.
+        require_capability('mod/cybrary:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'cybrary');
 
         $sort = 'd.' . $sortby . ' ' . $sortdirection;
-        $alldiscussions = forum_get_discussions($cm, $sort, true, -1, -1, true, $page, $perpage, FORUM_POSTS_ALL_USER_GROUPS);
+        $alldiscussions = cybrary_get_discussions($cm, $sort, true, -1, -1, true, $page, $perpage, CYBRARY_POSTS_ALL_USER_GROUPS);
 
         if ($alldiscussions) {
             $canviewfullname = has_capability('moodle/site:viewfullnames', $modcontext);
 
-            // Get the unreads array, this takes a forum id and returns data for all discussions.
+            // Get the unreads array, this takes a cybrary id and returns data for all discussions.
             $unreads = array();
-            if ($cantrack = forum_tp_can_track_forums($forum)) {
-                if ($forumtracked = forum_tp_is_tracked($forum)) {
-                    $unreads = forum_get_discussions_unread($cm);
+            if ($cantrack = cybrary_tp_can_track_cybraries($cybrary)) {
+                if ($cybrarytracked = cybrary_tp_is_tracked($cybrary)) {
+                    $unreads = cybrary_get_discussions_unread($cm);
                 }
             }
-            // The forum function returns the replies for all the discussions in a given forum.
-            $replies = forum_count_discussion_replies($forumid, $sort, -1, $page, $perpage);
+            // The cybrary function returns the replies for all the discussions in a given cybrary.
+            $replies = cybrary_count_discussion_replies($cybraryid, $sort, -1, $page, $perpage);
 
             foreach ($alldiscussions as $discussion) {
 
-                // This function checks for qanda forums.
-                // Note that the forum_get_discussions returns as id the post id, not the discussion id so we need to do this.
+                // This function checks for qanda cybraries.
+                // Note that the cybrary_get_discussions returns as id the post id, not the discussion id so we need to do this.
                 $discussionrec = clone $discussion;
                 $discussionrec->id = $discussion->discussion;
-                if (!forum_user_can_see_discussion($forum, $discussionrec, $modcontext)) {
+                if (!cybrary_user_can_see_discussion($cybrary, $discussionrec, $modcontext)) {
                     $warning = array();
-                    // Function forum_get_discussions returns forum_posts ids not forum_discussions ones.
+                    // Function cybrary_get_discussions returns cybrary_posts ids not cybrary_discussions ones.
                     $warning['item'] = 'post';
                     $warning['itemid'] = $discussion->id;
                     $warning['warningcode'] = '1';
@@ -681,7 +681,7 @@ class mod_forum_external extends external_api {
                 }
 
                 $discussion->numunread = 0;
-                if ($cantrack && $forumtracked) {
+                if ($cantrack && $cybrarytracked) {
                     if (isset($unreads[$discussion->discussion])) {
                         $discussion->numunread = (int) $unreads[$discussion->discussion];
                     }
@@ -720,14 +720,14 @@ class mod_forum_external extends external_api {
                 // Rewrite embedded images URLs.
                 list($discussion->message, $discussion->messageformat) =
                     external_format_text($discussion->message, $discussion->messageformat,
-                                            $modcontext->id, 'mod_forum', 'post', $discussion->id);
+                                            $modcontext->id, 'mod_cybrary', 'post', $discussion->id);
 
                 // List attachments.
                 if (!empty($discussion->attachment)) {
                     $discussion->attachments = array();
 
                     $fs = get_file_storage();
-                    if ($files = $fs->get_area_files($modcontext->id, 'mod_forum', 'attachment',
+                    if ($files = $fs->get_area_files($modcontext->id, 'mod_cybrary', 'attachment',
                                                         $discussion->id, "filename", false)) {
                         foreach ($files as $file) {
                             $filename = $file->get_filename();
@@ -736,7 +736,7 @@ class mod_forum_external extends external_api {
                                 'filename' => $filename,
                                 'mimetype' => $file->get_mimetype(),
                                 'fileurl'  => file_encode_url($CFG->wwwroot.'/webservice/pluginfile.php',
-                                                '/'.$modcontext->id.'/mod_forum/attachment/'.$discussion->id.'/'.$filename)
+                                                '/'.$modcontext->id.'/mod_cybrary/attachment/'.$discussion->id.'/'.$filename)
                             );
                         }
                     }
@@ -754,12 +754,12 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Describes the get_forum_discussions_paginated return value.
+     * Describes the get_cybrary_discussions_paginated return value.
      *
      * @return external_single_structure
      * @since Moodle 2.8
      */
-    public static function get_forum_discussions_paginated_returns() {
+    public static function get_cybrary_discussions_paginated_returns() {
         return new external_single_structure(
             array(
                 'discussions' => new external_multiple_structure(
@@ -814,10 +814,10 @@ class mod_forum_external extends external_api {
      * @return external_function_parameters
      * @since Moodle 2.9
      */
-    public static function view_forum_parameters() {
+    public static function view_cybrary_parameters() {
         return new external_function_parameters(
             array(
-                'forumid' => new external_value(PARAM_INT, 'forum instance id')
+                'cybraryid' => new external_value(PARAM_INT, 'cybrary instance id')
             )
         );
     }
@@ -825,32 +825,32 @@ class mod_forum_external extends external_api {
     /**
      * Trigger the course module viewed event and update the module completion status.
      *
-     * @param int $forumid the forum instance id
+     * @param int $cybraryid the cybrary instance id
      * @return array of warnings and status result
      * @since Moodle 2.9
      * @throws moodle_exception
      */
-    public static function view_forum($forumid) {
+    public static function view_cybrary($cybraryid) {
         global $DB, $CFG;
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
-        $params = self::validate_parameters(self::view_forum_parameters(),
+        $params = self::validate_parameters(self::view_cybrary_parameters(),
                                             array(
-                                                'forumid' => $forumid
+                                                'cybraryid' => $cybraryid
                                             ));
         $warnings = array();
 
         // Request and permission validation.
-        $forum = $DB->get_record('forum', array('id' => $params['forumid']), 'id', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($forum, 'forum');
+        $cybrary = $DB->get_record('cybrary', array('id' => $params['cybraryid']), 'id', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($cybrary, 'cybrary');
 
         $context = context_module::instance($cm->id);
         self::validate_context($context);
 
-        require_capability('mod/forum:viewdiscussion', $context, null, true, 'noviewdiscussionspermission', 'forum');
+        require_capability('mod/cybrary:viewdiscussion', $context, null, true, 'noviewdiscussionspermission', 'cybrary');
 
-        // Call the forum/lib API.
-        forum_view($forum, $course, $cm, $context);
+        // Call the cybrary/lib API.
+        cybrary_view($cybrary, $course, $cm, $context);
 
         $result = array();
         $result['status'] = true;
@@ -864,7 +864,7 @@ class mod_forum_external extends external_api {
      * @return external_description
      * @since Moodle 2.9
      */
-    public static function view_forum_returns() {
+    public static function view_cybrary_returns() {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'status: true if success'),
@@ -879,7 +879,7 @@ class mod_forum_external extends external_api {
      * @return external_function_parameters
      * @since Moodle 2.9
      */
-    public static function view_forum_discussion_parameters() {
+    public static function view_cybrary_discussion_parameters() {
         return new external_function_parameters(
             array(
                 'discussionid' => new external_value(PARAM_INT, 'discussion id')
@@ -895,28 +895,28 @@ class mod_forum_external extends external_api {
      * @since Moodle 2.9
      * @throws moodle_exception
      */
-    public static function view_forum_discussion($discussionid) {
+    public static function view_cybrary_discussion($discussionid) {
         global $DB, $CFG;
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
-        $params = self::validate_parameters(self::view_forum_discussion_parameters(),
+        $params = self::validate_parameters(self::view_cybrary_discussion_parameters(),
                                             array(
                                                 'discussionid' => $discussionid
                                             ));
         $warnings = array();
 
-        $discussion = $DB->get_record('forum_discussions', array('id' => $params['discussionid']), '*', MUST_EXIST);
-        $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($forum, 'forum');
+        $discussion = $DB->get_record('cybrary_discussions', array('id' => $params['discussionid']), '*', MUST_EXIST);
+        $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary), '*', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($cybrary, 'cybrary');
 
         // Validate the module context. It checks everything that affects the module visibility (including groupings, etc..).
         $modcontext = context_module::instance($cm->id);
         self::validate_context($modcontext);
 
-        require_capability('mod/forum:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'forum');
+        require_capability('mod/cybrary:viewdiscussion', $modcontext, null, true, 'noviewdiscussionspermission', 'cybrary');
 
-        // Call the forum/lib API.
-        forum_discussion_view($modcontext, $forum, $discussion);
+        // Call the cybrary/lib API.
+        cybrary_discussion_view($modcontext, $cybrary, $discussion);
 
         $result = array();
         $result['status'] = true;
@@ -930,7 +930,7 @@ class mod_forum_external extends external_api {
      * @return external_description
      * @since Moodle 2.9
      */
-    public static function view_forum_discussion_returns() {
+    public static function view_cybrary_discussion_returns() {
         return new external_single_structure(
             array(
                 'status' => new external_value(PARAM_BOOL, 'status: true if success'),
@@ -981,7 +981,7 @@ class mod_forum_external extends external_api {
      */
     public static function add_discussion_post($postid, $subject, $message, $options = array()) {
         global $DB, $CFG, $USER;
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
         $params = self::validate_parameters(self::add_discussion_post_parameters(),
                                             array(
@@ -1008,27 +1008,27 @@ class mod_forum_external extends external_api {
 
         $warnings = array();
 
-        if (!$parent = forum_get_post_full($params['postid'])) {
-            throw new moodle_exception('invalidparentpostid', 'forum');
+        if (!$parent = cybrary_get_post_full($params['postid'])) {
+            throw new moodle_exception('invalidparentpostid', 'cybrary');
         }
 
-        if (!$discussion = $DB->get_record("forum_discussions", array("id" => $parent->discussion))) {
-            throw new moodle_exception('notpartofdiscussion', 'forum');
+        if (!$discussion = $DB->get_record("cybrary_discussions", array("id" => $parent->discussion))) {
+            throw new moodle_exception('notpartofdiscussion', 'cybrary');
         }
 
         // Request and permission validation.
-        $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($forum, 'forum');
+        $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary), '*', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($cybrary, 'cybrary');
 
         $context = context_module::instance($cm->id);
         self::validate_context($context);
 
-        if (!forum_user_can_post($forum, $discussion, $USER, $cm, $course, $context)) {
-            throw new moodle_exception('nopostforum', 'forum');
+        if (!cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $context)) {
+            throw new moodle_exception('nopostcybrary', 'cybrary');
         }
 
-        $thresholdwarning = forum_check_throttling($forum, $cm);
-        forum_check_blocking_threshold($thresholdwarning);
+        $thresholdwarning = cybrary_check_throttling($cybrary, $cm);
+        cybrary_check_blocking_threshold($thresholdwarning);
 
         // Create the post.
         $post = new stdClass();
@@ -1040,7 +1040,7 @@ class mod_forum_external extends external_api {
         $post->messagetrust = trusttext_trusted($context);
         $post->itemid = 0;
 
-        if ($postid = forum_add_new_post($post, null)) {
+        if ($postid = cybrary_add_new_post($post, null)) {
 
             $post->id = $postid;
 
@@ -1050,27 +1050,27 @@ class mod_forum_external extends external_api {
                 'objectid' => $post->id,
                 'other' => array(
                     'discussionid' => $discussion->id,
-                    'forumid' => $forum->id,
-                    'forumtype' => $forum->type,
+                    'cybraryid' => $cybrary->id,
+                    'cybrarytype' => $cybrary->type,
                 )
             );
-            $event = \mod_forum\event\post_created::create($params);
-            $event->add_record_snapshot('forum_posts', $post);
-            $event->add_record_snapshot('forum_discussions', $discussion);
+            $event = \mod_cybrary\event\post_created::create($params);
+            $event->add_record_snapshot('cybrary_posts', $post);
+            $event->add_record_snapshot('cybrary_discussions', $discussion);
             $event->trigger();
 
             // Update completion state.
             $completion = new completion_info($course);
             if ($completion->is_enabled($cm) &&
-                    ($forum->completionreplies || $forum->completionposts)) {
+                    ($cybrary->completionreplies || $cybrary->completionposts)) {
                 $completion->update_state($cm, COMPLETION_COMPLETE);
             }
 
             $settings = new stdClass();
             $settings->discussionsubscribe = $options['discussionsubscribe'];
-            forum_post_subscription($settings, $forum, $discussion);
+            cybrary_post_subscription($settings, $cybrary, $discussion);
         } else {
-            throw new moodle_exception('couldnotadd', 'forum');
+            throw new moodle_exception('couldnotadd', 'cybrary');
         }
 
         $result = array();
@@ -1103,7 +1103,7 @@ class mod_forum_external extends external_api {
     public static function add_discussion_parameters() {
         return new external_function_parameters(
             array(
-                'forumid' => new external_value(PARAM_INT, 'Forum instance ID'),
+                'cybraryid' => new external_value(PARAM_INT, 'Cybrary instance ID'),
                 'subject' => new external_value(PARAM_TEXT, 'New Discussion subject'),
                 'message' => new external_value(PARAM_RAW, 'New Discussion message (only html format allowed)'),
                 'groupid' => new external_value(PARAM_INT, 'The group, default to -1', VALUE_DEFAULT, -1),
@@ -1124,9 +1124,9 @@ class mod_forum_external extends external_api {
     }
 
     /**
-     * Add a new discussion into an existing forum.
+     * Add a new discussion into an existing cybrary.
      *
-     * @param int $forumid the forum instance id
+     * @param int $cybraryid the cybrary instance id
      * @param string $subject new discussion subject
      * @param string $message new discussion message (only html format allowed)
      * @param int $groupid the user course group
@@ -1135,13 +1135,13 @@ class mod_forum_external extends external_api {
      * @since Moodle 3.0
      * @throws moodle_exception
      */
-    public static function add_discussion($forumid, $subject, $message, $groupid = -1, $options = array()) {
+    public static function add_discussion($cybraryid, $subject, $message, $groupid = -1, $options = array()) {
         global $DB, $CFG;
-        require_once($CFG->dirroot . "/mod/forum/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
         $params = self::validate_parameters(self::add_discussion_parameters(),
                                             array(
-                                                'forumid' => $forumid,
+                                                'cybraryid' => $cybraryid,
                                                 'subject' => $subject,
                                                 'message' => $message,
                                                 'groupid' => $groupid,
@@ -1166,8 +1166,8 @@ class mod_forum_external extends external_api {
         $warnings = array();
 
         // Request and permission validation.
-        $forum = $DB->get_record('forum', array('id' => $params['forumid']), '*', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($forum, 'forum');
+        $cybrary = $DB->get_record('cybrary', array('id' => $params['cybraryid']), '*', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($cybrary, 'cybrary');
 
         $context = context_module::instance($cm->id);
         self::validate_context($context);
@@ -1182,22 +1182,22 @@ class mod_forum_external extends external_api {
             if ($groupid === -1 or empty($params['groupid'])) {
                 $groupid = groups_get_activity_group($cm);
             } else {
-                // Here we rely in the group passed, forum_user_can_post_discussion will validate the group.
+                // Here we rely in the group passed, cybrary_user_can_post_discussion will validate the group.
                 $groupid = $params['groupid'];
             }
         }
 
-        if (!forum_user_can_post_discussion($forum, $groupid, -1, $cm, $context)) {
-            throw new moodle_exception('cannotcreatediscussion', 'forum');
+        if (!cybrary_user_can_post_discussion($cybrary, $groupid, -1, $cm, $context)) {
+            throw new moodle_exception('cannotcreatediscussion', 'cybrary');
         }
 
-        $thresholdwarning = forum_check_throttling($forum, $cm);
-        forum_check_blocking_threshold($thresholdwarning);
+        $thresholdwarning = cybrary_check_throttling($cybrary, $cm);
+        cybrary_check_blocking_threshold($thresholdwarning);
 
         // Create the discussion.
         $discussion = new stdClass();
         $discussion->course = $course->id;
-        $discussion->forum = $forum->id;
+        $discussion->cybrary = $cybrary->id;
         $discussion->message = $params['message'];
         $discussion->messageformat = FORMAT_HTML;   // Force formatting for now.
         $discussion->messagetrust = trusttext_trusted($context);
@@ -1209,7 +1209,7 @@ class mod_forum_external extends external_api {
         $discussion->timestart = 0;
         $discussion->timeend = 0;
 
-        if ($discussionid = forum_add_discussion($discussion)) {
+        if ($discussionid = cybrary_add_discussion($discussion)) {
 
             $discussion->id = $discussionid;
 
@@ -1219,24 +1219,24 @@ class mod_forum_external extends external_api {
                 'context' => $context,
                 'objectid' => $discussion->id,
                 'other' => array(
-                    'forumid' => $forum->id,
+                    'cybraryid' => $cybrary->id,
                 )
             );
-            $event = \mod_forum\event\discussion_created::create($params);
-            $event->add_record_snapshot('forum_discussions', $discussion);
+            $event = \mod_cybrary\event\discussion_created::create($params);
+            $event->add_record_snapshot('cybrary_discussions', $discussion);
             $event->trigger();
 
             $completion = new completion_info($course);
             if ($completion->is_enabled($cm) &&
-                    ($forum->completiondiscussions || $forum->completionposts)) {
+                    ($cybrary->completiondiscussions || $cybrary->completionposts)) {
                 $completion->update_state($cm, COMPLETION_COMPLETE);
             }
 
             $settings = new stdClass();
             $settings->discussionsubscribe = $options['discussionsubscribe'];
-            forum_post_subscription($settings, $forum, $discussion);
+            cybrary_post_subscription($settings, $cybrary, $discussion);
         } else {
-            throw new moodle_exception('couldnotadd', 'forum');
+            throw new moodle_exception('couldnotadd', 'cybrary');
         }
 
         $result = array();

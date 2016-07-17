@@ -15,57 +15,57 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Forum post renderable.
+ * Cybrary post renderable.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\output;
+namespace mod_cybrary\output;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Forum post renderable.
+ * Cybrary post renderable.
  *
  * @copyright  2015 Andrew Nicols <andrew@nicols.co.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  * @property boolean $viewfullnames Whether to override fullname()
  */
-class forum_post implements \renderable, \templatable {
+class cybrary_post implements \renderable, \templatable {
 
     /**
-     * The course that the forum post is in.
+     * The course that the cybrary post is in.
      *
      * @var object $course
      */
     protected $course = null;
 
     /**
-     * The course module for the forum.
+     * The course module for the cybrary.
      *
      * @var object $cm
      */
     protected $cm = null;
 
     /**
-     * The forum that the post is in.
+     * The cybrary that the post is in.
      *
-     * @var object $forum
+     * @var object $cybrary
      */
-    protected $forum = null;
+    protected $cybrary = null;
 
     /**
-     * The discussion that the forum post is in.
+     * The discussion that the cybrary post is in.
      *
      * @var object $discussion
      */
     protected $discussion = null;
 
     /**
-     * The forum post being displayed.
+     * The cybrary post being displayed.
      *
      * @var object $post
      */
@@ -79,7 +79,7 @@ class forum_post implements \renderable, \templatable {
     protected $canreply = false;
 
     /**
-     * Whether to override forum display when displaying usernames.
+     * Whether to override cybrary display when displaying usernames.
      * @var boolean $viewfullnames
      */
     protected $viewfullnames = false;
@@ -108,21 +108,21 @@ class forum_post implements \renderable, \templatable {
     );
 
     /**
-     * Builds a renderable forum post
+     * Builds a renderable cybrary post
      *
-     * @param object $course Course of the forum
-     * @param object $cm Course Module of the forum
-     * @param object $forum The forum of the post
+     * @param object $course Course of the cybrary
+     * @param object $cm Course Module of the cybrary
+     * @param object $cybrary The cybrary of the post
      * @param object $discussion Discussion thread in which the post appears
      * @param object $post The post
      * @param object $author Author of the post
      * @param object $recipient Recipient of the email
      * @param bool $canreply True if the user can reply to the post
      */
-    public function __construct($course, $cm, $forum, $discussion, $post, $author, $recipient, $canreply) {
+    public function __construct($course, $cm, $cybrary, $discussion, $post, $author, $recipient, $canreply) {
         $this->course = $course;
         $this->cm = $cm;
-        $this->forum = $forum;
+        $this->cybrary = $cybrary;
         $this->discussion = $discussion;
         $this->post = $post;
         $this->author = $author;
@@ -148,15 +148,15 @@ class forum_post implements \renderable, \templatable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \mod_forum_renderer $renderer The render to be used for formatting the message and attachments
+     * @param \mod_cybrary_renderer $renderer The render to be used for formatting the message and attachments
      * @return stdClass Data ready for use in a mustache template
      */
-    protected function export_for_template_text(\mod_forum_renderer $renderer) {
+    protected function export_for_template_text(\mod_cybrary_renderer $renderer) {
         return array(
             'id'                            => html_entity_decode($this->post->id),
             'coursename'                    => html_entity_decode($this->get_coursename()),
             'courselink'                    => html_entity_decode($this->get_courselink()),
-            'forumname'                     => html_entity_decode($this->get_forumname()),
+            'cybraryname'                     => html_entity_decode($this->get_cybraryname()),
             'showdiscussionname'            => html_entity_decode($this->get_showdiscussionname()),
             'discussionname'                => html_entity_decode($this->get_discussionname()),
             'subject'                       => html_entity_decode($this->get_subject()),
@@ -172,11 +172,11 @@ class forum_post implements \renderable, \templatable {
             'firstpost'                     => $this->get_is_firstpost(),
             'replylink'                     => $this->get_replylink(),
             'unsubscribediscussionlink'     => $this->get_unsubscribediscussionlink(),
-            'unsubscribeforumlink'          => $this->get_unsubscribeforumlink(),
+            'unsubscribecybrarylink'          => $this->get_unsubscribecybrarylink(),
             'parentpostlink'                => $this->get_parentpostlink(),
 
-            'forumindexlink'                => $this->get_forumindexlink(),
-            'forumviewlink'                 => $this->get_forumviewlink(),
+            'cybraryindexlink'                => $this->get_cybraryindexlink(),
+            'cybraryviewlink'                 => $this->get_cybraryviewlink(),
             'discussionlink'                => $this->get_discussionlink(),
 
             'authorlink'                    => $this->get_authorlink(),
@@ -189,15 +189,15 @@ class forum_post implements \renderable, \templatable {
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param \mod_forum_renderer $renderer The render to be used for formatting the message and attachments
+     * @param \mod_cybrary_renderer $renderer The render to be used for formatting the message and attachments
      * @return stdClass Data ready for use in a mustache template
      */
-    protected function export_for_template_html(\mod_forum_renderer $renderer) {
+    protected function export_for_template_html(\mod_cybrary_renderer $renderer) {
         return array(
             'id'                            => $this->post->id,
             'coursename'                    => $this->get_coursename(),
             'courselink'                    => $this->get_courselink(),
-            'forumname'                     => $this->get_forumname(),
+            'cybraryname'                     => $this->get_cybraryname(),
             'showdiscussionname'            => $this->get_showdiscussionname(),
             'discussionname'                => $this->get_discussionname(),
             'subject'                       => $this->get_subject(),
@@ -213,11 +213,11 @@ class forum_post implements \renderable, \templatable {
             'firstpost'                     => $this->get_is_firstpost(),
             'replylink'                     => $this->get_replylink(),
             'unsubscribediscussionlink'     => $this->get_unsubscribediscussionlink(),
-            'unsubscribeforumlink'          => $this->get_unsubscribeforumlink(),
+            'unsubscribecybrarylink'          => $this->get_unsubscribecybrarylink(),
             'parentpostlink'                => $this->get_parentpostlink(),
 
-            'forumindexlink'                => $this->get_forumindexlink(),
-            'forumviewlink'                 => $this->get_forumviewlink(),
+            'cybraryindexlink'                => $this->get_cybraryindexlink(),
+            'cybraryviewlink'                 => $this->get_cybraryviewlink(),
             'discussionlink'                => $this->get_discussionlink(),
 
             'authorlink'                    => $this->get_authorlink(),
@@ -275,14 +275,14 @@ class forum_post implements \renderable, \templatable {
     }
 
     /**
-     * Get the link to the forum index for this course.
+     * Get the link to the cybrary index for this course.
      *
      * @return string
      */
-    public function get_forumindexlink() {
+    public function get_cybraryindexlink() {
         $link = new \moodle_url(
             // Posts are viewed on the topic.
-            '/mod/forum/index.php', array(
+            '/mod/cybrary/index.php', array(
                 'id'    => $this->course->id,
             )
         );
@@ -291,15 +291,15 @@ class forum_post implements \renderable, \templatable {
     }
 
     /**
-     * Get the link to the view page for this forum.
+     * Get the link to the view page for this cybrary.
      *
      * @return string
      */
-    public function get_forumviewlink() {
+    public function get_cybraryviewlink() {
         $link = new \moodle_url(
             // Posts are viewed on the topic.
-            '/mod/forum/view.php', array(
-                'f' => $this->forum->id,
+            '/mod/cybrary/view.php', array(
+                'f' => $this->cybrary->id,
             )
         );
 
@@ -314,7 +314,7 @@ class forum_post implements \renderable, \templatable {
     protected function _get_discussionlink() {
         return new \moodle_url(
             // Posts are viewed on the topic.
-            '/mod/forum/discuss.php', array(
+            '/mod/cybrary/discuss.php', array(
                 // Within a discussion.
                 'd' => $this->discussion->id,
             )
@@ -373,14 +373,14 @@ class forum_post implements \renderable, \templatable {
     }
 
     /**
-     * Get the link to unsubscribe from the forum.
+     * Get the link to unsubscribe from the cybrary.
      *
      * @return string
      */
-    public function get_unsubscribeforumlink() {
+    public function get_unsubscribecybrarylink() {
         $link = new \moodle_url(
-            '/mod/forum/subscribe.php', array(
-                'id' => $this->forum->id,
+            '/mod/cybrary/subscribe.php', array(
+                'id' => $this->cybrary->id,
             )
         );
 
@@ -394,8 +394,8 @@ class forum_post implements \renderable, \templatable {
      */
     public function get_unsubscribediscussionlink() {
         $link = new \moodle_url(
-            '/mod/forum/subscribe.php', array(
-                'id'  => $this->forum->id,
+            '/mod/cybrary/subscribe.php', array(
+                'id'  => $this->cybrary->id,
                 'd'   => $this->discussion->id,
             )
         );
@@ -410,7 +410,7 @@ class forum_post implements \renderable, \templatable {
      */
     public function get_replylink() {
         return new \moodle_url(
-            '/mod/forum/post.php', array(
+            '/mod/cybrary/post.php', array(
                 'reply' => $this->post->id,
             )
         );
@@ -435,7 +435,7 @@ class forum_post implements \renderable, \templatable {
     }
 
     /**
-     * The name of the course that the forum is in.
+     * The name of the course that the cybrary is in.
      *
      * @return string
      */
@@ -446,12 +446,12 @@ class forum_post implements \renderable, \templatable {
     }
 
     /**
-     * The name of the forum.
+     * The name of the cybrary.
      *
      * @return string
      */
-    public function get_forumname() {
-        return format_string($this->forum->name, true);
+    public function get_cybraryname() {
+        return format_string($this->cybrary->name, true);
     }
 
     /**
@@ -465,13 +465,13 @@ class forum_post implements \renderable, \templatable {
 
     /**
      * Whether to show the discussion name.
-     * If the forum name matches the discussion name, the discussion name
+     * If the cybrary name matches the discussion name, the discussion name
      * is not typically displayed.
      *
      * @return boolean
      */
     public function get_showdiscussionname() {
-        return ($this->forum->name !== $this->discussion->name);
+        return ($this->cybrary->name !== $this->discussion->name);
     }
 
     /**
@@ -507,7 +507,7 @@ class forum_post implements \renderable, \templatable {
         global $CFG;
 
         $postmodified = $this->post->modified;
-        if (!empty($CFG->forum_enabletimedposts) && ($this->discussion->timestart > $postmodified)) {
+        if (!empty($CFG->cybrary_enabletimedposts) && ($this->discussion->timestart > $postmodified)) {
             $postmodified = $this->discussion->timestart;
         }
 
@@ -533,7 +533,7 @@ class forum_post implements \renderable, \templatable {
      */
     public function get_group_picture() {
         if (isset($this->userfrom->groups)) {
-            $groups = $this->userfrom->groups[$this->forum->id];
+            $groups = $this->userfrom->groups[$this->cybrary->id];
         } else {
             $groups = groups_get_all_groups($this->course->id, $this->author->id, $this->cm->groupingid);
         }

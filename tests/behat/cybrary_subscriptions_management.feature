@@ -1,5 +1,5 @@
-@mod @mod_forum
-Feature: A teacher can control the subscription to a forum
+@mod @mod_cybrary
+Feature: A teacher can control the subscription to a cybrary
   In order to change individual user's subscriptions
   As a course administrator
   I can change subscription setting for my users
@@ -21,14 +21,14 @@ Feature: A teacher can control the subscription to a forum
     And I log in as "teacher"
     And I follow "Course 1"
     And I turn editing mode on
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name        | Test forum name                |
-      | Forum type        | Standard forum for general use |
-      | Description       | Test forum description         |
+    And I add a "Cybrary" to section "1" and I fill the form with:
+      | Cybrary name        | Test cybrary name                |
+      | Cybrary type        | Standard cybrary for general use |
+      | Description       | Test cybrary description         |
       | Subscription mode | Auto subscription              |
 
   Scenario: A teacher can change toggle subscription editing on and off
-    Given I follow "Test forum name"
+    Given I follow "Test cybrary name"
     And I follow "Show/edit current subscribers"
     Then ".userselector" "css_element" should not exist
     And "Turn editing on" "button" should exist

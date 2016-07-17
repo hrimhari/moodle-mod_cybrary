@@ -16,9 +16,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * File containing the form definition to post in the forum.
+ * File containing the form definition to post in the cybrary.
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,34 +28,34 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/repository/lib.php');
 
 /**
- * Class to post in a forum.
+ * Class to post in a cybrary.
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright Jamie Pratt <me@jamiep.org>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_forum_post_form extends moodleform {
+class mod_cybrary_post_form extends moodleform {
 
     /**
-     * Returns the options array to use in filemanager for forum attachments
+     * Returns the options array to use in filemanager for cybrary attachments
      *
-     * @param stdClass $forum
+     * @param stdClass $cybrary
      * @return array
      */
-    public static function attachment_options($forum) {
+    public static function attachment_options($cybrary) {
         global $COURSE, $PAGE, $CFG;
-        $maxbytes = get_user_max_upload_file_size($PAGE->context, $CFG->maxbytes, $COURSE->maxbytes, $forum->maxbytes);
+        $maxbytes = get_user_max_upload_file_size($PAGE->context, $CFG->maxbytes, $COURSE->maxbytes, $cybrary->maxbytes);
         return array(
             'subdirs' => 0,
             'maxbytes' => $maxbytes,
-            'maxfiles' => $forum->maxattachments,
+            'maxfiles' => $cybrary->maxattachments,
             'accepted_types' => '*',
             'return_types' => FILE_INTERNAL
         );
     }
 
     /**
-     * Returns the options array to use in forum text editor
+     * Returns the options array to use in cybrary text editor
      *
      * @param context_module $context
      * @param int $postid post id, use null when adding new post
@@ -70,7 +70,7 @@ class mod_forum_post_form extends moodleform {
             'maxbytes' => $maxbytes,
             'trusttext'=> true,
             'return_types'=> FILE_INTERNAL | FILE_EXTERNAL,
-            'subdirs' => file_area_contains_subdirs($context, 'mod_forum', 'post', $postid)
+            'subdirs' => file_area_contains_subdirs($context, 'mod_cybrary', 'post', $postid)
         );
     }
 
@@ -88,7 +88,7 @@ class mod_forum_post_form extends moodleform {
         $cm = $this->_customdata['cm'];
         $coursecontext = $this->_customdata['coursecontext'];
         $modcontext = $this->_customdata['modcontext'];
-        $forum = $this->_customdata['forum'];
+        $cybrary = $this->_customdata['cybrary'];
         $post = $this->_customdata['post'];
         $subscribe = $this->_customdata['subscribe'];
         $edit = $this->_customdata['edit'];
@@ -105,51 +105,51 @@ class mod_forum_post_form extends moodleform {
             }
         }
 
-        $mform->addElement('text', 'subject', get_string('subject', 'forum'), 'size="48"');
+        $mform->addElement('text', 'subject', get_string('subject', 'cybrary'), 'size="48"');
         $mform->setType('subject', PARAM_TEXT);
         $mform->addRule('subject', get_string('required'), 'required', null, 'client');
         $mform->addRule('subject', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        $mform->addElement('editor', 'message', get_string('message', 'forum'), null, self::editor_options($modcontext, (empty($post->id) ? null : $post->id)));
+        $mform->addElement('editor', 'message', get_string('message', 'cybrary'), null, self::editor_options($modcontext, (empty($post->id) ? null : $post->id)));
         $mform->setType('message', PARAM_RAW);
         $mform->addRule('message', get_string('required'), 'required', null, 'client');
 
         $manageactivities = has_capability('moodle/course:manageactivities', $coursecontext);
 
-        if (\mod_forum\subscriptions::is_forcesubscribed($forum)) {
-            $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'forum'));
+        if (\mod_cybrary\subscriptions::is_forcesubscribed($cybrary)) {
+            $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'cybrary'));
             $mform->freeze('discussionsubscribe');
             $mform->setDefaults('discussionsubscribe', 0);
-            $mform->addHelpButton('discussionsubscribe', 'forcesubscribed', 'forum');
+            $mform->addHelpButton('discussionsubscribe', 'forcesubscribed', 'cybrary');
 
-        } else if (\mod_forum\subscriptions::subscription_disabled($forum) && !$manageactivities) {
-            $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'forum'));
+        } else if (\mod_cybrary\subscriptions::subscription_disabled($cybrary) && !$manageactivities) {
+            $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'cybrary'));
             $mform->freeze('discussionsubscribe');
             $mform->setDefaults('discussionsubscribe', 0);
-            $mform->addHelpButton('discussionsubscribe', 'disallowsubscription', 'forum');
+            $mform->addHelpButton('discussionsubscribe', 'disallowsubscription', 'cybrary');
 
         } else {
-            $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'forum'));
-            $mform->addHelpButton('discussionsubscribe', 'discussionsubscription', 'forum');
+            $mform->addElement('checkbox', 'discussionsubscribe', get_string('discussionsubscription', 'cybrary'));
+            $mform->addHelpButton('discussionsubscribe', 'discussionsubscription', 'cybrary');
         }
 
-        if (!empty($forum->maxattachments) && $forum->maxbytes != 1 && has_capability('mod/forum:createattachment', $modcontext))  {  //  1 = No attachments at all
-            $mform->addElement('filemanager', 'attachments', get_string('attachment', 'forum'), null, self::attachment_options($forum));
-            $mform->addHelpButton('attachments', 'attachment', 'forum');
+        if (!empty($cybrary->maxattachments) && $cybrary->maxbytes != 1 && has_capability('mod/cybrary:createattachment', $modcontext))  {  //  1 = No attachments at all
+            $mform->addElement('filemanager', 'attachments', get_string('attachment', 'cybrary'), null, self::attachment_options($cybrary));
+            $mform->addHelpButton('attachments', 'attachment', 'cybrary');
         }
 
         if (empty($post->id) && $manageactivities) {
-            $mform->addElement('checkbox', 'mailnow', get_string('mailnow', 'forum'));
+            $mform->addElement('checkbox', 'mailnow', get_string('mailnow', 'cybrary'));
         }
 
-        if (!empty($CFG->forum_enabletimedposts) && !$post->parent && has_capability('mod/forum:viewhiddentimedposts', $coursecontext)) { // hack alert
-            $mform->addElement('header', 'displayperiod', get_string('displayperiod', 'forum'));
+        if (!empty($CFG->cybrary_enabletimedposts) && !$post->parent && has_capability('mod/cybrary:viewhiddentimedposts', $coursecontext)) { // hack alert
+            $mform->addElement('header', 'displayperiod', get_string('displayperiod', 'cybrary'));
 
-            $mform->addElement('date_time_selector', 'timestart', get_string('displaystart', 'forum'), array('optional' => true));
-            $mform->addHelpButton('timestart', 'displaystart', 'forum');
+            $mform->addElement('date_time_selector', 'timestart', get_string('displaystart', 'cybrary'), array('optional' => true));
+            $mform->addHelpButton('timestart', 'displaystart', 'cybrary');
 
-            $mform->addElement('date_time_selector', 'timeend', get_string('displayend', 'forum'), array('optional' => true));
-            $mform->addHelpButton('timeend', 'displayend', 'forum');
+            $mform->addElement('date_time_selector', 'timeend', get_string('displayend', 'cybrary'), array('optional' => true));
+            $mform->addHelpButton('timeend', 'displayend', 'cybrary');
 
         } else {
             $mform->addElement('hidden', 'timestart');
@@ -166,7 +166,7 @@ class mod_forum_post_form extends moodleform {
             foreach ($groupdata as $groupid => $group) {
                 // Check whether this user can post in this group.
                 // We must make this check because all groups are returned for a visible grouped activity.
-                if (forum_user_can_post_discussion($forum, $groupid, null, $cm, $modcontext)) {
+                if (cybrary_user_can_post_discussion($cybrary, $groupid, null, $cm, $modcontext)) {
                     // Build the data for the groupinfo select.
                     $groupinfo[$groupid] = $group->name;
                 } else {
@@ -186,20 +186,20 @@ class mod_forum_post_form extends moodleform {
             $canposttoowngroups = $canposttoowngroups && empty($post->parent);
 
             // 3) You also need the canposttoowngroups capability.
-            $canposttoowngroups = $canposttoowngroups && has_capability('mod/forum:canposttomygroups', $modcontext);
+            $canposttoowngroups = $canposttoowngroups && has_capability('mod/cybrary:canposttomygroups', $modcontext);
             if ($canposttoowngroups) {
                 // This user is in multiple groups, and can post to all of their own groups.
                 // Note: This is not the same as accessallgroups. This option will copy a post to all groups that a
                 // user is a member of.
-                $mform->addElement('checkbox', 'posttomygroups', get_string('posttomygroups', 'forum'));
-                $mform->addHelpButton('posttomygroups', 'posttomygroups', 'forum');
+                $mform->addElement('checkbox', 'posttomygroups', get_string('posttomygroups', 'cybrary'));
+                $mform->addHelpButton('posttomygroups', 'posttomygroups', 'cybrary');
                 $mform->disabledIf('groupinfo', 'posttomygroups', 'checked');
             }
 
             // Check whether this user can post to all groups.
             // Posts to the 'All participants' group go to all groups, not to each group in a list.
             // It makes sense to allow this, even if there currently aren't any groups because there may be in the future.
-            if (forum_user_can_post_discussion($forum, -1, null, $cm, $modcontext)) {
+            if (cybrary_user_can_post_discussion($cybrary, -1, null, $cm, $modcontext)) {
                 // Note: We must reverse in this manner because array_unshift renumbers the array.
                 $groupinfo = array_reverse($groupinfo, true );
                 $groupinfo[-1] = get_string('allparticipants');
@@ -212,9 +212,9 @@ class mod_forum_post_form extends moodleform {
             $canselectgroupfornew = empty($post->edit) && $groupcount > 1;
 
             // 2) This is editing of an existing post and the user is allowed to movediscussions.
-            // We allow this because the post may have been moved from another forum where groups are not available.
+            // We allow this because the post may have been moved from another cybrary where groups are not available.
             // We show this even if no groups are available as groups *may* have been available but now are not.
-            $canselectgroupformove = $groupcount && !empty($post->edit) && has_capability('mod/forum:movediscussions', $modcontext);
+            $canselectgroupformove = $groupcount && !empty($post->edit) && has_capability('mod/cybrary:movediscussions', $modcontext);
 
             // Important: You can *only* change the group for a top level post. Never any reply.
             $canselectgroup = empty($post->parent) && ($canselectgroupfornew || $canselectgroupformove);
@@ -237,7 +237,7 @@ class mod_forum_post_form extends moodleform {
         if (isset($post->edit)) { // hack alert
             $submit_string = get_string('savechanges');
         } else {
-            $submit_string = get_string('posttoforum', 'forum');
+            $submit_string = get_string('posttocybrary', 'cybrary');
         }
 
         $this->add_action_buttons(true, $submit_string);
@@ -245,8 +245,8 @@ class mod_forum_post_form extends moodleform {
         $mform->addElement('hidden', 'course');
         $mform->setType('course', PARAM_INT);
 
-        $mform->addElement('hidden', 'forum');
-        $mform->setType('forum', PARAM_INT);
+        $mform->addElement('hidden', 'cybrary');
+        $mform->setType('cybrary', PARAM_INT);
 
         $mform->addElement('hidden', 'discussion');
         $mform->setType('discussion', PARAM_INT);
@@ -277,13 +277,13 @@ class mod_forum_post_form extends moodleform {
     function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (($data['timeend']!=0) && ($data['timestart']!=0) && $data['timeend'] <= $data['timestart']) {
-            $errors['timeend'] = get_string('timestartenderror', 'forum');
+            $errors['timeend'] = get_string('timestartenderror', 'cybrary');
         }
         if (empty($data['message']['text'])) {
-            $errors['message'] = get_string('erroremptymessage', 'forum');
+            $errors['message'] = get_string('erroremptymessage', 'cybrary');
         }
         if (empty($data['subject'])) {
-            $errors['subject'] = get_string('erroremptysubject', 'forum');
+            $errors['subject'] = get_string('erroremptysubject', 'cybrary');
         }
         return $errors;
     }

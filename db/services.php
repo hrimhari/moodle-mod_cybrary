@@ -16,87 +16,87 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Forum external functions and service definitions.
+ * Cybrary external functions and service definitions.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2012 Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $functions = array(
 
-    'mod_forum_get_forums_by_courses' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_forums_by_courses',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Returns a list of forum instances in a provided set of courses, if
-            no courses are provided then all the forum instances the user has access to will be
+    'mod_cybrary_get_cybraries_by_courses' => array(
+        'classname' => 'mod_cybrary_external',
+        'methodname' => 'get_cybraries_by_courses',
+        'classpath' => 'mod/cybrary/externallib.php',
+        'description' => 'Returns a list of cybrary instances in a provided set of courses, if
+            no courses are provided then all the cybrary instances the user has access to will be
             returned.',
         'type' => 'read',
-        'capabilities' => 'mod/forum:viewdiscussion'
+        'capabilities' => 'mod/cybrary:viewdiscussion'
     ),
 
-    'mod_forum_get_forum_discussions' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_forum_discussions',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'DEPRECATED (use mod_forum_get_forum_discussions_paginated instead):
-                            Returns a list of forum discussions contained within a given set of forums.',
+    'mod_cybrary_get_cybrary_discussions' => array(
+        'classname' => 'mod_cybrary_external',
+        'methodname' => 'get_cybrary_discussions',
+        'classpath' => 'mod/cybrary/externallib.php',
+        'description' => 'DEPRECATED (use mod_cybrary_get_cybrary_discussions_paginated instead):
+                            Returns a list of cybrary discussions contained within a given set of cybraries.',
         'type' => 'read',
-        'capabilities' => 'mod/forum:viewdiscussion, mod/forum:viewqandawithoutposting'
+        'capabilities' => 'mod/cybrary:viewdiscussion, mod/cybrary:viewqandawithoutposting'
     ),
 
-    'mod_forum_get_forum_discussion_posts' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_forum_discussion_posts',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Returns a list of forum posts for a discussion.',
+    'mod_cybrary_get_cybrary_discussion_posts' => array(
+        'classname' => 'mod_cybrary_external',
+        'methodname' => 'get_cybrary_discussion_posts',
+        'classpath' => 'mod/cybrary/externallib.php',
+        'description' => 'Returns a list of cybrary posts for a discussion.',
         'type' => 'read',
-        'capabilities' => 'mod/forum:viewdiscussion, mod/forum:viewqandawithoutposting'
+        'capabilities' => 'mod/cybrary:viewdiscussion, mod/cybrary:viewqandawithoutposting'
     ),
 
-    'mod_forum_get_forum_discussions_paginated' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'get_forum_discussions_paginated',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Returns a list of forum discussions optionally sorted and paginated.',
+    'mod_cybrary_get_cybrary_discussions_paginated' => array(
+        'classname' => 'mod_cybrary_external',
+        'methodname' => 'get_cybrary_discussions_paginated',
+        'classpath' => 'mod/cybrary/externallib.php',
+        'description' => 'Returns a list of cybrary discussions optionally sorted and paginated.',
         'type' => 'read',
-        'capabilities' => 'mod/forum:viewdiscussion, mod/forum:viewqandawithoutposting'
+        'capabilities' => 'mod/cybrary:viewdiscussion, mod/cybrary:viewqandawithoutposting'
     ),
 
-    'mod_forum_view_forum' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'view_forum',
-        'classpath' => 'mod/forum/externallib.php',
+    'mod_cybrary_view_cybrary' => array(
+        'classname' => 'mod_cybrary_external',
+        'methodname' => 'view_cybrary',
+        'classpath' => 'mod/cybrary/externallib.php',
         'description' => 'Trigger the course module viewed event and update the module completion status.',
         'type' => 'write',
-        'capabilities' => 'mod/forum:viewdiscussion'
+        'capabilities' => 'mod/cybrary:viewdiscussion'
     ),
 
-    'mod_forum_view_forum_discussion' => array(
-        'classname' => 'mod_forum_external',
-        'methodname' => 'view_forum_discussion',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Trigger the forum discussion viewed event.',
+    'mod_cybrary_view_cybrary_discussion' => array(
+        'classname' => 'mod_cybrary_external',
+        'methodname' => 'view_cybrary_discussion',
+        'classpath' => 'mod/cybrary/externallib.php',
+        'description' => 'Trigger the cybrary discussion viewed event.',
         'type' => 'write',
-        'capabilities' => 'mod/forum:viewdiscussion'
+        'capabilities' => 'mod/cybrary:viewdiscussion'
     ),
 
-    'mod_forum_add_discussion_post' => array(
-        'classname' => 'mod_forum_external',
+    'mod_cybrary_add_discussion_post' => array(
+        'classname' => 'mod_cybrary_external',
         'methodname' => 'add_discussion_post',
-        'classpath' => 'mod/forum/externallib.php',
+        'classpath' => 'mod/cybrary/externallib.php',
         'description' => 'Create new posts into an existing discussion.',
         'type' => 'write',
-        'capabilities' => 'mod/forum:replypost'
+        'capabilities' => 'mod/cybrary:replypost'
     ),
 
-    'mod_forum_add_discussion' => array(
-        'classname' => 'mod_forum_external',
+    'mod_cybrary_add_discussion' => array(
+        'classname' => 'mod_cybrary_external',
         'methodname' => 'add_discussion',
-        'classpath' => 'mod/forum/externallib.php',
-        'description' => 'Add a new discussion into an existing forum.',
+        'classpath' => 'mod/cybrary/externallib.php',
+        'description' => 'Add a new discussion into an existing cybrary.',
         'type' => 'write',
-        'capabilities' => 'mod/forum:startdiscussion'
+        'capabilities' => 'mod/cybrary:startdiscussion'
     ),
 );

@@ -1,6 +1,6 @@
-@mod @mod_forum
+@mod @mod_cybrary
 Feature: Posting to groups in a separate group discussion when restricted to groupings
-  In order to post to groups in a forum with separate groups and groupings
+  In order to post to groups in a cybrary with separate groups and groupings
   As a teacher
   I need to have groups configured to post to a group
 
@@ -37,16 +37,16 @@ Feature: Posting to groups in a separate group discussion when restricted to gro
     And I am on site homepage
     And I follow "Course 1"
     And I turn editing mode on
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name  | Multiple groups forum             |
-      | Forum type  | Standard forum for general use    |
-      | Description | Standard forum description        |
+    And I add a "Cybrary" to section "1" and I fill the form with:
+      | Cybrary name  | Multiple groups cybrary             |
+      | Cybrary type  | Standard cybrary for general use    |
+      | Description | Standard cybrary description        |
       | Group mode  | Separate groups                   |
       | Grouping    | G1                                |
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name  | Single groups forum               |
-      | Forum type  | Standard forum for general use    |
-      | Description | Standard forum description        |
+    And I add a "Cybrary" to section "1" and I fill the form with:
+      | Cybrary name  | Single groups cybrary               |
+      | Cybrary type  | Standard cybrary for general use    |
+      | Description | Standard cybrary description        |
       | Group mode  | Separate groups                   |
       | Grouping    | G2                                |
     And I log out
@@ -54,13 +54,13 @@ Feature: Posting to groups in a separate group discussion when restricted to gro
   Scenario: Teacher with accessallgroups can post in all groups
     Given I log in as "teacher1"
     And I follow "Course 1"
-    And I follow "Multiple groups forum"
+    And I follow "Multiple groups cybrary"
     When I click on "Add a new discussion topic" "button"
     Then the "Group" select box should contain "All participants"
     And the "Group" select box should contain "G1G1"
     And the "Group" select box should contain "G1G2"
     And I follow "Course 1"
-    And I follow "Single groups forum"
+    And I follow "Single groups cybrary"
     And I click on "Add a new discussion topic" "button"
     And the "Group" select box should contain "All participants"
     And the "Group" select box should contain "G2G1"
@@ -73,13 +73,13 @@ Feature: Posting to groups in a separate group discussion when restricted to gro
     And I log out
     Given I log in as "teacher1"
     And I follow "Course 1"
-    And I follow "Multiple groups forum"
+    And I follow "Multiple groups cybrary"
     When I click on "Add a new discussion topic" "button"
     Then the "Group" select box should not contain "All participants"
     And the "Group" select box should contain "G1G1"
     And the "Group" select box should contain "G1G2"
     And I follow "Course 1"
-    And I follow "Single groups forum"
+    And I follow "Single groups cybrary"
     And I click on "Add a new discussion topic" "button"
     And I should see "G2G1"
     And "Group" "select" should not exist

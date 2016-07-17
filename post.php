@@ -18,7 +18,7 @@
 /**
  * Edit and save a new post to a discussion
  *
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,7 +28,7 @@ require_once('lib.php');
 require_once($CFG->libdir.'/completionlib.php');
 
 $reply   = optional_param('reply', 0, PARAM_INT);
-$forum   = optional_param('forum', 0, PARAM_INT);
+$cybrary   = optional_param('cybrary', 0, PARAM_INT);
 $edit    = optional_param('edit', 0, PARAM_INT);
 $delete  = optional_param('delete', 0, PARAM_INT);
 $prune   = optional_param('prune', 0, PARAM_INT);
@@ -36,9 +36,9 @@ $name    = optional_param('name', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $groupid = optional_param('groupid', null, PARAM_INT);
 
-$PAGE->set_url('/mod/forum/post.php', array(
+$PAGE->set_url('/mod/cybrary/post.php', array(
         'reply' => $reply,
-        'forum' => $forum,
+        'cybrary' => $cybrary,
         'edit'  => $edit,
         'delete'=> $delete,
         'prune' => $prune,
@@ -47,7 +47,7 @@ $PAGE->set_url('/mod/forum/post.php', array(
         'groupid'=>$groupid,
         ));
 //these page_params will be passed as hidden variables later in the form.
-$page_params = array('reply'=>$reply, 'forum'=>$forum, 'edit'=>$edit);
+$page_params = array('reply'=>$reply, 'cybrary'=>$cybrary, 'edit'=>$edit);
 
 $sitecontext = context_system::instance();
 
@@ -58,53 +58,53 @@ if (!isloggedin() or isguestuser()) {
         require_login();
     }
 
-    if (!empty($forum)) {      // User is starting a new discussion in a forum
-        if (! $forum = $DB->get_record('forum', array('id' => $forum))) {
-            print_error('invalidforumid', 'forum');
+    if (!empty($cybrary)) {      // User is starting a new discussion in a cybrary
+        if (! $cybrary = $DB->get_record('cybrary', array('id' => $cybrary))) {
+            print_error('invalidcybraryid', 'cybrary');
         }
     } else if (!empty($reply)) {      // User is writing a new reply
-        if (! $parent = forum_get_post_full($reply)) {
-            print_error('invalidparentpostid', 'forum');
+        if (! $parent = cybrary_get_post_full($reply)) {
+            print_error('invalidparentpostid', 'cybrary');
         }
-        if (! $discussion = $DB->get_record('forum_discussions', array('id' => $parent->discussion))) {
-            print_error('notpartofdiscussion', 'forum');
+        if (! $discussion = $DB->get_record('cybrary_discussions', array('id' => $parent->discussion))) {
+            print_error('notpartofdiscussion', 'cybrary');
         }
-        if (! $forum = $DB->get_record('forum', array('id' => $discussion->forum))) {
-            print_error('invalidforumid');
+        if (! $cybrary = $DB->get_record('cybrary', array('id' => $discussion->cybrary))) {
+            print_error('invalidcybraryid');
         }
     }
-    if (! $course = $DB->get_record('course', array('id' => $forum->course))) {
+    if (! $course = $DB->get_record('course', array('id' => $cybrary->course))) {
         print_error('invalidcourseid');
     }
 
-    if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) { // For the logs
+    if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id)) { // For the logs
         print_error('invalidcoursemodule');
     } else {
         $modcontext = context_module::instance($cm->id);
     }
 
-    $PAGE->set_cm($cm, $course, $forum);
+    $PAGE->set_cm($cm, $course, $cybrary);
     $PAGE->set_context($modcontext);
     $PAGE->set_title($course->shortname);
     $PAGE->set_heading($course->fullname);
     $referer = get_local_referer(false);
 
     echo $OUTPUT->header();
-    echo $OUTPUT->confirm(get_string('noguestpost', 'forum').'<br /><br />'.get_string('liketologin'), get_login_url(), $referer);
+    echo $OUTPUT->confirm(get_string('noguestpost', 'cybrary').'<br /><br />'.get_string('liketologin'), get_login_url(), $referer);
     echo $OUTPUT->footer();
     exit;
 }
 
 require_login(0, false);   // Script is useless unless they're logged in
 
-if (!empty($forum)) {      // User is starting a new discussion in a forum
-    if (! $forum = $DB->get_record("forum", array("id" => $forum))) {
-        print_error('invalidforumid', 'forum');
+if (!empty($cybrary)) {      // User is starting a new discussion in a cybrary
+    if (! $cybrary = $DB->get_record("cybrary", array("id" => $cybrary))) {
+        print_error('invalidcybraryid', 'cybrary');
     }
-    if (! $course = $DB->get_record("course", array("id" => $forum->course))) {
+    if (! $course = $DB->get_record("course", array("id" => $cybrary->course))) {
         print_error('invalidcourseid');
     }
-    if (! $cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
+    if (! $cm = get_coursemodule_from_instance("cybrary", $cybrary->id, $course->id)) {
         print_error("invalidcoursemodule");
     }
 
@@ -112,19 +112,19 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     $modcontext    = context_module::instance($cm->id);
     $coursecontext = context_course::instance($course->id);
 
-    if (! forum_user_can_post_discussion($forum, $groupid, -1, $cm)) {
+    if (! cybrary_user_can_post_discussion($cybrary, $groupid, -1, $cm)) {
         if (!isguestuser()) {
             if (!is_enrolled($coursecontext)) {
                 if (enrol_selfenrol_available($course->id)) {
                     $SESSION->wantsurl = qualified_me();
                     $SESSION->enrolcancel = get_local_referer(false);
                     redirect(new moodle_url('/enrol/index.php', array('id' => $course->id,
-                        'returnurl' => '/mod/forum/view.php?f=' . $forum->id)),
+                        'returnurl' => '/mod/cybrary/view.php?f=' . $cybrary->id)),
                         get_string('youneedtoenrol'));
                 }
             }
         }
-        print_error('nopostforum', 'forum');
+        print_error('nopostcybrary', 'cybrary');
     }
 
     if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $modcontext)) {
@@ -137,7 +137,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
     $post = new stdClass();
     $post->course        = $course->id;
-    $post->forum         = $forum->id;
+    $post->cybrary         = $cybrary->id;
     $post->discussion    = 0;           // ie discussion # not defined yet
     $post->parent        = 0;
     $post->subject       = '';
@@ -157,40 +157,40 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
 } else if (!empty($reply)) {      // User is writing a new reply
 
-    if (! $parent = forum_get_post_full($reply)) {
-        print_error('invalidparentpostid', 'forum');
+    if (! $parent = cybrary_get_post_full($reply)) {
+        print_error('invalidparentpostid', 'cybrary');
     }
-    if (! $discussion = $DB->get_record("forum_discussions", array("id" => $parent->discussion))) {
-        print_error('notpartofdiscussion', 'forum');
+    if (! $discussion = $DB->get_record("cybrary_discussions", array("id" => $parent->discussion))) {
+        print_error('notpartofdiscussion', 'cybrary');
     }
-    if (! $forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
+    if (! $cybrary = $DB->get_record("cybrary", array("id" => $discussion->cybrary))) {
+        print_error('invalidcybraryid', 'cybrary');
     }
     if (! $course = $DB->get_record("course", array("id" => $discussion->course))) {
         print_error('invalidcourseid');
     }
-    if (! $cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
+    if (! $cm = get_coursemodule_from_instance("cybrary", $cybrary->id, $course->id)) {
         print_error('invalidcoursemodule');
     }
 
     // Ensure lang, theme, etc. is set up properly. MDL-6926
-    $PAGE->set_cm($cm, $course, $forum);
+    $PAGE->set_cm($cm, $course, $cybrary);
 
     // Retrieve the contexts.
     $modcontext    = context_module::instance($cm->id);
     $coursecontext = context_course::instance($course->id);
 
-    if (! forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext)) {
+    if (! cybrary_user_can_post($cybrary, $discussion, $USER, $cm, $course, $modcontext)) {
         if (!isguestuser()) {
             if (!is_enrolled($coursecontext)) {  // User is a guest here!
                 $SESSION->wantsurl = qualified_me();
                 $SESSION->enrolcancel = get_local_referer(false);
                 redirect(new moodle_url('/enrol/index.php', array('id' => $course->id,
-                    'returnurl' => '/mod/forum/view.php?f=' . $forum->id)),
+                    'returnurl' => '/mod/cybrary/view.php?f=' . $cybrary->id)),
                     get_string('youneedtoenrol'));
             }
         }
-        print_error('nopostforum', 'forum');
+        print_error('nopostcybrary', 'cybrary');
     }
 
     // Make sure user can post here
@@ -201,10 +201,10 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     }
     if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $modcontext)) {
         if ($discussion->groupid == -1) {
-            print_error('nopostforum', 'forum');
+            print_error('nopostcybrary', 'cybrary');
         } else {
             if (!groups_is_member($discussion->groupid)) {
-                print_error('nopostforum', 'forum');
+                print_error('nopostcybrary', 'cybrary');
             }
         }
     }
@@ -217,7 +217,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
     $post = new stdClass();
     $post->course      = $course->id;
-    $post->forum       = $forum->id;
+    $post->cybrary       = $cybrary->id;
     $post->discussion  = $parent->discussion;
     $post->parent      = $parent->id;
     $post->subject     = $parent->subject;
@@ -226,7 +226,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
     $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
-    $strre = get_string('re', 'forum');
+    $strre = get_string('re', 'cybrary');
     if (!(substr($post->subject, 0, strlen($strre)) == $strre)) {
         $post->subject = $strre.' '.$post->subject;
     }
@@ -236,48 +236,48 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
 } else if (!empty($edit)) {  // User is editing their own post
 
-    if (! $post = forum_get_post_full($edit)) {
-        print_error('invalidpostid', 'forum');
+    if (! $post = cybrary_get_post_full($edit)) {
+        print_error('invalidpostid', 'cybrary');
     }
     if ($post->parent) {
-        if (! $parent = forum_get_post_full($post->parent)) {
-            print_error('invalidparentpostid', 'forum');
+        if (! $parent = cybrary_get_post_full($post->parent)) {
+            print_error('invalidparentpostid', 'cybrary');
         }
     }
 
-    if (! $discussion = $DB->get_record("forum_discussions", array("id" => $post->discussion))) {
-        print_error('notpartofdiscussion', 'forum');
+    if (! $discussion = $DB->get_record("cybrary_discussions", array("id" => $post->discussion))) {
+        print_error('notpartofdiscussion', 'cybrary');
     }
-    if (! $forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
+    if (! $cybrary = $DB->get_record("cybrary", array("id" => $discussion->cybrary))) {
+        print_error('invalidcybraryid', 'cybrary');
     }
     if (! $course = $DB->get_record("course", array("id" => $discussion->course))) {
         print_error('invalidcourseid');
     }
-    if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
+    if (!$cm = get_coursemodule_from_instance("cybrary", $cybrary->id, $course->id)) {
         print_error('invalidcoursemodule');
     } else {
         $modcontext = context_module::instance($cm->id);
     }
 
-    $PAGE->set_cm($cm, $course, $forum);
+    $PAGE->set_cm($cm, $course, $cybrary);
 
-    if (!($forum->type == 'news' && !$post->parent && $discussion->timestart > time())) {
+    if (!($cybrary->type == 'news' && !$post->parent && $discussion->timestart > time())) {
         if (((time() - $post->created) > $CFG->maxeditingtime) and
-                    !has_capability('mod/forum:editanypost', $modcontext)) {
-            print_error('maxtimehaspassed', 'forum', '', format_time($CFG->maxeditingtime));
+                    !has_capability('mod/cybrary:editanypost', $modcontext)) {
+            print_error('maxtimehaspassed', 'cybrary', '', format_time($CFG->maxeditingtime));
         }
     }
     if (($post->userid <> $USER->id) and
-                !has_capability('mod/forum:editanypost', $modcontext)) {
-        print_error('cannoteditposts', 'forum');
+                !has_capability('mod/cybrary:editanypost', $modcontext)) {
+        print_error('cannoteditposts', 'cybrary');
     }
 
 
     // Load up the $post variable.
     $post->edit   = $edit;
     $post->course = $course->id;
-    $post->forum  = $forum->id;
+    $post->cybrary  = $cybrary->id;
     $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
     $post = trusttext_pre_edit($post, 'message', $modcontext);
@@ -287,122 +287,122 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
 }else if (!empty($delete)) {  // User is deleting a post
 
-    if (! $post = forum_get_post_full($delete)) {
-        print_error('invalidpostid', 'forum');
+    if (! $post = cybrary_get_post_full($delete)) {
+        print_error('invalidpostid', 'cybrary');
     }
-    if (! $discussion = $DB->get_record("forum_discussions", array("id" => $post->discussion))) {
-        print_error('notpartofdiscussion', 'forum');
+    if (! $discussion = $DB->get_record("cybrary_discussions", array("id" => $post->discussion))) {
+        print_error('notpartofdiscussion', 'cybrary');
     }
-    if (! $forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
+    if (! $cybrary = $DB->get_record("cybrary", array("id" => $discussion->cybrary))) {
+        print_error('invalidcybraryid', 'cybrary');
     }
-    if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $forum->course)) {
+    if (!$cm = get_coursemodule_from_instance("cybrary", $cybrary->id, $cybrary->course)) {
         print_error('invalidcoursemodule');
     }
-    if (!$course = $DB->get_record('course', array('id' => $forum->course))) {
+    if (!$course = $DB->get_record('course', array('id' => $cybrary->course))) {
         print_error('invalidcourseid');
     }
 
     require_login($course, false, $cm);
     $modcontext = context_module::instance($cm->id);
 
-    if ( !(($post->userid == $USER->id && has_capability('mod/forum:deleteownpost', $modcontext))
-                || has_capability('mod/forum:deleteanypost', $modcontext)) ) {
-        print_error('cannotdeletepost', 'forum');
+    if ( !(($post->userid == $USER->id && has_capability('mod/cybrary:deleteownpost', $modcontext))
+                || has_capability('mod/cybrary:deleteanypost', $modcontext)) ) {
+        print_error('cannotdeletepost', 'cybrary');
     }
 
 
-    $replycount = forum_count_replies($post);
+    $replycount = cybrary_count_replies($post);
 
     if (!empty($confirm) && confirm_sesskey()) {    // User has confirmed the delete
         //check user capability to delete post.
         $timepassed = time() - $post->created;
-        if (($timepassed > $CFG->maxeditingtime) && !has_capability('mod/forum:deleteanypost', $modcontext)) {
-            print_error("cannotdeletepost", "forum",
-                        forum_go_back_to(new moodle_url("/mod/forum/discuss.php", array('d' => $post->discussion))));
+        if (($timepassed > $CFG->maxeditingtime) && !has_capability('mod/cybrary:deleteanypost', $modcontext)) {
+            print_error("cannotdeletepost", "cybrary",
+                        cybrary_go_back_to(new moodle_url("/mod/cybrary/discuss.php", array('d' => $post->discussion))));
         }
 
         if ($post->totalscore) {
             notice(get_string('couldnotdeleteratings', 'rating'),
-                   forum_go_back_to(new moodle_url("/mod/forum/discuss.php", array('d' => $post->discussion))));
+                   cybrary_go_back_to(new moodle_url("/mod/cybrary/discuss.php", array('d' => $post->discussion))));
 
-        } else if ($replycount && !has_capability('mod/forum:deleteanypost', $modcontext)) {
-            print_error("couldnotdeletereplies", "forum",
-                        forum_go_back_to(new moodle_url("/mod/forum/discuss.php", array('d' => $post->discussion))));
+        } else if ($replycount && !has_capability('mod/cybrary:deleteanypost', $modcontext)) {
+            print_error("couldnotdeletereplies", "cybrary",
+                        cybrary_go_back_to(new moodle_url("/mod/cybrary/discuss.php", array('d' => $post->discussion))));
 
         } else {
             if (! $post->parent) {  // post is a discussion topic as well, so delete discussion
-                if ($forum->type == 'single') {
+                if ($cybrary->type == 'single') {
                     notice("Sorry, but you are not allowed to delete that discussion!",
-                           forum_go_back_to(new moodle_url("/mod/forum/discuss.php", array('d' => $post->discussion))));
+                           cybrary_go_back_to(new moodle_url("/mod/cybrary/discuss.php", array('d' => $post->discussion))));
                 }
-                forum_delete_discussion($discussion, false, $course, $cm, $forum);
+                cybrary_delete_discussion($discussion, false, $course, $cm, $cybrary);
 
                 $params = array(
                     'objectid' => $discussion->id,
                     'context' => $modcontext,
                     'other' => array(
-                        'forumid' => $forum->id,
+                        'cybraryid' => $cybrary->id,
                     )
                 );
 
-                $event = \mod_forum\event\discussion_deleted::create($params);
-                $event->add_record_snapshot('forum_discussions', $discussion);
+                $event = \mod_cybrary\event\discussion_deleted::create($params);
+                $event->add_record_snapshot('cybrary_discussions', $discussion);
                 $event->trigger();
 
-                redirect("view.php?f=$discussion->forum");
+                redirect("view.php?f=$discussion->cybrary");
 
-            } else if (forum_delete_post($post, has_capability('mod/forum:deleteanypost', $modcontext),
-                $course, $cm, $forum)) {
+            } else if (cybrary_delete_post($post, has_capability('mod/cybrary:deleteanypost', $modcontext),
+                $course, $cm, $cybrary)) {
 
-                if ($forum->type == 'single') {
-                    // Single discussion forums are an exception. We show
-                    // the forum itself since it only has one discussion
+                if ($cybrary->type == 'single') {
+                    // Single discussion cybraries are an exception. We show
+                    // the cybrary itself since it only has one discussion
                     // thread.
-                    $discussionurl = new moodle_url("/mod/forum/view.php", array('f' => $forum->id));
+                    $discussionurl = new moodle_url("/mod/cybrary/view.php", array('f' => $cybrary->id));
                 } else {
-                    $discussionurl = new moodle_url("/mod/forum/discuss.php", array('d' => $discussion->id));
+                    $discussionurl = new moodle_url("/mod/cybrary/discuss.php", array('d' => $discussion->id));
                 }
 
-                redirect(forum_go_back_to($discussionurl));
+                redirect(cybrary_go_back_to($discussionurl));
             } else {
-                print_error('errorwhiledelete', 'forum');
+                print_error('errorwhiledelete', 'cybrary');
             }
         }
 
 
     } else { // User just asked to delete something
 
-        forum_set_return();
-        $PAGE->navbar->add(get_string('delete', 'forum'));
+        cybrary_set_return();
+        $PAGE->navbar->add(get_string('delete', 'cybrary'));
         $PAGE->set_title($course->shortname);
         $PAGE->set_heading($course->fullname);
 
         if ($replycount) {
-            if (!has_capability('mod/forum:deleteanypost', $modcontext)) {
-                print_error("couldnotdeletereplies", "forum",
-                      forum_go_back_to(new moodle_url('/mod/forum/discuss.php', array('d' => $post->discussion), 'p'.$post->id)));
+            if (!has_capability('mod/cybrary:deleteanypost', $modcontext)) {
+                print_error("couldnotdeletereplies", "cybrary",
+                      cybrary_go_back_to(new moodle_url('/mod/cybrary/discuss.php', array('d' => $post->discussion), 'p'.$post->id)));
             }
             echo $OUTPUT->header();
-            echo $OUTPUT->heading(format_string($forum->name), 2);
-            echo $OUTPUT->confirm(get_string("deletesureplural", "forum", $replycount+1),
+            echo $OUTPUT->heading(format_string($cybrary->name), 2);
+            echo $OUTPUT->confirm(get_string("deletesureplural", "cybrary", $replycount+1),
                          "post.php?delete=$delete&confirm=$delete",
-                         $CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'#p'.$post->id);
+                         $CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'#p'.$post->id);
 
-            forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+            cybrary_print_post($post, $discussion, $cybrary, $cm, $course, false, false, false);
 
             if (empty($post->edit)) {
-                $forumtracked = forum_tp_is_tracked($forum);
-                $posts = forum_get_all_discussion_posts($discussion->id, "created ASC", $forumtracked);
-                forum_print_posts_nested($course, $cm, $forum, $discussion, $post, false, false, $forumtracked, $posts);
+                $cybrarytracked = cybrary_tp_is_tracked($cybrary);
+                $posts = cybrary_get_all_discussion_posts($discussion->id, "created ASC", $cybrarytracked);
+                cybrary_print_posts_nested($course, $cm, $cybrary, $discussion, $post, false, false, $cybrarytracked, $posts);
             }
         } else {
             echo $OUTPUT->header();
-            echo $OUTPUT->heading(format_string($forum->name), 2);
-            echo $OUTPUT->confirm(get_string("deletesure", "forum", $replycount),
+            echo $OUTPUT->heading(format_string($cybrary->name), 2);
+            echo $OUTPUT->confirm(get_string("deletesure", "cybrary", $replycount),
                          "post.php?delete=$delete&confirm=$delete",
-                         $CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'#p'.$post->id);
-            forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+                         $CFG->wwwroot.'/mod/cybrary/discuss.php?d='.$post->discussion.'#p'.$post->id);
+            cybrary_print_post($post, $discussion, $cybrary, $cm, $course, false, false, false);
         }
 
     }
@@ -412,43 +412,43 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
 } else if (!empty($prune)) {  // Pruning
 
-    if (!$post = forum_get_post_full($prune)) {
-        print_error('invalidpostid', 'forum');
+    if (!$post = cybrary_get_post_full($prune)) {
+        print_error('invalidpostid', 'cybrary');
     }
-    if (!$discussion = $DB->get_record("forum_discussions", array("id" => $post->discussion))) {
-        print_error('notpartofdiscussion', 'forum');
+    if (!$discussion = $DB->get_record("cybrary_discussions", array("id" => $post->discussion))) {
+        print_error('notpartofdiscussion', 'cybrary');
     }
-    if (!$forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
+    if (!$cybrary = $DB->get_record("cybrary", array("id" => $discussion->cybrary))) {
+        print_error('invalidcybraryid', 'cybrary');
     }
-    if ($forum->type == 'single') {
-        print_error('cannotsplit', 'forum');
+    if ($cybrary->type == 'single') {
+        print_error('cannotsplit', 'cybrary');
     }
     if (!$post->parent) {
-        print_error('alreadyfirstpost', 'forum');
+        print_error('alreadyfirstpost', 'cybrary');
     }
-    if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $forum->course)) { // For the logs
+    if (!$cm = get_coursemodule_from_instance("cybrary", $cybrary->id, $cybrary->course)) { // For the logs
         print_error('invalidcoursemodule');
     } else {
         $modcontext = context_module::instance($cm->id);
     }
-    if (!has_capability('mod/forum:splitdiscussions', $modcontext)) {
-        print_error('cannotsplit', 'forum');
+    if (!has_capability('mod/cybrary:splitdiscussions', $modcontext)) {
+        print_error('cannotsplit', 'cybrary');
     }
 
     $PAGE->set_cm($cm);
     $PAGE->set_context($modcontext);
 
-    $prunemform = new mod_forum_prune_form(null, array('prune' => $prune, 'confirm' => $prune));
+    $prunemform = new mod_cybrary_prune_form(null, array('prune' => $prune, 'confirm' => $prune));
 
 
     if ($prunemform->is_cancelled()) {
-        redirect(forum_go_back_to(new moodle_url("/mod/forum/discuss.php", array('d' => $post->discussion))));
+        redirect(cybrary_go_back_to(new moodle_url("/mod/cybrary/discuss.php", array('d' => $post->discussion))));
     } else if ($fromform = $prunemform->get_data()) {
         // User submits the data.
         $newdiscussion = new stdClass();
         $newdiscussion->course       = $discussion->course;
-        $newdiscussion->forum        = $discussion->forum;
+        $newdiscussion->cybrary        = $discussion->cybrary;
         $newdiscussion->name         = $name;
         $newdiscussion->firstpost    = $post->id;
         $newdiscussion->userid       = $discussion->userid;
@@ -458,40 +458,40 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
         $newdiscussion->timestart    = $discussion->timestart;
         $newdiscussion->timeend      = $discussion->timeend;
 
-        $newid = $DB->insert_record('forum_discussions', $newdiscussion);
+        $newid = $DB->insert_record('cybrary_discussions', $newdiscussion);
 
         $newpost = new stdClass();
         $newpost->id      = $post->id;
         $newpost->parent  = 0;
         $newpost->subject = $name;
 
-        $DB->update_record("forum_posts", $newpost);
+        $DB->update_record("cybrary_posts", $newpost);
 
-        forum_change_discussionid($post->id, $newid);
+        cybrary_change_discussionid($post->id, $newid);
 
         // Update last post in each discussion.
-        forum_discussion_update_last_post($discussion->id);
-        forum_discussion_update_last_post($newid);
+        cybrary_discussion_update_last_post($discussion->id);
+        cybrary_discussion_update_last_post($newid);
 
         // Fire events to reflect the split..
         $params = array(
             'context' => $modcontext,
             'objectid' => $discussion->id,
             'other' => array(
-                'forumid' => $forum->id,
+                'cybraryid' => $cybrary->id,
             )
         );
-        $event = \mod_forum\event\discussion_updated::create($params);
+        $event = \mod_cybrary\event\discussion_updated::create($params);
         $event->trigger();
 
         $params = array(
             'context' => $modcontext,
             'objectid' => $newid,
             'other' => array(
-                'forumid' => $forum->id,
+                'cybraryid' => $cybrary->id,
             )
         );
-        $event = \mod_forum\event\discussion_created::create($params);
+        $event = \mod_cybrary\event\discussion_created::create($params);
         $event->trigger();
 
         $params = array(
@@ -499,30 +499,30 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
             'objectid' => $post->id,
             'other' => array(
                 'discussionid' => $newid,
-                'forumid' => $forum->id,
-                'forumtype' => $forum->type,
+                'cybraryid' => $cybrary->id,
+                'cybrarytype' => $cybrary->type,
             )
         );
-        $event = \mod_forum\event\post_updated::create($params);
-        $event->add_record_snapshot('forum_discussions', $discussion);
+        $event = \mod_cybrary\event\post_updated::create($params);
+        $event->add_record_snapshot('cybrary_discussions', $discussion);
         $event->trigger();
 
-        redirect(forum_go_back_to(new moodle_url("/mod/forum/discuss.php", array('d' => $newid))));
+        redirect(cybrary_go_back_to(new moodle_url("/mod/cybrary/discuss.php", array('d' => $newid))));
 
     } else {
         // Display the prune form.
-        $course = $DB->get_record('course', array('id' => $forum->course));
-        $PAGE->navbar->add(format_string($post->subject, true), new moodle_url('/mod/forum/discuss.php', array('d'=>$discussion->id)));
-        $PAGE->navbar->add(get_string("prune", "forum"));
+        $course = $DB->get_record('course', array('id' => $cybrary->course));
+        $PAGE->navbar->add(format_string($post->subject, true), new moodle_url('/mod/cybrary/discuss.php', array('d'=>$discussion->id)));
+        $PAGE->navbar->add(get_string("prune", "cybrary"));
         $PAGE->set_title(format_string($discussion->name).": ".format_string($post->subject));
         $PAGE->set_heading($course->fullname);
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(format_string($forum->name), 2);
-        echo $OUTPUT->heading(get_string('pruneheading', 'forum'), 3);
+        echo $OUTPUT->heading(format_string($cybrary->name), 2);
+        echo $OUTPUT->heading(get_string('pruneheading', 'cybrary'), 3);
 
         $prunemform->display();
 
-        forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+        cybrary_print_post($post, $discussion, $cybrary, $cm, $course, false, false, false);
     }
 
     echo $OUTPUT->footer();
@@ -534,13 +534,13 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
 if (!isset($coursecontext)) {
     // Has not yet been set by post.php.
-    $coursecontext = context_course::instance($forum->course);
+    $coursecontext = context_course::instance($cybrary->course);
 }
 
 
 // from now on user must be logged on properly
 
-if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) { // For the logs
+if (!$cm = get_coursemodule_from_instance('cybrary', $cybrary->id, $course->id)) { // For the logs
     print_error('invalidcoursemodule');
 }
 $modcontext = context_module::instance($cm->id);
@@ -551,24 +551,24 @@ if (isguestuser()) {
     print_error('noguest');
 }
 
-if (!isset($forum->maxattachments)) {  // TODO - delete this once we add a field to the forum table
-    $forum->maxattachments = 3;
+if (!isset($cybrary->maxattachments)) {  // TODO - delete this once we add a field to the cybrary table
+    $cybrary->maxattachments = 3;
 }
 
-$thresholdwarning = forum_check_throttling($forum, $cm);
-$mform_post = new mod_forum_post_form('post.php', array('course' => $course,
+$thresholdwarning = cybrary_check_throttling($cybrary, $cm);
+$mform_post = new mod_cybrary_post_form('post.php', array('course' => $course,
                                                         'cm' => $cm,
                                                         'coursecontext' => $coursecontext,
                                                         'modcontext' => $modcontext,
-                                                        'forum' => $forum,
+                                                        'cybrary' => $cybrary,
                                                         'post' => $post,
-                                                        'subscribe' => \mod_forum\subscriptions::is_subscribed($USER->id, $forum,
+                                                        'subscribe' => \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary,
                                                                 null, $cm),
                                                         'thresholdwarning' => $thresholdwarning,
-                                                        'edit' => $edit), 'post', '', array('id' => 'mformforum'));
+                                                        'edit' => $edit), 'post', '', array('id' => 'mformcybrary'));
 
 $draftitemid = file_get_submitted_draft_itemid('attachments');
-file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_forum', 'attachment', empty($post->id)?null:$post->id, mod_forum_post_form::attachment_options($forum));
+file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_cybrary', 'attachment', empty($post->id)?null:$post->id, mod_cybrary_post_form::attachment_options($cybrary));
 
 //load data into form NOW!
 
@@ -578,46 +578,46 @@ if ($USER->id != $post->userid) {   // Not the original author, so add a message
     if ($post->messageformat == FORMAT_HTML) {
         $data->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$USER->id.'&course='.$post->course.'">'.
                        fullname($USER).'</a>';
-        $post->message .= '<p><span class="edited">('.get_string('editedby', 'forum', $data).')</span></p>';
+        $post->message .= '<p><span class="edited">('.get_string('editedby', 'cybrary', $data).')</span></p>';
     } else {
         $data->name = fullname($USER);
-        $post->message .= "\n\n(".get_string('editedby', 'forum', $data).')';
+        $post->message .= "\n\n(".get_string('editedby', 'cybrary', $data).')';
     }
     unset($data);
 }
 
 $formheading = '';
 if (!empty($parent)) {
-    $heading = get_string("yourreply", "forum");
-    $formheading = get_string('reply', 'forum');
+    $heading = get_string("yourreply", "cybrary");
+    $formheading = get_string('reply', 'cybrary');
 } else {
-    if ($forum->type == 'qanda') {
-        $heading = get_string('yournewquestion', 'forum');
+    if ($cybrary->type == 'qanda') {
+        $heading = get_string('yournewquestion', 'cybrary');
     } else {
-        $heading = get_string('yournewtopic', 'forum');
+        $heading = get_string('yournewtopic', 'cybrary');
     }
 }
 
 $postid = empty($post->id) ? null : $post->id;
 $draftid_editor = file_get_submitted_draft_itemid('message');
-$currenttext = file_prepare_draft_area($draftid_editor, $modcontext->id, 'mod_forum', 'post', $postid, mod_forum_post_form::editor_options($modcontext, $postid), $post->message);
+$currenttext = file_prepare_draft_area($draftid_editor, $modcontext->id, 'mod_cybrary', 'post', $postid, mod_cybrary_post_form::editor_options($modcontext, $postid), $post->message);
 
 $manageactivities = has_capability('moodle/course:manageactivities', $coursecontext);
-if (\mod_forum\subscriptions::subscription_disabled($forum) && !$manageactivities) {
+if (\mod_cybrary\subscriptions::subscription_disabled($cybrary) && !$manageactivities) {
     // User does not have permission to subscribe to this discussion at all.
     $discussionsubscribe = false;
-} else if (\mod_forum\subscriptions::is_forcesubscribed($forum)) {
+} else if (\mod_cybrary\subscriptions::is_forcesubscribed($cybrary)) {
     // User does not have permission to unsubscribe from this discussion at all.
     $discussionsubscribe = true;
 } else {
-    if (isset($discussion) && \mod_forum\subscriptions::is_subscribed($USER->id, $forum, $discussion->id, $cm)) {
+    if (isset($discussion) && \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary, $discussion->id, $cm)) {
         // User is subscribed to the discussion - continue the subscription.
         $discussionsubscribe = true;
-    } else if (!isset($discussion) && \mod_forum\subscriptions::is_subscribed($USER->id, $forum, null, $cm)) {
-        // Starting a new discussion, and the user is subscribed to the forum - subscribe to the discussion.
+    } else if (!isset($discussion) && \mod_cybrary\subscriptions::is_subscribed($USER->id, $cybrary, null, $cm)) {
+        // Starting a new discussion, and the user is subscribed to the cybrary - subscribe to the discussion.
         $discussionsubscribe = true;
     } else {
-        // User is not subscribed to either forum or discussion. Follow user preference.
+        // User is not subscribed to either cybrary or discussion. Follow user preference.
         $discussionsubscribe = $USER->autosubscribe;
     }
 }
@@ -659,16 +659,16 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
                                     array()));
 
 if ($mform_post->is_cancelled()) {
-    if (!isset($discussion->id) || $forum->type === 'qanda') {
-        // Q and A forums don't have a discussion page, so treat them like a new thread..
-        redirect(new moodle_url('/mod/forum/view.php', array('f' => $forum->id)));
+    if (!isset($discussion->id) || $cybrary->type === 'qanda') {
+        // Q and A cybraries don't have a discussion page, so treat them like a new thread..
+        redirect(new moodle_url('/mod/cybrary/view.php', array('f' => $cybrary->id)));
     } else {
-        redirect(new moodle_url('/mod/forum/discuss.php', array('d' => $discussion->id)));
+        redirect(new moodle_url('/mod/cybrary/discuss.php', array('d' => $discussion->id)));
     }
 } else if ($fromform = $mform_post->get_data()) {
 
     if (empty($SESSION->fromurl)) {
-        $errordestination = "$CFG->wwwroot/mod/forum/view.php?f=$forum->id";
+        $errordestination = "$CFG->wwwroot/mod/cybrary/view.php?f=$cybrary->id";
     } else {
         $errordestination = $SESSION->fromurl;
     }
@@ -685,7 +685,7 @@ if ($mform_post->is_cancelled()) {
         $message = '';
 
         //fix for bug #4314
-        if (!$realpost = $DB->get_record('forum_posts', array('id' => $fromform->id))) {
+        if (!$realpost = $DB->get_record('cybrary_posts', array('id' => $fromform->id))) {
             $realpost = new stdClass();
             $realpost->userid = -1;
         }
@@ -695,36 +695,36 @@ if ($mform_post->is_cancelled()) {
         // or has either startnewdiscussion or reply capability and is editting own post
         // then he can proceed
         // MDL-7066
-        if ( !(($realpost->userid == $USER->id && (has_capability('mod/forum:replypost', $modcontext)
-                            || has_capability('mod/forum:startdiscussion', $modcontext))) ||
-                            has_capability('mod/forum:editanypost', $modcontext)) ) {
-            print_error('cannotupdatepost', 'forum');
+        if ( !(($realpost->userid == $USER->id && (has_capability('mod/cybrary:replypost', $modcontext)
+                            || has_capability('mod/cybrary:startdiscussion', $modcontext))) ||
+                            has_capability('mod/cybrary:editanypost', $modcontext)) ) {
+            print_error('cannotupdatepost', 'cybrary');
         }
 
         // If the user has access to all groups and they are changing the group, then update the post.
-        if (isset($fromform->groupinfo) && has_capability('mod/forum:movediscussions', $modcontext)) {
+        if (isset($fromform->groupinfo) && has_capability('mod/cybrary:movediscussions', $modcontext)) {
             if (empty($fromform->groupinfo)) {
                 $fromform->groupinfo = -1;
             }
 
-            if (!forum_user_can_post_discussion($forum, $fromform->groupinfo, null, $cm, $modcontext)) {
-                print_error('cannotupdatepost', 'forum');
+            if (!cybrary_user_can_post_discussion($cybrary, $fromform->groupinfo, null, $cm, $modcontext)) {
+                print_error('cannotupdatepost', 'cybrary');
             }
 
-            $DB->set_field('forum_discussions' ,'groupid' , $fromform->groupinfo, array('firstpost' => $fromform->id));
+            $DB->set_field('cybrary_discussions' ,'groupid' , $fromform->groupinfo, array('firstpost' => $fromform->id));
         }
 
         $updatepost = $fromform; //realpost
-        $updatepost->forum = $forum->id;
-        if (!forum_update_post($updatepost, $mform_post, $message)) {
-            print_error("couldnotupdate", "forum", $errordestination);
+        $updatepost->cybrary = $cybrary->id;
+        if (!cybrary_update_post($updatepost, $mform_post, $message)) {
+            print_error("couldnotupdate", "cybrary", $errordestination);
         }
 
         // MDL-11818
-        if (($forum->type == 'single') && ($updatepost->parent == '0')){ // updating first post of single discussion type -> updating forum intro
-            $forum->intro = $updatepost->message;
-            $forum->timemodified = time();
-            $DB->update_record("forum", $forum);
+        if (($cybrary->type == 'single') && ($updatepost->parent == '0')){ // updating first post of single discussion type -> updating cybrary intro
+            $cybrary->intro = $updatepost->message;
+            $cybrary->timemodified = time();
+            $DB->update_record("cybrary", $cybrary);
         }
 
         $timemessage = 2;
@@ -733,22 +733,22 @@ if ($mform_post->is_cancelled()) {
         }
 
         if ($realpost->userid == $USER->id) {
-            $message .= '<br />'.get_string("postupdated", "forum");
+            $message .= '<br />'.get_string("postupdated", "cybrary");
         } else {
             $realuser = $DB->get_record('user', array('id' => $realpost->userid));
-            $message .= '<br />'.get_string("editedpostupdated", "forum", fullname($realuser));
+            $message .= '<br />'.get_string("editedpostupdated", "cybrary", fullname($realuser));
         }
 
-        if ($subscribemessage = forum_post_subscription($fromform, $forum, $discussion)) {
+        if ($subscribemessage = cybrary_post_subscription($fromform, $cybrary, $discussion)) {
             $timemessage = 4;
         }
-        if ($forum->type == 'single') {
-            // Single discussion forums are an exception. We show
-            // the forum itself since it only has one discussion
+        if ($cybrary->type == 'single') {
+            // Single discussion cybraries are an exception. We show
+            // the cybrary itself since it only has one discussion
             // thread.
-            $discussionurl = new moodle_url("/mod/forum/view.php", array('f' => $forum->id));
+            $discussionurl = new moodle_url("/mod/cybrary/view.php", array('f' => $cybrary->id));
         } else {
-            $discussionurl = new moodle_url("/mod/forum/discuss.php", array('d' => $discussion->id), 'p' . $fromform->id);
+            $discussionurl = new moodle_url("/mod/cybrary/discuss.php", array('d' => $discussion->id), 'p' . $fromform->id);
         }
 
         $params = array(
@@ -756,8 +756,8 @@ if ($mform_post->is_cancelled()) {
             'objectid' => $fromform->id,
             'other' => array(
                 'discussionid' => $discussion->id,
-                'forumid' => $forum->id,
-                'forumtype' => $forum->type,
+                'cybraryid' => $cybrary->id,
+                'cybrarytype' => $cybrary->type,
             )
         );
 
@@ -765,48 +765,48 @@ if ($mform_post->is_cancelled()) {
             $params['relateduserid'] = $realpost->userid;
         }
 
-        $event = \mod_forum\event\post_updated::create($params);
-        $event->add_record_snapshot('forum_discussions', $discussion);
+        $event = \mod_cybrary\event\post_updated::create($params);
+        $event->add_record_snapshot('cybrary_discussions', $discussion);
         $event->trigger();
 
-        redirect(forum_go_back_to($discussionurl), $message.$subscribemessage, $timemessage);
+        redirect(cybrary_go_back_to($discussionurl), $message.$subscribemessage, $timemessage);
 
         exit;
 
 
     } else if ($fromform->discussion) { // Adding a new post to an existing discussion
         // Before we add this we must check that the user will not exceed the blocking threshold.
-        forum_check_blocking_threshold($thresholdwarning);
+        cybrary_check_blocking_threshold($thresholdwarning);
 
         unset($fromform->groupid);
         $message = '';
         $addpost = $fromform;
-        $addpost->forum=$forum->id;
-        if ($fromform->id = forum_add_new_post($addpost, $mform_post, $message)) {
+        $addpost->cybrary=$cybrary->id;
+        if ($fromform->id = cybrary_add_new_post($addpost, $mform_post, $message)) {
             $timemessage = 2;
             if (!empty($message)) { // if we're printing stuff about the file upload
                 $timemessage = 4;
             }
 
-            if ($subscribemessage = forum_post_subscription($fromform, $forum, $discussion)) {
+            if ($subscribemessage = cybrary_post_subscription($fromform, $cybrary, $discussion)) {
                 $timemessage = 4;
             }
 
             if (!empty($fromform->mailnow)) {
-                $message .= get_string("postmailnow", "forum");
+                $message .= get_string("postmailnow", "cybrary");
                 $timemessage = 4;
             } else {
-                $message .= '<p>'.get_string("postaddedsuccess", "forum") . '</p>';
-                $message .= '<p>'.get_string("postaddedtimeleft", "forum", format_time($CFG->maxeditingtime)) . '</p>';
+                $message .= '<p>'.get_string("postaddedsuccess", "cybrary") . '</p>';
+                $message .= '<p>'.get_string("postaddedtimeleft", "cybrary", format_time($CFG->maxeditingtime)) . '</p>';
             }
 
-            if ($forum->type == 'single') {
-                // Single discussion forums are an exception. We show
-                // the forum itself since it only has one discussion
+            if ($cybrary->type == 'single') {
+                // Single discussion cybraries are an exception. We show
+                // the cybrary itself since it only has one discussion
                 // thread.
-                $discussionurl = new moodle_url("/mod/forum/view.php", array('f' => $forum->id), 'p'.$fromform->id);
+                $discussionurl = new moodle_url("/mod/cybrary/view.php", array('f' => $cybrary->id), 'p'.$fromform->id);
             } else {
-                $discussionurl = new moodle_url("/mod/forum/discuss.php", array('d' => $discussion->id), 'p'.$fromform->id);
+                $discussionurl = new moodle_url("/mod/cybrary/discuss.php", array('d' => $discussion->id), 'p'.$fromform->id);
             }
 
             $params = array(
@@ -814,32 +814,32 @@ if ($mform_post->is_cancelled()) {
                 'objectid' => $fromform->id,
                 'other' => array(
                     'discussionid' => $discussion->id,
-                    'forumid' => $forum->id,
-                    'forumtype' => $forum->type,
+                    'cybraryid' => $cybrary->id,
+                    'cybrarytype' => $cybrary->type,
                 )
             );
-            $event = \mod_forum\event\post_created::create($params);
-            $event->add_record_snapshot('forum_posts', $fromform);
-            $event->add_record_snapshot('forum_discussions', $discussion);
+            $event = \mod_cybrary\event\post_created::create($params);
+            $event->add_record_snapshot('cybrary_posts', $fromform);
+            $event->add_record_snapshot('cybrary_discussions', $discussion);
             $event->trigger();
 
             // Update completion state
             $completion=new completion_info($course);
             if($completion->is_enabled($cm) &&
-                ($forum->completionreplies || $forum->completionposts)) {
+                ($cybrary->completionreplies || $cybrary->completionposts)) {
                 $completion->update_state($cm,COMPLETION_COMPLETE);
             }
 
-            redirect(forum_go_back_to($discussionurl), $message.$subscribemessage, $timemessage);
+            redirect(cybrary_go_back_to($discussionurl), $message.$subscribemessage, $timemessage);
 
         } else {
-            print_error("couldnotadd", "forum", $errordestination);
+            print_error("couldnotadd", "cybrary", $errordestination);
         }
         exit;
 
     } else { // Adding a new discussion.
         // The location to redirect to after successfully posting.
-        $redirectto = new moodle_url('view.php', array('f' => $fromform->forum));
+        $redirectto = new moodle_url('view.php', array('f' => $fromform->cybrary));
 
         $fromform->mailnow = empty($fromform->mailnow) ? 0 : 1;
 
@@ -847,7 +847,7 @@ if ($mform_post->is_cancelled()) {
         $discussion->name = $fromform->subject;
 
         $newstopic = false;
-        if ($forum->type == 'news' && !$fromform->parent) {
+        if ($cybrary->type == 'news' && !$fromform->parent) {
             $newstopic = true;
         }
         $discussion->timestart = $fromform->timestart;
@@ -859,13 +859,13 @@ if ($mform_post->is_cancelled()) {
         // If we are posting a copy to all groups the user has access to.
         if (isset($fromform->posttomygroups)) {
             // Post to each of my groups.
-            require_capability('mod/forum:canposttomygroups', $modcontext);
+            require_capability('mod/cybrary:canposttomygroups', $modcontext);
 
             // Fetch all of this user's groups.
             // Note: all groups are returned when in visible groups mode so we must manually filter.
             $allowedgroups = groups_get_activity_allowed_groups($cm);
             foreach ($allowedgroups as $groupid => $group) {
-                if (forum_user_can_post_discussion($forum, $groupid, -1, $cm, $modcontext)) {
+                if (cybrary_user_can_post_discussion($cybrary, $groupid, -1, $cm, $modcontext)) {
                     $groupstopostto[] = $groupid;
                 }
             }
@@ -883,26 +883,26 @@ if ($mform_post->is_cancelled()) {
         }
 
         // Before we post this we must check that the user will not exceed the blocking threshold.
-        forum_check_blocking_threshold($thresholdwarning);
+        cybrary_check_blocking_threshold($thresholdwarning);
 
         foreach ($groupstopostto as $group) {
-            if (!forum_user_can_post_discussion($forum, $group, -1, $cm, $modcontext)) {
-                print_error('cannotcreatediscussion', 'forum');
+            if (!cybrary_user_can_post_discussion($cybrary, $group, -1, $cm, $modcontext)) {
+                print_error('cannotcreatediscussion', 'cybrary');
             }
 
             $discussion->groupid = $group;
             $message = '';
-            if ($discussion->id = forum_add_discussion($discussion, $mform_post, $message)) {
+            if ($discussion->id = cybrary_add_discussion($discussion, $mform_post, $message)) {
 
                 $params = array(
                     'context' => $modcontext,
                     'objectid' => $discussion->id,
                     'other' => array(
-                        'forumid' => $forum->id,
+                        'cybraryid' => $cybrary->id,
                     )
                 );
-                $event = \mod_forum\event\discussion_created::create($params);
-                $event->add_record_snapshot('forum_discussions', $discussion);
+                $event = \mod_cybrary\event\discussion_created::create($params);
+                $event->add_record_snapshot('cybrary_discussions', $discussion);
                 $event->trigger();
 
                 $timemessage = 2;
@@ -911,30 +911,30 @@ if ($mform_post->is_cancelled()) {
                 }
 
                 if ($fromform->mailnow) {
-                    $message .= get_string("postmailnow", "forum");
+                    $message .= get_string("postmailnow", "cybrary");
                     $timemessage = 4;
                 } else {
-                    $message .= '<p>'.get_string("postaddedsuccess", "forum") . '</p>';
-                    $message .= '<p>'.get_string("postaddedtimeleft", "forum", format_time($CFG->maxeditingtime)) . '</p>';
+                    $message .= '<p>'.get_string("postaddedsuccess", "cybrary") . '</p>';
+                    $message .= '<p>'.get_string("postaddedtimeleft", "cybrary", format_time($CFG->maxeditingtime)) . '</p>';
                 }
 
-                if ($subscribemessage = forum_post_subscription($fromform, $forum, $discussion)) {
+                if ($subscribemessage = cybrary_post_subscription($fromform, $cybrary, $discussion)) {
                     $timemessage = 6;
                 }
             } else {
-                print_error("couldnotadd", "forum", $errordestination);
+                print_error("couldnotadd", "cybrary", $errordestination);
             }
         }
 
         // Update completion status.
         $completion = new completion_info($course);
         if ($completion->is_enabled($cm) &&
-                ($forum->completiondiscussions || $forum->completionposts)) {
+                ($cybrary->completiondiscussions || $cybrary->completionposts)) {
             $completion->update_state($cm, COMPLETION_COMPLETE);
         }
 
         // Redirect back to the discussion.
-        redirect(forum_go_back_to($redirectto->out()), $message . $subscribemessage, $timemessage);
+        redirect(cybrary_go_back_to($redirectto->out()), $message . $subscribemessage, $timemessage);
     }
 }
 
@@ -944,16 +944,16 @@ if ($mform_post->is_cancelled()) {
 // variable will be loaded with all the particulars,
 // so bring up the form.
 
-// $course, $forum are defined.  $discussion is for edit and reply only.
+// $course, $cybrary are defined.  $discussion is for edit and reply only.
 
 if ($post->discussion) {
-    if (! $toppost = $DB->get_record("forum_posts", array("discussion" => $post->discussion, "parent" => 0))) {
-        print_error('cannotfindparentpost', 'forum', '', $post->id);
+    if (! $toppost = $DB->get_record("cybrary_posts", array("discussion" => $post->discussion, "parent" => 0))) {
+        print_error('cannotfindparentpost', 'cybrary', '', $post->id);
     }
 } else {
     $toppost = new stdClass();
-    $toppost->subject = ($forum->type == "news") ? get_string("addanewtopic", "forum") :
-                                                   get_string("addanewdiscussion", "forum");
+    $toppost->subject = ($cybrary->type == "news") ? get_string("addanewtopic", "cybrary") :
+                                                   get_string("addanewdiscussion", "cybrary");
 }
 
 if (empty($post->edit)) {
@@ -964,11 +964,11 @@ if (empty($discussion->name)) {
     if (empty($discussion)) {
         $discussion = new stdClass();
     }
-    $discussion->name = $forum->name;
+    $discussion->name = $cybrary->name;
 }
-if ($forum->type == 'single') {
-    // There is only one discussion thread for this forum type. We should
-    // not show the discussion name (same as forum name in this case) in
+if ($cybrary->type == 'single') {
+    // There is only one discussion thread for this cybrary type. We should
+    // not show the discussion name (same as cybrary name in this case) in
     // the breadcrumbs.
     $strdiscussionname = '';
 } else {
@@ -983,56 +983,56 @@ if (!empty($discussion->id)) {
 }
 
 if ($post->parent) {
-    $PAGE->navbar->add(get_string('reply', 'forum'));
+    $PAGE->navbar->add(get_string('reply', 'cybrary'));
 }
 
 if ($edit) {
-    $PAGE->navbar->add(get_string('edit', 'forum'));
+    $PAGE->navbar->add(get_string('edit', 'cybrary'));
 }
 
 $PAGE->set_title("$course->shortname: $strdiscussionname ".format_string($toppost->subject));
 $PAGE->set_heading($course->fullname);
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($forum->name), 2);
+echo $OUTPUT->heading(format_string($cybrary->name), 2);
 
 // checkup
-if (!empty($parent) && !forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
-    print_error('cannotreply', 'forum');
+if (!empty($parent) && !cybrary_user_can_see_post($cybrary, $discussion, $post, null, $cm)) {
+    print_error('cannotreply', 'cybrary');
 }
-if (empty($parent) && empty($edit) && !forum_user_can_post_discussion($forum, $groupid, -1, $cm, $modcontext)) {
-    print_error('cannotcreatediscussion', 'forum');
+if (empty($parent) && empty($edit) && !cybrary_user_can_post_discussion($cybrary, $groupid, -1, $cm, $modcontext)) {
+    print_error('cannotcreatediscussion', 'cybrary');
 }
 
-if ($forum->type == 'qanda'
-            && !has_capability('mod/forum:viewqandawithoutposting', $modcontext)
+if ($cybrary->type == 'qanda'
+            && !has_capability('mod/cybrary:viewqandawithoutposting', $modcontext)
             && !empty($discussion->id)
-            && !forum_user_has_posted($forum->id, $discussion->id, $USER->id)) {
-    echo $OUTPUT->notification(get_string('qandanotify','forum'));
+            && !cybrary_user_has_posted($cybrary->id, $discussion->id, $USER->id)) {
+    echo $OUTPUT->notification(get_string('qandanotify','cybrary'));
 }
 
 // If there is a warning message and we are not editing a post we need to handle the warning.
 if (!empty($thresholdwarning) && !$edit) {
     // Here we want to throw an exception if they are no longer allowed to post.
-    forum_check_blocking_threshold($thresholdwarning);
+    cybrary_check_blocking_threshold($thresholdwarning);
 }
 
 if (!empty($parent)) {
-    if (!$discussion = $DB->get_record('forum_discussions', array('id' => $parent->discussion))) {
-        print_error('notpartofdiscussion', 'forum');
+    if (!$discussion = $DB->get_record('cybrary_discussions', array('id' => $parent->discussion))) {
+        print_error('notpartofdiscussion', 'cybrary');
     }
 
-    forum_print_post($parent, $discussion, $forum, $cm, $course, false, false, false);
+    cybrary_print_post($parent, $discussion, $cybrary, $cm, $course, false, false, false);
     if (empty($post->edit)) {
-        if ($forum->type != 'qanda' || forum_user_can_see_discussion($forum, $discussion, $modcontext)) {
-            $forumtracked = forum_tp_is_tracked($forum);
-            $posts = forum_get_all_discussion_posts($discussion->id, "created ASC", $forumtracked);
-            forum_print_posts_threaded($course, $cm, $forum, $discussion, $parent, 0, false, $forumtracked, $posts);
+        if ($cybrary->type != 'qanda' || cybrary_user_can_see_discussion($cybrary, $discussion, $modcontext)) {
+            $cybrarytracked = cybrary_tp_is_tracked($cybrary);
+            $posts = cybrary_get_all_discussion_posts($discussion->id, "created ASC", $cybrarytracked);
+            cybrary_print_posts_threaded($course, $cm, $cybrary, $discussion, $parent, 0, false, $cybrarytracked, $posts);
         }
     }
 } else {
-    if (!empty($forum->intro)) {
-        echo $OUTPUT->box(format_module_intro('forum', $forum, $cm->id), 'generalbox', 'intro');
+    if (!empty($cybrary->intro)) {
+        echo $OUTPUT->box(format_module_intro('cybrary', $cybrary, $cm->id), 'generalbox', 'intro');
 
         if (!empty($CFG->enableplagiarism)) {
             require_once($CFG->libdir.'/plagiarismlib.php');

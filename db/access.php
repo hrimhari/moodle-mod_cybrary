@@ -17,7 +17,7 @@
 /**
  * Plugin capabilities
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2006 Martin Dougiamas
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
 
-    'mod/forum:addinstance' => array(
+    'mod/cybrary:addinstance' => array(
         'riskbitmask' => RISK_XSS,
 
         'captype' => 'write',
@@ -38,7 +38,7 @@ $capabilities = array(
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ),
 
-    'mod/forum:viewdiscussion' => array(
+    'mod/cybrary:viewdiscussion' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -52,7 +52,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:viewhiddentimedposts' => array(
+    'mod/cybrary:viewhiddentimedposts' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -63,7 +63,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:startdiscussion' => array(
+    'mod/cybrary:startdiscussion' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -77,7 +77,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:replypost' => array(
+    'mod/cybrary:replypost' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -91,7 +91,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:addnews' => array(
+    'mod/cybrary:addnews' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -104,7 +104,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:replynews' => array(
+    'mod/cybrary:replynews' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -117,7 +117,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:viewrating' => array(
+    'mod/cybrary:viewrating' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -129,7 +129,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:viewanyrating' => array(
+    'mod/cybrary:viewanyrating' => array(
 
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
@@ -141,7 +141,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:viewallratings' => array(
+    'mod/cybrary:viewallratings' => array(
 
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
@@ -151,10 +151,10 @@ $capabilities = array(
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
-        'clonepermissionsfrom' =>  'mod/forum:viewanyrating'
+        'clonepermissionsfrom' =>  'mod/cybrary:viewanyrating'
     ),
 
-    'mod/forum:rate' => array(
+    'mod/cybrary:rate' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
@@ -165,7 +165,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:createattachment' => array(
+    'mod/cybrary:createattachment' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -179,7 +179,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:deleteownpost' => array(
+    'mod/cybrary:deleteownpost' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -191,7 +191,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:deleteanypost' => array(
+    'mod/cybrary:deleteanypost' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -202,7 +202,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:splitdiscussions' => array(
+    'mod/cybrary:splitdiscussions' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -213,7 +213,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:movediscussions' => array(
+    'mod/cybrary:movediscussions' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -224,7 +224,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:editanypost' => array(
+    'mod/cybrary:editanypost' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -237,7 +237,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:viewqandawithoutposting' => array(
+    'mod/cybrary:viewqandawithoutposting' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -248,7 +248,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:viewsubscribers' => array(
+    'mod/cybrary:viewsubscribers' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -259,7 +259,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:managesubscriptions' => array(
+    'mod/cybrary:managesubscriptions' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -272,7 +272,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:postwithoutthrottling' => array(
+    'mod/cybrary:postwithoutthrottling' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -285,7 +285,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/forum:exportdiscussion' => array(
+    'mod/cybrary:exportdiscussion' => array(
 
         'riskbitmask' => RISK_PERSONAL,
 
@@ -297,7 +297,7 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-    'mod/forum:exportpost' => array(
+    'mod/cybrary:exportpost' => array(
 
         'riskbitmask' => RISK_PERSONAL,
 
@@ -309,7 +309,7 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-    'mod/forum:exportownpost' => array(
+    'mod/cybrary:exportownpost' => array(
 
         'riskbitmask' => RISK_PERSONAL,
 
@@ -322,7 +322,7 @@ $capabilities = array(
             'student' => CAP_ALLOW,
         )
     ),
-    'mod/forum:addquestion' => array(
+    'mod/cybrary:addquestion' => array(
 
         'riskbitmask' => RISK_SPAM,
 
@@ -334,7 +334,7 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-    'mod/forum:allowforcesubscribe' => array(
+    'mod/cybrary:allowforcesubscribe' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -345,7 +345,7 @@ $capabilities = array(
             'frontpage' => CAP_ALLOW
         )
     ),
-    'mod/forum:canposttomygroups' => array(
+    'mod/cybrary:canposttomygroups' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,

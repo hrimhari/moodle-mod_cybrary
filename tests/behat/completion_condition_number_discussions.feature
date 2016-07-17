@@ -1,8 +1,8 @@
-@mod @mod_forum
-Feature: Set a certain number of discussions as a completion condition for a forum
-  In order to ensure students are participating on forums
+@mod @mod_cybrary
+Feature: Set a certain number of discussions as a completion condition for a cybrary
+  In order to ensure students are participating on cybraries
   As a teacher
-  I need to set a minimum number of discussions to mark the forum activity as completed
+  I need to set a minimum number of discussions to mark the cybrary activity as completed
 
   Scenario: Set X number of discussions as a condition
     Given the following "users" exist:
@@ -26,25 +26,25 @@ Feature: Set a certain number of discussions as a completion condition for a for
     And I set the following fields to these values:
       | Enable completion tracking | Yes |
     And I press "Save and display"
-    When I add a "Forum" to section "1" and I fill the form with:
-      | Forum name | Test forum name |
-      | Description | Test forum description |
+    When I add a "Cybrary" to section "1" and I fill the form with:
+      | Cybrary name | Test cybrary name |
+      | Description | Test cybrary description |
       | Completion tracking | Show activity as complete when conditions are met |
       | completiondiscussionsenabled | 1 |
       | completiondiscussions | 2 |
     And I log out
     And I log in as "student1"
     And I follow "Course 1"
-    Then the "Test forum name" "forum" activity with "auto" completion should be marked as not complete
-    And I add a new discussion to "Test forum name" forum with:
+    Then the "Test cybrary name" "cybrary" activity with "auto" completion should be marked as not complete
+    And I add a new discussion to "Test cybrary name" cybrary with:
       | Subject | Post 1 subject |
       | Message | Body 1 content |
-    And I add a new discussion to "Test forum name" forum with:
+    And I add a new discussion to "Test cybrary name" cybrary with:
       | Subject | Post 2 subject |
       | Message | Body 2 content |
     And I follow "Course 1"
-    Then the "Test forum name" "forum" activity with "auto" completion should be marked as complete
+    Then the "Test cybrary name" "cybrary" activity with "auto" completion should be marked as complete
     And I log out
     And I log in as "teacher1"
     And I follow "Course 1"
-    And "Student 1" user has completed "Test forum name" activity
+    And "Student 1" user has completed "Test cybrary name" activity

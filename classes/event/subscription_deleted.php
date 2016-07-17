@@ -15,27 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The mod_forum subscription deleted event.
+ * The mod_cybrary subscription deleted event.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\event;
+namespace mod_cybrary\event;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_forum subscription deleted event class.
+ * The mod_cybrary subscription deleted event class.
  *
  * @property-read array $other {
  *      Extra information about the event.
  *
- *      - int forumid: The id of the forum which has been unsusbcribed from.
+ *      - int cybraryid: The id of the cybrary which has been unsusbcribed from.
  * }
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @since      Moodle 2.7
  * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -49,7 +49,7 @@ class subscription_deleted extends \core\event\base {
     protected function init() {
         $this->data['crud'] = 'd';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'forum_subscriptions';
+        $this->data['objecttable'] = 'cybrary_subscriptions';
     }
 
     /**
@@ -58,7 +58,7 @@ class subscription_deleted extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' unsubscribed the user with id '$this->relateduserid' to the forum with " .
+        return "The user with id '$this->userid' unsubscribed the user with id '$this->relateduserid' to the cybrary with " .
             "course module id '$this->contextinstanceid'.";
     }
 
@@ -68,7 +68,7 @@ class subscription_deleted extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventsubscriptiondeleted', 'mod_forum');
+        return get_string('eventsubscriptiondeleted', 'mod_cybrary');
     }
 
     /**
@@ -77,7 +77,7 @@ class subscription_deleted extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/forum/subscribers.php', array('id' => $this->other['forumid']));
+        return new \moodle_url('/mod/cybrary/subscribers.php', array('id' => $this->other['cybraryid']));
     }
 
     /**
@@ -86,8 +86,8 @@ class subscription_deleted extends \core\event\base {
      * @return array|null
      */
     protected function get_legacy_logdata() {
-        return array($this->courseid, 'forum', 'unsubscribe', 'view.php?f=' . $this->other['forumid'],
-            $this->other['forumid'], $this->contextinstanceid);
+        return array($this->courseid, 'cybrary', 'unsubscribe', 'view.php?f=' . $this->other['cybraryid'],
+            $this->other['cybraryid'], $this->contextinstanceid);
     }
 
     /**
@@ -103,8 +103,8 @@ class subscription_deleted extends \core\event\base {
             throw new \coding_exception('The \'relateduserid\' must be set.');
         }
 
-        if (!isset($this->other['forumid'])) {
-            throw new \coding_exception('The \'forumid\' value must be set in other.');
+        if (!isset($this->other['cybraryid'])) {
+            throw new \coding_exception('The \'cybraryid\' value must be set in other.');
         }
 
         if ($this->contextlevel != CONTEXT_MODULE) {
@@ -113,12 +113,12 @@ class subscription_deleted extends \core\event\base {
     }
 
     public static function get_objectid_mapping() {
-        return array('db' => 'forum_subscriptions', 'restore' => 'forum_subscription');
+        return array('db' => 'cybrary_subscriptions', 'restore' => 'cybrary_subscription');
     }
 
     public static function get_other_mapping() {
         $othermapped = array();
-        $othermapped['forumid'] = array('db' => 'forum', 'restore' => 'forum');
+        $othermapped['cybraryid'] = array('db' => 'cybrary', 'restore' => 'cybrary');
 
         return $othermapped;
     }

@@ -16,7 +16,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_forum
+ * @package   mod_cybrary
  * @copyright  2009 Petr Skoda (http://skodak.org)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -24,94 +24,94 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    require_once($CFG->dirroot.'/mod/forum/lib.php');
+    require_once($CFG->dirroot.'/mod/cybrary/lib.php');
 
-    $settings->add(new admin_setting_configselect('forum_displaymode', get_string('displaymode', 'forum'),
-                       get_string('configdisplaymode', 'forum'), FORUM_MODE_NESTED, forum_get_layout_modes()));
+    $settings->add(new admin_setting_configselect('cybrary_displaymode', get_string('displaymode', 'cybrary'),
+                       get_string('configdisplaymode', 'cybrary'), CYBRARY_MODE_NESTED, cybrary_get_layout_modes()));
 
-    $settings->add(new admin_setting_configcheckbox('forum_replytouser', get_string('replytouser', 'forum'),
-                       get_string('configreplytouser', 'forum'), 1));
+    $settings->add(new admin_setting_configcheckbox('cybrary_replytouser', get_string('replytouser', 'cybrary'),
+                       get_string('configreplytouser', 'cybrary'), 1));
 
     // Less non-HTML characters than this is short
-    $settings->add(new admin_setting_configtext('forum_shortpost', get_string('shortpost', 'forum'),
-                       get_string('configshortpost', 'forum'), 300, PARAM_INT));
+    $settings->add(new admin_setting_configtext('cybrary_shortpost', get_string('shortpost', 'cybrary'),
+                       get_string('configshortpost', 'cybrary'), 300, PARAM_INT));
 
     // More non-HTML characters than this is long
-    $settings->add(new admin_setting_configtext('forum_longpost', get_string('longpost', 'forum'),
-                       get_string('configlongpost', 'forum'), 600, PARAM_INT));
+    $settings->add(new admin_setting_configtext('cybrary_longpost', get_string('longpost', 'cybrary'),
+                       get_string('configlongpost', 'cybrary'), 600, PARAM_INT));
 
     // Number of discussions on a page
-    $settings->add(new admin_setting_configtext('forum_manydiscussions', get_string('manydiscussions', 'forum'),
-                       get_string('configmanydiscussions', 'forum'), 100, PARAM_INT));
+    $settings->add(new admin_setting_configtext('cybrary_manydiscussions', get_string('manydiscussions', 'cybrary'),
+                       get_string('configmanydiscussions', 'cybrary'), 100, PARAM_INT));
 
     if (isset($CFG->maxbytes)) {
         $maxbytes = 0;
-        if (isset($CFG->forum_maxbytes)) {
-            $maxbytes = $CFG->forum_maxbytes;
+        if (isset($CFG->cybrary_maxbytes)) {
+            $maxbytes = $CFG->cybrary_maxbytes;
         }
-        $settings->add(new admin_setting_configselect('forum_maxbytes', get_string('maxattachmentsize', 'forum'),
-                           get_string('configmaxbytes', 'forum'), 512000, get_max_upload_sizes($CFG->maxbytes, 0, 0, $maxbytes)));
+        $settings->add(new admin_setting_configselect('cybrary_maxbytes', get_string('maxattachmentsize', 'cybrary'),
+                           get_string('configmaxbytes', 'cybrary'), 512000, get_max_upload_sizes($CFG->maxbytes, 0, 0, $maxbytes)));
     }
 
-    // Default number of attachments allowed per post in all forums
-    $settings->add(new admin_setting_configtext('forum_maxattachments', get_string('maxattachments', 'forum'),
-                       get_string('configmaxattachments', 'forum'), 9, PARAM_INT));
+    // Default number of attachments allowed per post in all cybraries
+    $settings->add(new admin_setting_configtext('cybrary_maxattachments', get_string('maxattachments', 'cybrary'),
+                       get_string('configmaxattachments', 'cybrary'), 9, PARAM_INT));
 
     // Default Read Tracking setting.
     $options = array();
-    $options[FORUM_TRACKING_OPTIONAL] = get_string('trackingoptional', 'forum');
-    $options[FORUM_TRACKING_OFF] = get_string('trackingoff', 'forum');
-    $options[FORUM_TRACKING_FORCED] = get_string('trackingon', 'forum');
-    $settings->add(new admin_setting_configselect('forum_trackingtype', get_string('trackingtype', 'forum'),
-                       get_string('configtrackingtype', 'forum'), FORUM_TRACKING_OPTIONAL, $options));
+    $options[CYBRARY_TRACKING_OPTIONAL] = get_string('trackingoptional', 'cybrary');
+    $options[CYBRARY_TRACKING_OFF] = get_string('trackingoff', 'cybrary');
+    $options[CYBRARY_TRACKING_FORCED] = get_string('trackingon', 'cybrary');
+    $settings->add(new admin_setting_configselect('cybrary_trackingtype', get_string('trackingtype', 'cybrary'),
+                       get_string('configtrackingtype', 'cybrary'), CYBRARY_TRACKING_OPTIONAL, $options));
 
     // Default whether user needs to mark a post as read
-    $settings->add(new admin_setting_configcheckbox('forum_trackreadposts', get_string('trackforum', 'forum'),
-                       get_string('configtrackreadposts', 'forum'), 1));
+    $settings->add(new admin_setting_configcheckbox('cybrary_trackreadposts', get_string('trackcybrary', 'cybrary'),
+                       get_string('configtrackreadposts', 'cybrary'), 1));
 
     // Default whether user needs to mark a post as read.
-    $settings->add(new admin_setting_configcheckbox('forum_allowforcedreadtracking', get_string('forcedreadtracking', 'forum'),
-                       get_string('forcedreadtracking_desc', 'forum'), 0));
+    $settings->add(new admin_setting_configcheckbox('cybrary_allowforcedreadtracking', get_string('forcedreadtracking', 'cybrary'),
+                       get_string('forcedreadtracking_desc', 'cybrary'), 0));
 
     // Default number of days that a post is considered old
-    $settings->add(new admin_setting_configtext('forum_oldpostdays', get_string('oldpostdays', 'forum'),
-                       get_string('configoldpostdays', 'forum'), 14, PARAM_INT));
+    $settings->add(new admin_setting_configtext('cybrary_oldpostdays', get_string('oldpostdays', 'cybrary'),
+                       get_string('configoldpostdays', 'cybrary'), 14, PARAM_INT));
 
     // Default whether user needs to mark a post as read
-    $settings->add(new admin_setting_configcheckbox('forum_usermarksread', get_string('usermarksread', 'forum'),
-                       get_string('configusermarksread', 'forum'), 0));
+    $settings->add(new admin_setting_configcheckbox('cybrary_usermarksread', get_string('usermarksread', 'cybrary'),
+                       get_string('configusermarksread', 'cybrary'), 0));
 
     $options = array();
     for ($i = 0; $i < 24; $i++) {
         $options[$i] = sprintf("%02d",$i);
     }
     // Default time (hour) to execute 'clean_read_records' cron
-    $settings->add(new admin_setting_configselect('forum_cleanreadtime', get_string('cleanreadtime', 'forum'),
-                       get_string('configcleanreadtime', 'forum'), 2, $options));
+    $settings->add(new admin_setting_configselect('cybrary_cleanreadtime', get_string('cleanreadtime', 'cybrary'),
+                       get_string('configcleanreadtime', 'cybrary'), 2, $options));
 
     // Default time (hour) to send digest email
-    $settings->add(new admin_setting_configselect('digestmailtime', get_string('digestmailtime', 'forum'),
-                       get_string('configdigestmailtime', 'forum'), 17, $options));
+    $settings->add(new admin_setting_configselect('digestmailtime', get_string('digestmailtime', 'cybrary'),
+                       get_string('configdigestmailtime', 'cybrary'), 17, $options));
 
     if (empty($CFG->enablerssfeeds)) {
         $options = array(0 => get_string('rssglobaldisabled', 'admin'));
-        $str = get_string('configenablerssfeeds', 'forum').'<br />'.get_string('configenablerssfeedsdisabled2', 'admin');
+        $str = get_string('configenablerssfeeds', 'cybrary').'<br />'.get_string('configenablerssfeedsdisabled2', 'admin');
 
     } else {
         $options = array(0=>get_string('no'), 1=>get_string('yes'));
-        $str = get_string('configenablerssfeeds', 'forum');
+        $str = get_string('configenablerssfeeds', 'cybrary');
     }
-    $settings->add(new admin_setting_configselect('forum_enablerssfeeds', get_string('enablerssfeeds', 'admin'),
+    $settings->add(new admin_setting_configselect('cybrary_enablerssfeeds', get_string('enablerssfeeds', 'admin'),
                        $str, 0, $options));
 
     if (!empty($CFG->enablerssfeeds)) {
         $options = array(
             0 => get_string('none'),
-            1 => get_string('discussions', 'forum'),
-            2 => get_string('posts', 'forum')
+            1 => get_string('discussions', 'cybrary'),
+            2 => get_string('posts', 'cybrary')
         );
-        $settings->add(new admin_setting_configselect('forum_rsstype', get_string('rsstypedefault', 'forum'),
-                get_string('configrsstypedefault', 'forum'), 0, $options));
+        $settings->add(new admin_setting_configselect('cybrary_rsstype', get_string('rsstypedefault', 'cybrary'),
+                get_string('configrsstypedefault', 'cybrary'), 0, $options));
 
         $options = array(
             0  => '0',
@@ -128,11 +128,11 @@ if ($ADMIN->fulltree) {
             40 => '40',
             50 => '50'
         );
-        $settings->add(new admin_setting_configselect('forum_rssarticles', get_string('rssarticles', 'forum'),
-                get_string('configrssarticlesdefault', 'forum'), 0, $options));
+        $settings->add(new admin_setting_configselect('cybrary_rssarticles', get_string('rssarticles', 'cybrary'),
+                get_string('configrssarticlesdefault', 'cybrary'), 0, $options));
     }
 
-    $settings->add(new admin_setting_configcheckbox('forum_enabletimedposts', get_string('timedposts', 'forum'),
-                       get_string('configenabletimedposts', 'forum'), 0));
+    $settings->add(new admin_setting_configcheckbox('cybrary_enabletimedposts', get_string('timedposts', 'cybrary'),
+                       get_string('configenabletimedposts', 'cybrary'), 0));
 }
 

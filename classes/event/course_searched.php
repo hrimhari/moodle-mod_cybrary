@@ -15,27 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The mod_forum course searched event.
+ * The mod_cybrary course searched event.
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_forum\event;
+namespace mod_cybrary\event;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_forum course searched event class.
+ * The mod_cybrary course searched event class.
  *
  * @property-read array $other {
  *      Extra information about the event.
  *
- *      - string searchterm: The searchterm used on forum search.
+ *      - string searchterm: The searchterm used on cybrary search.
  * }
  *
- * @package    mod_forum
+ * @package    mod_cybrary
  * @since      Moodle 2.7
  * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -59,7 +59,7 @@ class course_searched extends \core\event\base {
      */
     public function get_description() {
         $searchterm = s($this->other['searchterm']);
-        return "The user with id '$this->userid' has searched the course with id '$this->courseid' for forum posts " .
+        return "The user with id '$this->userid' has searched the course with id '$this->courseid' for cybrary posts " .
             "containing \"{$searchterm}\".";
     }
 
@@ -69,7 +69,7 @@ class course_searched extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventcoursesearched', 'mod_forum');
+        return get_string('eventcoursesearched', 'mod_cybrary');
     }
 
     /**
@@ -78,7 +78,7 @@ class course_searched extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/forum/search.php',
+        return new \moodle_url('/mod/cybrary/search.php',
             array('id' => $this->courseid, 'search' => $this->other['searchterm']));
     }
 
@@ -88,10 +88,10 @@ class course_searched extends \core\event\base {
      * @return array|null
      */
     protected function get_legacy_logdata() {
-        // The legacy log table expects a relative path to /mod/forum/.
-        $logurl = substr($this->get_url()->out_as_local_url(), strlen('/mod/forum/'));
+        // The legacy log table expects a relative path to /mod/cybrary/.
+        $logurl = substr($this->get_url()->out_as_local_url(), strlen('/mod/cybrary/'));
 
-        return array($this->courseid, 'forum', 'search', $logurl, $this->other['searchterm']);
+        return array($this->courseid, 'cybrary', 'search', $logurl, $this->other['searchterm']);
     }
 
     /**

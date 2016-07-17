@@ -1,8 +1,8 @@
-@mod @mod_forum
-Feature: Students can edit or delete their forum posts within a set time limit
-  In order to refine forum posts
+@mod @mod_cybrary
+Feature: Students can edit or delete their cybrary posts within a set time limit
+  In order to refine cybrary posts
   As a user
-  I need to edit or delete my forum posts within a certain period of time after posting
+  I need to edit or delete my cybrary posts within a certain period of time after posting
 
   Background:
     Given the following "users" exist:
@@ -16,15 +16,15 @@ Feature: Students can edit or delete their forum posts within a set time limit
       | student1 | C1 | student |
     And the following "activities" exist:
       | activity   | name                   | intro                   | course  | idnumber  |
-      | forum      | Test forum name        | Test forum description  | C1      | forum     |
+      | cybrary      | Test cybrary name        | Test cybrary description  | C1      | cybrary     |
     And I log in as "student1"
     And I follow "Course 1"
-    And I add a new discussion to "Test forum name" forum with:
-      | Subject | Forum post subject |
+    And I add a new discussion to "Test cybrary name" cybrary with:
+      | Subject | Cybrary post subject |
       | Message | This is the body |
 
-  Scenario: Edit forum post
-    Given I follow "Forum post subject"
+  Scenario: Edit cybrary post
+    Given I follow "Cybrary post subject"
     And I follow "Edit"
     When I set the following fields to these values:
       | Subject | Edited post subject |
@@ -34,11 +34,11 @@ Feature: Students can edit or delete their forum posts within a set time limit
     Then I should see "Edited post subject"
     And I should see "Edited post body"
 
-  Scenario: Delete forum post
-    Given I follow "Forum post subject"
+  Scenario: Delete cybrary post
+    Given I follow "Cybrary post subject"
     When I follow "Delete"
     And I press "Continue"
-    Then I should not see "Forum post subject"
+    Then I should not see "Cybrary post subject"
 
   @javascript
   Scenario: Time limit expires
@@ -52,14 +52,14 @@ Feature: Students can edit or delete their forum posts within a set time limit
     And I am on site homepage
     And I follow "Course 1"
     And I turn editing mode on
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name | Test forum name |
-      | Forum type | Standard forum for general use |
-      | Description | Test forum description |
+    And I add a "Cybrary" to section "1" and I fill the form with:
+      | Cybrary name | Test cybrary name |
+      | Cybrary type | Standard cybrary for general use |
+      | Description | Test cybrary description |
     And I log out
     And I log in as "student1"
     And I follow "Course 1"
     When I wait "61" seconds
-    And I follow "Forum post subject"
+    And I follow "Cybrary post subject"
     Then I should not see "Edit" in the "region-main" "region"
     And I should not see "Delete" in the "region-main" "region"

@@ -1,4 +1,4 @@
-@mod @mod_forum
+@mod @mod_cybrary
 Feature: A user with access to multiple groups should be able to post a copy of a message to all the groups they have access to
   In order to post to all groups a user has access to
   As a user
@@ -57,78 +57,78 @@ Background:
       | G1       | C2G2 |
     And the following "activities" exist:
       | activity   | name                   | intro             | course | idnumber     | groupmode | grouping |
-      | forum      | No group forum         | Test forum name   | C1     | forum        | 0         |          |
-      | forum      | Separate group forum   | Test forum name   | C1     | forum        | 1         |          |
-      | forum      | Visible group forum    | Test forum name   | C1     | forum        | 2         |          |
-      | forum      | Groupings forum        | Test forum name   | C2     | forum        | 1         | G1       |
+      | cybrary      | No group cybrary         | Test cybrary name   | C1     | cybrary        | 0         |          |
+      | cybrary      | Separate group cybrary   | Test cybrary name   | C1     | cybrary        | 1         |          |
+      | cybrary      | Visible group cybrary    | Test cybrary name   | C1     | cybrary        | 2         |          |
+      | cybrary      | Groupings cybrary        | Test cybrary name   | C2     | cybrary        | 1         | G1       |
 
-  Scenario: Teacher is able to post a copy of a message to all groups in a separate group forum
+  Scenario: Teacher is able to post a copy of a message to all groups in a separate group cybrary
     Given I log in as "teacher1"
     And I follow "Course 1"
-    And I add a new discussion to "Separate group forum" forum with:
+    And I add a new discussion to "Separate group cybrary" cybrary with:
       | Subject | Discussion 1 |
       | Message | test |
       | Post a copy to all groups | 1 |
     And I log out
     And I log in as "student1"
     And I follow "Course 1"
-    When I follow "Separate group forum"
+    When I follow "Separate group cybrary"
     Then I should see "Discussion 1"
     And I log out
     And I log in as "student2"
     And I follow "Course 1"
-    And I follow "Separate group forum"
+    And I follow "Separate group cybrary"
     And I should see "Discussion 1"
     And I log out
     And I log in as "student3"
     And I follow "Course 1"
-    And I follow "Separate group forum"
+    And I follow "Separate group cybrary"
     And I should see "Discussion 1"
 
-  Scenario: Teacher is able to post a copy of a message to all groups in a visible group forum
+  Scenario: Teacher is able to post a copy of a message to all groups in a visible group cybrary
     Given I log in as "teacher1"
     And I follow "Course 1"
-    And I add a new discussion to "Visible group forum" forum with:
+    And I add a new discussion to "Visible group cybrary" cybrary with:
       | Subject | Discussion 1 |
       | Message | test |
       | Post a copy to all groups | 1 |
     And I log out
     And I log in as "student1"
     And I follow "Course 1"
-    When I follow "Visible group forum"
+    When I follow "Visible group cybrary"
     Then I should see "Discussion 1"
     And I log out
     And I log in as "student2"
     And I follow "Course 1"
-    And I follow "Visible group forum"
+    And I follow "Visible group cybrary"
     And I should see "Discussion 1"
     And I log out
     And I log in as "student3"
     And I follow "Course 1"
-    And I follow "Visible group forum"
+    And I follow "Visible group cybrary"
     And I should see "Discussion 1"
 
-  Scenario: Teacher is unable to post a copy of a message to all groups in a no group forum
+  Scenario: Teacher is unable to post a copy of a message to all groups in a no group cybrary
     Given I log in as "teacher1"
     And I follow "Course 1"
-    And I follow "No group forum"
+    And I follow "No group cybrary"
     And I press "Add a new discussion topic"
     Then I should not see "Post a copy to all groups"
 
   Scenario: Posts to all groups that have groupings should only display within the grouping and not to other groups
     Given I log in as "teacher1"
     And I follow "Course 2"
-    And I add a new discussion to "Groupings forum" forum with:
+    And I add a new discussion to "Groupings cybrary" cybrary with:
       | Subject | Discussion 1 |
       | Message | test |
       | Post a copy to all groups | 1 |
     And I log out
     And I log in as "student1"
     And I follow "Course 2"
-    When I follow "Groupings forum"
+    When I follow "Groupings cybrary"
     Then I should see "Discussion 1"
     And I log out
     And I log in as "student2"
     And I follow "Course 2"
-    And I follow "Groupings forum"
+    And I follow "Groupings cybrary"
     And I should not see "Discussion 1"
