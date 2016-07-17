@@ -25,6 +25,44 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
     require_once($CFG->dirroot.'/mod/cybrary/lib.php');
+    require_once("$CFG->libdir/resourcelib.php");
+
+    $displayoptions = resourcelib_get_displayoptions(array(RESOURCELIB_DISPLAY_AUTO,
+                                                           RESOURCELIB_DISPLAY_EMBED,
+                                                           RESOURCELIB_DISPLAY_FRAME,
+                                                           RESOURCELIB_DISPLAY_OPEN,
+                                                           RESOURCELIB_DISPLAY_NEW,
+                                                           RESOURCELIB_DISPLAY_POPUP,
+                                                          ));
+    $defaultdisplayoptions = array(RESOURCELIB_DISPLAY_AUTO,
+                                   RESOURCELIB_DISPLAY_EMBED,
+                                   RESOURCELIB_DISPLAY_OPEN,
+                                   RESOURCELIB_DISPLAY_POPUP,
+                                  );
+
+    //--- general settings -----------------------------------------------------------------------------------
+    $settings->add(new admin_setting_configtext('cybrary_framesize',
+        get_string('framesize', 'cybrary'), get_string('configframesize', 'cybrary'), 130, PARAM_INT));
+    $settings->add(new admin_setting_configpasswordunmask('cybrary_secretphrase', get_string('password'),
+        get_string('configsecretphrase', 'cybrary'), ''));
+    $settings->add(new admin_setting_configcheckbox('cybrary_rolesinparams',
+        get_string('rolesinparams', 'cybrary'), get_string('configrolesinparams', 'cybrary'), false));
+    $settings->add(new admin_setting_configmultiselect('cybrary_displayoptions',
+        get_string('displayoptions', 'cybrary'), get_string('configdisplayoptions', 'cybrary'),
+        $defaultdisplayoptions, $displayoptions));
+
+    //--- modedit defaults -----------------------------------------------------------------------------------
+    $settings->add(new admin_setting_heading('urlmodeditdefaults', get_string('modeditdefaults', 'admin'), get_string('condifmodeditdefaults', 'admin')));
+
+    $settings->add(new admin_setting_configcheckbox('cybrary_printintro',
+        get_string('printintro', 'cybrary'), get_string('printintroexplain', 'cybrary'), 1));
+    $settings->add(new admin_setting_configselect('cybrary_display',
+        get_string('displayselect', 'cybrary'), get_string('displayselectexplain', 'cybrary'), RESOURCELIB_DISPLAY_AUTO, $displayoptions));
+    $settings->add(new admin_setting_configtext('cybrary_popupwidth',
+        get_string('popupwidth', 'cybrary'), get_string('popupwidthexplain', 'cybrary'), 620, PARAM_INT, 7));
+    $settings->add(new admin_setting_configtext('cybrary_popupheight',
+        get_string('popupheight', 'cybrary'), get_string('popupheightexplain', 'cybrary'), 450, PARAM_INT, 7));
+
 
     $settings->add(new admin_setting_configselect('cybrary_displaymode', get_string('displaymode', 'cybrary'),
                        get_string('configdisplaymode', 'cybrary'), CYBRARY_MODE_NESTED, cybrary_get_layout_modes()));

@@ -25,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 /** Include required files */
 require_once(__DIR__ . '/deprecatedlib.php');
 require_once($CFG->libdir.'/filelib.php');
+require_once("$CFG->libdir/resourcelib.php");
 require_once($CFG->libdir.'/eventslib.php');
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
@@ -94,6 +95,29 @@ function cybrary_add_instance($cybrary, $mform = null) {
         $cybrary->assesstimestart  = 0;
         $cybrary->assesstimefinish = 0;
     }
+
+    $parameters = array();
+    for ($i=0; $i < 100; $i++) {
+        $parameter = "parameter_$i";
+        $variable  = "variable_$i";
+        if (empty($cybrary->$parameter) or empty($cybrary->$variable)) {
+            continue;
+        }
+        $parameters[$cybrary->$parameter] = $cybrary->$variable;
+    }
+    $cybrary->parameters = serialize($parameters);
+
+    $displayoptions = array();
+    if ($cybrary->display == RESOURCELIB_DISPLAY_POPUP) {
+        $displayoptions['popupwidth']  = $cybrary->popupwidth;
+        $displayoptions['popupheight'] = $cybrary->popupheight;
+    }
+    if (in_array($cybrary->display, array(RESOURCELIB_DISPLAY_AUTO, RESOURCELIB_DISPLAY_EMBED, RESOURCELIB_DISPLAY_FRAME))) {
+        $displayoptions['printintro']   = (int)!empty($cybrary->printintro);
+    }
+    $cybrary->displayoptions = serialize($displayoptions);
+
+    $cybrary->externalurl = url_fix_submitted_url($cybrary->externalurl);
 
     $cybrary->id = $DB->insert_record('cybrary', $cybrary);
     $modcontext = context_module::instance($cybrary->coursemodule);

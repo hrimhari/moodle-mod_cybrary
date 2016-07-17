@@ -32,6 +32,8 @@
     $changegroup = optional_param('group', -1, PARAM_INT);   // choose the current group
     $page        = optional_param('page', 0, PARAM_INT);     // which page to show
     $search      = optional_param('search', '', PARAM_CLEAN);// search string
+    $redirect    = optional_param('redirect', 0, PARAM_BOOL);
+
 
     $params = array();
     if ($id) {
@@ -121,8 +123,63 @@
     echo $OUTPUT->header();
 
     echo $OUTPUT->heading(format_string($cybrary->name), 2);
+
+// Make sure URL exists before generating output - some older sites may contain empty urls
+// Do not use PARAM_URL here, it is too strict and does not support general URIs!
+    $exturl = trim($url->externalurl);
+    if (empty($exturl) or $exturl === 'http://') {
+        notice(get_string('invalidstoredurl', 'cybrary'), new moodle_url('/course/view.php', array('id'=>$cm->course)));
+        die;
+    }
+    unset($exturl);
+    
+    $displaytype = url_get_final_display_type($url);
+    if ($displaytype == RESOURCELIB_DISPLAY_OPEN) {
+        // For 'open' links, we always redirect to the content - except if the user
+        // just chose 'save and display' from the form then that would be confusing
+        if (strpos(get_local_referer(false), 'modedit.php') === false) {
+            $redirect = true;
+        }
+    }
+
     if (!empty($cybrary->intro) && $cybrary->type != 'single' && $cybrary->type != 'teacher') {
         echo $OUTPUT->box(format_module_intro('cybrary', $cybrary, $cm->id), 'generalbox', 'intro');
+    }
+
+    if ($redirect) {
+        // coming from course page or url index page,
+        // the redirection is needed for completion tracking and logging
+        $fullurl = str_replace('&amp;', '&', url_get_full_url($url, $cm, $course));
+    
+        if (!course_get_format($course)->has_view_page()) {
+            // If course format does not have a view page, add redirection delay with a link to the edit page.
+            // Otherwise teacher is redirected to the external URL without any possibility to edit activity or course settings.
+            $editurl = null;
+            if (has_capability('moodle/course:manageactivities', $context)) {
+                $editurl = new moodle_url('/course/modedit.php', array('update' => $cm->id));
+                $edittext = get_string('editthisactivity');
+            } else if (has_capability('moodle/course:update', $context->get_course_context())) {
+                $editurl = new moodle_url('/course/edit.php', array('id' => $course->id));
+                $edittext = get_string('editcoursesettings');
+            }
+            if ($editurl) {
+                redirect($fullurl, html_writer::link($editurl, $edittext)."<br/>".
+                        get_string('pageshouldredirect'), 10);
+            }
+        }
+        redirect($fullurl);
+    }
+
+    switch ($displaytype) {
+        case RESOURCELIB_DISPLAY_EMBED:
+            url_display_embed($url, $cm, $course);
+            break;
+        case RESOURCELIB_DISPLAY_FRAME:
+            url_display_frame($url, $cm, $course);
+            break;
+        default:
+            url_print_workaround($url, $cm, $course);
+            break;
     }
 
 /// find out current groups mode

@@ -63,7 +63,7 @@ class mod_cybrary_external extends external_api {
      */
     public static function view_url($urlid) {
         global $DB, $CFG;
-        require_once($CFG->dirroot . "/mod/url/lib.php");
+        require_once($CFG->dirroot . "/mod/cybrary/lib.php");
 
         $params = self::validate_parameters(self::view_url_parameters(),
                                             array(
@@ -72,13 +72,13 @@ class mod_cybrary_external extends external_api {
         $warnings = array();
 
         // Request and permission validation.
-        $url = $DB->get_record('url', array('id' => $params['urlid']), '*', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($url, 'url');
+        $url = $DB->get_record('cybrary', array('id' => $params['urlid']), '*', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($url, 'cybrary');
 
         $context = context_module::instance($cm->id);
         self::validate_context($context);
 
-        require_capability('mod/url:view', $context);
+        require_capability('mod/cybrary:view', $context);
 
         // Call the url/lib API.
         url_view($url, $course, $cm, $context);

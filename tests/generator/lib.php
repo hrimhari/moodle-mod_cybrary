@@ -69,6 +69,12 @@ class mod_cybrary_generator extends testing_module_generator {
         require_once($CFG->dirroot.'/mod/cybrary/lib.php');
         $record = (object)(array)$record;
 
+        // Add default values for url.
+        $record = (array)$record + array(
+            'display' => RESOURCELIB_DISPLAY_AUTO,
+            'externalurl' => 'http://moodle.org/',
+        );
+
         if (!isset($record->type)) {
             $record->type = 'general';
         }

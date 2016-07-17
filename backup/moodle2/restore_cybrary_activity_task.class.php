@@ -54,7 +54,7 @@ class restore_cybrary_activity_task extends restore_activity_task {
     static public function define_decode_contents() {
         $contents = array();
 
-        $contents[] = new restore_decode_content('cybrary', array('intro'), 'cybrary');
+        $contents[] = new restore_decode_content('cybrary', array('intro', 'externalurl'), 'cybrary');
         $contents[] = new restore_decode_content('cybrary_posts', array('message'), 'cybrary_post');
 
         return $contents;
