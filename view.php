@@ -126,14 +126,14 @@
 
 // Make sure URL exists before generating output - some older sites may contain empty urls
 // Do not use PARAM_URL here, it is too strict and does not support general URIs!
-    $exturl = trim($url->externalurl);
+    $exturl = trim($cybrary->externalurl);
     if (empty($exturl) or $exturl === 'http://') {
         notice(get_string('invalidstoredurl', 'cybrary'), new moodle_url('/course/view.php', array('id'=>$cm->course)));
         die;
     }
     unset($exturl);
     
-    $displaytype = url_get_final_display_type($url);
+    $displaytype = url_get_final_display_type($cybrary);
     if ($displaytype == RESOURCELIB_DISPLAY_OPEN) {
         // For 'open' links, we always redirect to the content - except if the user
         // just chose 'save and display' from the form then that would be confusing
@@ -149,7 +149,7 @@
     if ($redirect) {
         // coming from course page or url index page,
         // the redirection is needed for completion tracking and logging
-        $fullurl = str_replace('&amp;', '&', url_get_full_url($url, $cm, $course));
+        $fullurl = str_replace('&amp;', '&', url_get_full_url($cybrary, $cm, $course));
     
         if (!course_get_format($course)->has_view_page()) {
             // If course format does not have a view page, add redirection delay with a link to the edit page.
@@ -172,13 +172,13 @@
 
     switch ($displaytype) {
         case RESOURCELIB_DISPLAY_EMBED:
-            url_display_embed($url, $cm, $course);
+            url_display_embed($cybrary, $cm, $course);
             break;
         case RESOURCELIB_DISPLAY_FRAME:
-            url_display_frame($url, $cm, $course);
+            url_display_frame($cybrary, $cm, $course);
             break;
         default:
-            url_print_workaround($url, $cm, $course);
+            url_print_workaround($cybrary, $cm, $course);
             break;
     }
 

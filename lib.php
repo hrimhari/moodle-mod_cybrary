@@ -27,6 +27,7 @@ require_once(__DIR__ . '/deprecatedlib.php');
 require_once($CFG->libdir.'/filelib.php');
 require_once("$CFG->libdir/resourcelib.php");
 require_once($CFG->libdir.'/eventslib.php');
+require_once('locallib.php');
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 
@@ -7012,11 +7013,12 @@ function cybrary_get_layout_modes() {
  * @return array
  */
 function cybrary_get_cybrary_types() {
-    return array ('general'  => get_string('generalcybrary', 'cybrary'),
-                  'eachuser' => get_string('eachusercybrary', 'cybrary'),
+    return array (//'general'  => get_string('generalcybrary', 'cybrary'),
+                  //'eachuser' => get_string('eachusercybrary', 'cybrary'),
                   'single'   => get_string('singlecybrary', 'cybrary'),
-                  'qanda'    => get_string('qandacybrary', 'cybrary'),
-                  'blog'     => get_string('blogcybrary', 'cybrary'));
+                  //'qanda'    => get_string('qandacybrary', 'cybrary'),
+                  //'blog'     => get_string('blogcybrary', 'cybrary')
+	);
 }
 
 /**

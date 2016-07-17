@@ -26,6 +26,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 require_once ($CFG->dirroot.'/course/moodleform_mod.php');
+require_once ($CFG->dirroot.'/mod/cybrary/locallib.php');
 
 class mod_cybrary_mod_form extends moodleform_mod {
 

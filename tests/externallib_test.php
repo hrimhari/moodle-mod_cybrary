@@ -1020,9 +1020,9 @@ class mod_cybrary_external_testcase extends externallib_advanced_testcase {
 
         // Setup test data.
         $course = $this->getDataGenerator()->create_course();
-        $url = $this->getDataGenerator()->create_module('url', array('course' => $course->id));
+        $url = $this->getDataGenerator()->create_module('cybrary', array('course' => $course->id));
         $context = context_module::instance($url->cmid);
-        $cm = get_coursemodule_from_instance('url', $url->id);
+        $cm = get_coursemodule_from_instance('cybrary', $url->id);
 
         // Test invalid instance id.
         try {

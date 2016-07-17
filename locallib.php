@@ -568,6 +568,22 @@ class cybrary_file_info_container extends file_info {
 }
 
 /**
+ * This methods does weak url validation, we are looking for major problems only,
+ * no strict RFE validation.
+ *
+ * @param $url
+ * @return bool true is seems valid, false if definitely not valid URL
+ */
+function url_appears_valid_url($url) {
+    if (preg_match('/^(\/|https?:|ftp:)/i', $url)) {
+        // note: this is not exact validation, we look for severely malformed URLs only
+        return (bool)preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[a-z0-9_\.\-]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
+    } else {
+        return (bool)preg_match('/^[a-z]+:\/\/...*$/i', $url);
+    }
+}
+
+/**
  * Fix common URL problems that we want teachers to see fixed
  * the next time they edit the resource.
  *
@@ -777,8 +793,8 @@ EOF;
 function url_print_workaround($url, $cm, $course) {
     global $OUTPUT;
 
-    url_print_header($url, $cm, $course);
-    url_print_heading($url, $cm, $course, true);
+    //url_print_header($url, $cm, $course);
+    //url_print_heading($url, $cm, $course, true);
     url_print_intro($url, $cm, $course, true);
 
     $fullurl = url_get_full_url($url, $cm, $course);
@@ -803,8 +819,8 @@ function url_print_workaround($url, $cm, $course) {
     print_string('clicktoopen', 'cybrary', "<a href=\"$fullurl\" $extra>$fullurl</a>");
     echo '</div>';
 
-    echo $OUTPUT->footer();
-    die;
+    //echo $OUTPUT->footer();
+    //die;
 }
 
 /**
@@ -845,15 +861,15 @@ function url_display_embed($url, $cm, $course) {
         $code = resourcelib_embed_general($fullurl, $title, $clicktoopen, $mimetype);
     }
 
-    url_print_header($url, $cm, $course);
-    url_print_heading($url, $cm, $course);
+    //url_print_header($url, $cm, $course);
+    //url_print_heading($url, $cm, $course);
 
     echo $code;
 
     url_print_intro($url, $cm, $course);
 
-    echo $OUTPUT->footer();
-    die;
+    //echo $OUTPUT->footer();
+    //die;
 }
 
 /**
