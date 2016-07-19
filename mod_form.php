@@ -67,9 +67,9 @@ class mod_cybrary_mod_form extends moodleform_mod {
         $mform->addElement('header', 'optionssection', get_string('appearance'));
 
         if ($this->current->instance) {
-            $options = resourcelib_get_displayoptions(explode(',', $config->displayoptions), $this->current->display);
+            $options = resourcelib_get_displayoptions(explode(',', $CFG->cybrary_displayoptions), $this->current->display);
         } else {
-            $options = resourcelib_get_displayoptions(explode(',', $config->displayoptions));
+            $options = resourcelib_get_displayoptions(explode(',', $CFG->cybrary_displayoptions));
         }
         if (count($options) == 1) {
             $mform->addElement('hidden', 'display');
@@ -78,7 +78,7 @@ class mod_cybrary_mod_form extends moodleform_mod {
             $mform->setDefault('display', key($options));
         } else {
             $mform->addElement('select', 'display', get_string('displayselect', 'cybrary'), $options);
-            $mform->setDefault('display', $config->display);
+            $mform->setDefault('display', $CFG->cybrary_display);
             $mform->addHelpButton('display', 'displayselect', 'cybrary');
         }
 
@@ -88,14 +88,14 @@ class mod_cybrary_mod_form extends moodleform_mod {
                 $mform->disabledIf('popupwidth', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
             }
             $mform->setType('popupwidth', PARAM_INT);
-            $mform->setDefault('popupwidth', $config->popupwidth);
+            $mform->setDefault('popupwidth', $CFG->cybrary_popupwidth);
 
             $mform->addElement('text', 'popupheight', get_string('popupheight', 'cybrary'), array('size'=>3));
             if (count($options) > 1) {
                 $mform->disabledIf('popupheight', 'display', 'noteq', RESOURCELIB_DISPLAY_POPUP);
             }
             $mform->setType('popupheight', PARAM_INT);
-            $mform->setDefault('popupheight', $config->popupheight);
+            $mform->setDefault('popupheight', $CFG->cybrary_popupheight);
         }
 
         if (array_key_exists(RESOURCELIB_DISPLAY_AUTO, $options) or
@@ -105,7 +105,7 @@ class mod_cybrary_mod_form extends moodleform_mod {
             $mform->disabledIf('printintro', 'display', 'eq', RESOURCELIB_DISPLAY_POPUP);
             $mform->disabledIf('printintro', 'display', 'eq', RESOURCELIB_DISPLAY_OPEN);
             $mform->disabledIf('printintro', 'display', 'eq', RESOURCELIB_DISPLAY_NEW);
-            $mform->setDefault('printintro', $config->printintro);
+            $mform->setDefault('printintro', $CFG->cybrary_printintro);
         }
 
         //-------------------------------------------------------
@@ -118,7 +118,7 @@ class mod_cybrary_mod_form extends moodleform_mod {
             $parcount = 5 + count(unserialize($this->current->parameters));
             $parcount = ($parcount > 100) ? 100 : $parcount;
         }
-        $options = url_get_variable_options($config);
+        $options = url_get_variable_options($CFG);
 
         for ($i=0; $i < $parcount; $i++) {
             $parameter = "parameter_$i";

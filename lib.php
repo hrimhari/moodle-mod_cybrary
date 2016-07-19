@@ -118,7 +118,7 @@ function cybrary_add_instance($cybrary, $mform = null) {
     }
     $cybrary->displayoptions = serialize($displayoptions);
 
-    $cybrary->externalurl = url_fix_submitted_url($cybrary->externalurl);
+    $cybrary->externalurl = cybrary_fix_submitted_url($cybrary->externalurl);
 
     $cybrary->id = $DB->insert_record('cybrary', $cybrary);
     $modcontext = context_module::instance($cybrary->coursemodule);
@@ -7853,3 +7853,126 @@ function mod_cybrary_myprofile_navigation(core_user\output\myprofile\tree $tree,
 
     return true;
 }
+
+/**
+ * Given a course_module object, this function returns any
+ * "extra" information that may be needed when printing
+ * this activity in a course listing.
+ *
+ * See {@link get_array_of_activities()} in course/lib.php
+ *
+ * @param object $coursemodule
+ * @return cached_cm_info info
+ */
+function cybrary_get_coursemodule_info($coursemodule) {
+    global $CFG, $DB;
+    require_once("$CFG->dirroot/mod/cybrary/locallib.php");
+
+    if (!$url = $DB->get_record('cybrary', array('id'=>$coursemodule->instance),
+            'id, name, display, displayoptions, externalurl, parameters, intro, introformat')) {
+        return NULL;
+    }
+
+    $info = new cached_cm_info();
+    $info->name = $url->name;
+
+    //note: there should be a way to differentiate links from normal resources
+    $info->icon = url_guess_icon($url->externalurl, 24);
+
+    $display = url_get_final_display_type($url);
+
+    $activityurl = "$CFG->wwwroot/mod/cybrary/view.php?id=$coursemodule->id";
+    if ($display == RESOURCELIB_DISPLAY_POPUP) {
+        $fullurl = "${activityurl}&amp;redirect=1";
+        $options = empty($url->displayoptions) ? array() : unserialize($url->displayoptions);
+        $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
+        $height = empty($options['popupheight']) ? 450 : $options['popupheight'];
+        $wh = "width=$width,height=$height,toolbar=no,location=no,menubar=no,copyhistory=no,status=no,directories=no,scrollbars=yes,resizable=yes";
+        $info->onclick = "window.open('$fullurl', '', '$wh'); return true;";
+
+    } else if ($display == RESOURCELIB_DISPLAY_NEW) {
+        $fullurl = "${activityurl}&amp;redirect=1";
+        $info->onclick = "window.open('$fullurl'); return true;";
+
+    }
+
+    if ($coursemodule->showdescription) {
+        // Convert intro to html. Do not filter cached version, filters run at display time.
+        $discuss = get_string('discusslink', 'cybrary');
+        $info->content = format_module_intro('cybrary', $url, $coursemodule->id, false) . " <a href='${activityurl}'>${discuss}</a>";
+    }
+
+    return $info;
+}
+
+/**
+ * Export URL resource contents
+ *
+ * @return array of file content
+ */
+function cybrary_export_contents($cm, $baseurl) {
+    global $CFG, $DB;
+    require_once("$CFG->dirroot/mod/cybrary/locallib.php");
+    $contents = array();
+    $context = context_module::instance($cm->id);
+
+    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+    $urlrecord = $DB->get_record('url', array('id'=>$cm->instance), '*', MUST_EXIST);
+
+    $fullurl = str_replace('&amp;', '&', cybrary_get_full_url($urlrecord, $cm, $course));
+    $isurl = clean_param($fullurl, PARAM_URL);
+    if (empty($isurl)) {
+        return null;
+    }
+
+    $url = array();
+    $url['type'] = 'cybrary';
+    $url['filename']     = clean_param(format_string($urlrecord->name), PARAM_FILE);
+    $url['filepath']     = null;
+    $url['filesize']     = 0;
+    $url['fileurl']      = $fullurl;
+    $url['timecreated']  = null;
+    $url['sortorder']    = null;
+    $url['userid']       = null;
+    $url['author']       = null;
+    $url['license']      = null;
+    $contents[] = $url;
+
+    return $contents;
+}
+
+
+/**
+ * Register the ability to handle drag and drop file uploads
+ * @return array containing details of the files / types the mod can handle
+ */
+function cybrary_dndupload_register() {
+    return array('types' => array(
+                     array('identifier' => 'cybrary', 'message' => get_string('createurl', 'cybrary'))
+                 ));
+}
+/**
+ * Handle a file that has been uploaded
+ * @param object $uploadinfo details of the file / content that has been uploaded
+ * @return int instance id of the newly created mod
+ */
+function cybrary_dndupload_handle($uploadinfo) {
+    // Gather all the required data.
+    $data = new stdClass();
+    $data->course = $uploadinfo->course->id;
+    $data->name = $uploadinfo->displayname;
+    $data->intro = '<p>'.$uploadinfo->displayname.'</p>';
+    $data->introformat = FORMAT_HTML;
+    $data->externalurl = clean_param($uploadinfo->content, PARAM_URL);
+
+    // Set the display options to the site defaults.
+    $config = get_config('cybrary');
+    $data->display = $config->cybrary_display;
+    $data->popupwidth = $config->cybrary_popupwidth;
+    $data->popupheight = $config->cybrary_popupheight;
+    $data->printintro = $config->cybrary_printintro;
+    $data->type = 'single';
+
+    return cybrary_add_instance($data, null);
+}
+

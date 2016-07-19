@@ -568,3 +568,4 @@ $string['printintroexplain'] = 'Display URL description below content? Some disp
 $string['rolesinparams'] = 'Include role names in parameters';
 $string['serverurl'] = 'Server URL';
 $string['cybrary:view'] = 'View Cybrary';
+$string['discusslink'] = 'Discuss';
