@@ -118,7 +118,7 @@ function cybrary_add_instance($cybrary, $mform = null) {
     }
     $cybrary->displayoptions = serialize($displayoptions);
 
-    $cybrary->externalurl = cybrary_fix_submitted_url($cybrary->externalurl);
+    $cybrary->externalurl = url_fix_submitted_url($cybrary->externalurl);
 
     $cybrary->id = $DB->insert_record('cybrary', $cybrary);
     $modcontext = context_module::instance($cybrary->coursemodule);

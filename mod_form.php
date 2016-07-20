@@ -48,6 +48,7 @@ class mod_cybrary_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
         $this->standard_intro_elements(get_string('cybraryintro', 'cybrary'));
+        $mform->setDefault('showdescription', $CFG->cybrary_printintro); 
 
         $cybrarytypes = cybrary_get_cybrary_types();
         core_collator::asort($cybrarytypes, core_collator::SORT_STRING);
