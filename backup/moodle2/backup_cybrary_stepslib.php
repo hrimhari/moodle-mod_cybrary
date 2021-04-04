@@ -43,7 +43,7 @@ class backup_cybrary_activity_structure_step extends backup_activity_structure_s
             'display', 'displayoptions', 'parameters', 'timemodified',
             'assessed', 'assesstimestart', 'assesstimefinish', 'scale',
             'maxbytes', 'maxattachments', 'forcesubscribe', 'trackingtype',
-            'rsstype', 'rssarticles', 'timemodified', 'warnafter',
+            'rsstype', 'rssarticles', 'warnafter',
             'blockafter', 'blockperiod', 'completiondiscussions', 'completionreplies',
             'completionposts', 'displaywordcount'));
 
